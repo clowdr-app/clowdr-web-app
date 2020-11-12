@@ -44,7 +44,7 @@ export default function TracksView(props: Props) {
                         latestEnd,
                         eventsOfSession: eventsOfSession.map(event => {
                             const item = data.items.find(x => x.id === event.itemId);
-                            assert(item);
+                            assert(item, `Item ${event.itemId} not found! (Event: ${event.id}, Session: ${session.id})`);
                             const eResult: SortedEventData = {
                                 event,
                                 item: {

@@ -2,6 +2,8 @@ import { PrivilegedConferenceDetails } from "@clowdr-app/clowdr-db-schema";
 import { DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import React, { useCallback, useState } from "react";
 import ReactMarkdown from 'react-markdown';
+import ReactPlayer from "react-player";
+import { parseYouTubeURL, ReactMarkdownCustomised } from "../../../classes/Utils";
 import useConference from "../../../hooks/useConference";
 import useDataSubscription from "../../../hooks/useDataSubscription";
 import useHeading from "../../../hooks/useHeading";
@@ -40,10 +42,6 @@ export default function LoggedInWelcome() {
     useDataSubscription("PrivilegedConferenceDetails", onTextUpdated, null, contents === "You are logged in. Loading conference information...", conference);
 
     return <section aria-labelledby="page-title" tabIndex={0}>
-        <ReactMarkdown
-            linkTarget="_blank"
-            escapeHtml={true}
-            source={contents}
-        />
+        <ReactMarkdownCustomised>{contents}</ReactMarkdownCustomised>
     </section>;
 }

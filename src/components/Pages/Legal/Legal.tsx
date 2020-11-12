@@ -1,10 +1,8 @@
 import React from "react";
-import ReactMarkdown from "react-markdown";
+import { ReactMarkdownCustomised } from "../../../classes/Utils";
 
 export default function Legal() {
-    return <ReactMarkdown
-        linkTarget="_blank"
-    >
+    return <ReactMarkdownCustomised>
         {`## Who are we
 
 Clowdr is not currently a legal entity, it's just an [open source project](https://github.com/clowdr-app).
@@ -31,5 +29,5 @@ CLOWDR, and never gets your name or email). Twilio treats this data as
 protected personal information, and guarantees destruction within 120
 days. Only the conference organizers have access to call logs.
 `}
-    </ReactMarkdown>;
+    </ReactMarkdownCustomised>;
 }

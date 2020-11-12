@@ -4,10 +4,9 @@ import { Flair, UserProfile } from "@clowdr-app/clowdr-db-schema";
 
 // @ts-ignore
 import defaultProfilePic from "../../../assets/default-profile-pic.png";
-import ReactMarkdown from "react-markdown";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import FlairChip from "../FlairChip/FlairChip";
-import { handleParseFileURLWeirdness } from "../../../classes/Utils";
+import { handleParseFileURLWeirdness, ReactMarkdownCustomised } from "../../../classes/Utils";
 import LocalStorage from "../../../classes/LocalStorage/ProfileEditing";
 
 interface Props {
@@ -65,11 +64,7 @@ export default function ProfileView(props: Props) {
                     ? <div className="country">{p.country}</div>
                     : <></>}
                 <div className="bio">
-                    <ReactMarkdown 
-                        linkTarget="_blank"
-                        escapeHtml={true}
-                        source={p.bio}
-                    />
+                    <ReactMarkdownCustomised>{p.bio}</ReactMarkdownCustomised>
                 </div>
                 {p.webpage ? <a className="webpage" href={p.webpage}>{p.webpage}</a> : <></>}
                 {props.setEditing

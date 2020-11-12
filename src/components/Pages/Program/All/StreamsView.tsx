@@ -24,7 +24,7 @@ export default function StreamsView(props: Props) {
                     feed: props.data.feeds?.find(feed => feed.id === session.feedId),
                     eventsOfSession: eventsOfSession.map(event => {
                         const item = props.data.items.find(x => x.id === event.itemId);
-                        assert(item);
+                        assert(item, `Item ${event.itemId} not found! (Event: ${event.id}, Session: ${session.id})`);
                         const eResult: SortedEventData = {
                             event,
                             item: {

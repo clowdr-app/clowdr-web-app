@@ -5,10 +5,10 @@ import "./WelcomePage.scss";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import useConference from "../../../../hooks/useConference";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
-import ReactMarkdown from "react-markdown";
 import ReactMde from "react-mde";
 import "react-mde/lib/styles/css/react-mde-all.css";
 import { addError, addNotification } from "../../../../classes/Notifications/Notifications";
+import { ReactMarkdownCustomised } from "../../../../classes/Utils";
 
 export default function AdminWelcomePage() {
     const conference = useConference();
@@ -75,7 +75,7 @@ export default function AdminWelcomePage() {
                         selectedTab={selectedTab}
                         onTabChange={setSelectedTab}
                         generateMarkdownPreview={(markdown: string) =>
-                            Promise.resolve(<ReactMarkdown linkTarget="_blank" escapeHtml={true} source={markdown} />)
+                            Promise.resolve(<ReactMarkdownCustomised>{markdown}</ReactMarkdownCustomised>)
                         }
                         childProps={{
                             writeButton: {

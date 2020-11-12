@@ -1,10 +1,8 @@
 import React from "react";
-import ReactMarkdown from "react-markdown";
+import { ReactMarkdownCustomised } from "../../../classes/Utils";
 
 export default function About() {
-    return <ReactMarkdown
-        linkTarget="_blank"
-    >
+    return <ReactMarkdownCustomised>
 {`[CLOWDR](https://www.clowdr.org/) is an [open source platform](https://github.com/clowdr-app) to make
 it easier to run interactive and engaging virtual conferences. Imagine
 that your conference attendees could interact by video and text and
@@ -72,5 +70,5 @@ CLOWDR was made possible thanks to support by the
 [National Science Foundation](https://www.nsf.gov/) under awards
 CCF-2035003, CCF-2035101 and CCF-203500 and support from [Twilio.org](https://www.twilio.org)
 `}
-    </ReactMarkdown>;
+    </ReactMarkdownCustomised>;
 }

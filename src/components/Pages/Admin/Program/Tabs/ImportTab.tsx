@@ -6,6 +6,7 @@ import { CompleteSpecs, EventSpec, FeedSpec, ItemSpec, PersonSpec, SessionSpec, 
 import { parse as parseDate } from 'date-fns';
 import { zonedTimeToUtc } from 'date-fns-tz';
 import { generatePersonId } from "./AuthorsTab";
+import { parseYouTubeURL } from "../../../../../classes/Utils";
 
 function timeFromConfTime(date: string, time: string, timezone: string): Date {
     const localDateTime = parseDate(`${date} ${time}`, "yyyy/MM/dd HH:mm", new Date());
@@ -640,13 +641,7 @@ export default function ImportTab(props: Props) {
                                     assert(feed.id);
                                     assert(feed.youtubeURL || feed.zoomURL);
 
-                                    const youtubeURL = feed.youtubeURL as string;
-                                    // Regarding parsing youtube URLs:
-                                    // See https://gist.github.com/rodrigoborgesdeoliveira/987683cfbfcc8d800192da1e73adc486
-                                    // See https://regexr.com/531i0
-                                    const youtubeIDParts = youtubeURL.matchAll(/(?:\/|%3D|v=|vi=)([0-9A-z-_]{11})(?:[%#?&]|$)/gi).next();
-                                    assert(youtubeIDParts);
-                                    feed.youtubeID = youtubeIDParts.value[1];
+                                    feed.youtubeID = parseYouTubeURL(feed.youtubeURL);
                                     assert(feed.youtubeID, "Unable to parse YouTube URL.");
                                     delete feed.youtubeURL;
 

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import ReactMarkdown from "react-markdown";
 import { addError } from "../../../../classes/Notifications/Notifications";
+import { ReactMarkdownCustomised } from "../../../../classes/Utils";
 import AsyncButton from "../../../AsyncButton/AsyncButton";
 import "./TextItem.scss";
 
@@ -58,19 +58,11 @@ export default function TextItem(props: Props) {
             {props.editing ? (
                 form
             ) : (
-                <ReactMarkdown
-                    escapeHtml={true}
-                    source={props.markdown}
-                    renderers={{
-                        link: ({ href, children }: { href: string; children: JSX.Element }) => {
-                            return (
-                                <a href={href} style={{ color: props.sponsorColour }}>
-                                    {children}
-                                </a>
-                            );
-                        },
-                    }}
-                />
+                    <ReactMarkdownCustomised
+                        linkColour={props.sponsorColour}
+                    >
+                        {props.markdown}
+                    </ReactMarkdownCustomised>
             )}
         </div>
     );

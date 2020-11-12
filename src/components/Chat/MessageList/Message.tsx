@@ -4,7 +4,6 @@ import "./Message.scss";
 // @ts-ignore
 import defaultProfilePic from "../../../assets/default-profile-pic.png";
 import FlairChip from "../../Profile/FlairChip/FlairChip";
-import ReactMarkdown from "react-markdown";
 import { Conference, Flair, TextChat } from "@clowdr-app/clowdr-db-schema";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 
@@ -18,7 +17,7 @@ import useMaybeChat from "../../../hooks/useMaybeChat";
 import useUserProfile from "../../../hooks/useUserProfile";
 import IMessage from "../../../classes/Chat/IMessage";
 import { UserProfile } from "@clowdr-app/clowdr-db-schema";
-import { handleParseFileURLWeirdness } from "../../../classes/Utils";
+import { handleParseFileURLWeirdness, ReactMarkdownCustomised } from "../../../classes/Utils";
 import AsyncButton from "../../AsyncButton/AsyncButton";
 import IMember from "../../../classes/Chat/IMember";
 import useUserRoles from "../../../hooks/useUserRoles";
@@ -295,16 +294,9 @@ export default function Message(props: {
                             </button>
                         </div>
                     ) : (
-                        <ReactMarkdown
-                            className="body"
-                            linkTarget="_blank"
-                            escapeHtml={true}
-                            renderers={{
-                                text: renderEmoji,
-                            }}
-                        >
+                        <ReactMarkdownCustomised className="body">
                             {msg.body}
-                        </ReactMarkdown>
+                        </ReactMarkdownCustomised>
                     )}
                     {!props.hideReportButton && msg.profileId !== userProfile.id && !showDeleteConfirm ? (
                         <div className="report">

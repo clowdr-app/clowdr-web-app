@@ -13,8 +13,8 @@ import { StaticBaseImpl } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Int
 import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
 import { emojify } from "react-emojione";
 import { addNotification } from "../Notifications/Notifications";
-import ReactMarkdown from "react-markdown";
 import { SimpleEventDispatcher } from "strongly-typed-events";
+import { ReactMarkdownCustomised } from "../Utils";
 
 export type ChatDescriptor = {
     id: string;
@@ -173,15 +173,9 @@ export default class Chat implements IChatManager {
                                     : c.friendlyName}**\n\n`;
                         const body = `${title}${msg.body}`;
                         addNotification(
-                            <ReactMarkdown
-                                linkTarget="_blank"
-                                escapeHtml={true}
-                                renderers={{
-                                    text: renderEmoji
-                                }}
-                            >
+                            <ReactMarkdownCustomised>
                                 {body}
-                            </ReactMarkdown>,
+                            </ReactMarkdownCustomised>,
                             isAnnouncement
                                 ? undefined
                                 : c.isModerationHub

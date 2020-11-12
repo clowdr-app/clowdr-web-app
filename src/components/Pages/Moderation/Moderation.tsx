@@ -1,12 +1,12 @@
 import { ConferenceConfiguration, UserProfile, _Role } from "@clowdr-app/clowdr-db-schema";
 import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
 import React, { useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
 import MultiSelect from "react-multi-select-component";
 import { Link, Redirect } from "react-router-dom";
 import Toggle from "react-toggle";
 import { ChatDescriptor } from "../../../classes/Chat";
 import { addError } from "../../../classes/Notifications/Notifications";
+import { ReactMarkdownCustomised } from "../../../classes/Utils";
 import { ActionButton } from "../../../contexts/HeadingContext";
 import useConference from "../../../hooks/useConference";
 import useHeading from "../../../hooks/useHeading";
@@ -229,9 +229,9 @@ export default function Moderation() {
         <div className="moderation">
             {customNotice ? (
                 <div className="notice">
-                    <ReactMarkdown linkTarget="_blank" escapeHtml={true}>
+                    <ReactMarkdownCustomised>
                         {customNotice}
-                    </ReactMarkdown>
+                    </ReactMarkdownCustomised>
                 </div>
             ) : (
                 <></>

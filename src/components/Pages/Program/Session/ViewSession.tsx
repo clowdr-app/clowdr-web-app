@@ -321,7 +321,7 @@ export default function ViewSession(props: Props) {
     useSafeAsync(async () => events
         ? await Promise.all(events.map(async event => {
             const item = await event.item;
-            assert(item);
+            assert(item, `Item ${event.itemId} not found! (Event: ${event.id}, Session: ${session?.id})`);
             const eResult: SortedEventData = {
                 event,
                 item: {

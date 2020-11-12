@@ -4,7 +4,7 @@ import {
     DataDeletedEventDetails,
 } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import React, { useCallback, useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
+import { ReactMarkdownCustomised } from "../../../../classes/Utils";
 import { HeadingState } from "../../../../contexts/HeadingContext";
 import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
@@ -211,9 +211,9 @@ export default function ViewItem(props: Props) {
                         <></>
                     )}
                     <div className="info">
-                        <ReactMarkdown linkTarget="_blank" escapeHtml={true} className="abstract">
+                        <ReactMarkdownCustomised className="abstract">
                             {item.abstract}
-                        </ReactMarkdown>
+                        </ReactMarkdownCustomised>
                         <AuthorsList authors={authors} idOrdering={item.authors} />
                     </div>
                     <hr />

@@ -1,10 +1,8 @@
 import React from "react";
-import ReactMarkdown from "react-markdown";
+import { ReactMarkdownCustomised } from "../../../classes/Utils";
 
 export default function Help() {
-    return <ReactMarkdown
-        linkTarget="_blank"
-    >
+    return <ReactMarkdownCustomised>
 {`Clowdr is experimental open-source software, developed by volunteers
 specifically for conferences like this one. For more information about
 how to get the most of this platform, see the
@@ -13,5 +11,5 @@ particular, this manual includes hints for troubleshooting and various
 other techniques to make this platform work for you. If you run into
 trouble you can also access the "Tech support" chat channel.
 (Available under ["All Channels"](/chat) or by searching.)`}
-    </ReactMarkdown>;
+    </ReactMarkdownCustomised>;
 }
