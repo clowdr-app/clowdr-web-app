@@ -397,7 +397,7 @@ export default function SponsorsGroup(props: Props) {
                 dispatchUpdate({ action: "searchSponsors", search: null });
             },
         },
-        { type: "link", label: "Show all sponsors", icon: "fas fa-user-tie", url: "/sponsor" },
+        // TODO: Re-enable in future? { type: "link", label: "Show all sponsors", icon: "fas fa-user-tie", url: "/sponsor" },
     ];
 
     function getSponsorMenuItems() {
