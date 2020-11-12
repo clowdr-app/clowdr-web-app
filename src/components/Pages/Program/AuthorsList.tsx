@@ -5,7 +5,7 @@ import "./AuthorsList.scss";
 
 interface Props {
     authors: Array<ProgramPerson> | null;
-    idOrdering: Array<string>
+    idOrdering: Array<string>;
 }
 
 export default function AuthorsList(props: Props) {
@@ -18,17 +18,14 @@ export default function AuthorsList(props: Props) {
                 return xIdx < yIdx ? -1 : xIdx > yIdx ? 1 : 0;
             })
             .map(author => {
-            return <Link
-                key={author.id}
-                to={`/author/${author.id}`}
-                onClick={(ev) => ev.stopPropagation()}>
-                {author.name}
-            </Link>;
-        });
+                return (
+                    <Link key={author.id} to={`/author/${author.id}`} onClick={ev => ev.stopPropagation()}>
+                        {author.name} {author.affiliation ? `(${author.affiliation})` : ""}
+                    </Link>
+                );
+            });
         authorsEls = authorsEls.flatMap((el, i) => [el, <span key={i}>&middot;</span>]);
         authorsEls = authorsEls.slice(0, authorsEls.length - 1);
     }
-    return <p className="authors">
-        {authorsEls}
-    </p>;
+    return <p className="authors">{authorsEls}</p>;
 }
