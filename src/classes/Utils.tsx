@@ -48,8 +48,8 @@ export function parseYouTubeURL(youtubeURL: string): string | undefined {
     // Regarding parsing youtube URLs:
     // See https://gist.github.com/rodrigoborgesdeoliveira/987683cfbfcc8d800192da1e73adc486
     // See https://regexr.com/531i0
-    const youtubeIDParts = youtubeURL.matchAll(/(?:\/|%3D|v=|vi=)([0-9A-z-_]{11})(?:[%#?&]|$)/gi).next();
-    if (youtubeIDParts) {
+    const youtubeIDParts = youtubeURL.matchAll(/(?:\/|%3D|v=|vi=)([0-9A-z-_]{11})(?:[%#?&]|$)/gi)?.next();
+    if (youtubeIDParts?.value && youtubeIDParts.value.length >= 2) {
         return youtubeIDParts.value[1];
     }
     return undefined;
