@@ -161,12 +161,12 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
                 : `${profile2.id}-${profile1.id}`);
     }
 
-    const name = textChat.get("name").trim();
+    let name = textChat.get("name").trim();
     if (!name || name === "") {
         throw new Error("Name cannot be blank");
     }
     if (name.length < 5) {
-        throw new Error("Name is too short");
+        name = name.padEnd(5, ".");
     }
     textChat.set("name", name);
 

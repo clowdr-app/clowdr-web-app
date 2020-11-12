@@ -154,6 +154,7 @@ async function createContentFeed(data) {
             existing.unset("textChat");
         }
         await existing.save({
+            name: data.name,
             youtube: data.youtube,
             zoomRoom: data.zoomRoom,
             videoRoom: data.videoRoom,

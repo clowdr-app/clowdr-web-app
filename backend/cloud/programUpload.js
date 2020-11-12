@@ -200,76 +200,101 @@ Parse.Cloud.job("import-program-job", async request => {
             const feed = feeds[feedId];
             const feedName = feed.name;
 
-            // TODO: Check for an existing content feed first; use its
-            // video room / text chat if existent / needed(or delete if not)
-            // in order to avoid the name case -sensitivity issue
-
-            if (feed.youtube) {
-                youtubeObj = await createYouTubeFeed({
-                    conference,
-                    videoId: feed.youtube,
-                });
+            let existingContentFeed;
+            if (feed.originatingID) {
+                existingContentFeed
+                    = await new Parse.Query("ContentFeed")
+                        .equalTo("conference", conference)
+                        .equalTo("originatingID", feed.originatingID)
+                        .includeAll()
+                        .first({ useMasterKey: true });
+            }
+            else {
+                existingContentFeed
+                    = await new Parse.Query("ContentFeed")
+                        .equalTo("conference", conference)
+                        .equalTo("name", feed.name)
+                        .includeAll()
+                        .first({ useMasterKey: true });
             }
 
-            if (feed.zoomRoom) {
-                zoomRoomObj = await createZoomRoom({
-                    conference,
-                    url: feed.zoomRoom,
-                });
-            }
+            if (existingContentFeed) {
+                // TODO: How should the youtube/zoomRoom/videoRoom/textChat fields be updated?
+                await existingContentFeed.save({
+                    name: feed.name,
+                    originatingID: feed.originatingID
+                }, { useMasterKey: true });
 
-            if (feed.textChat || feed.videoRoom) {
-                textChatObj = await new Parse.Query("TextChat")
-                    .equalTo("conference", conference)
-                    .equalTo("name", feedName)
-                    .first({ useMasterKey: true });
-                if (!textChatObj) {
-                    textChatObj = await createTextChat({
-                        name: feedName,
+                feedsMap.set(feedId, existingContentFeed);
+            }
+            else {
+                if (feed.youtube) {
+                    youtubeObj = await createYouTubeFeed({
                         conference,
-                        isPrivate: false,
-                        isDM: false,
-                        autoWatch: false,
-                        creator: adminProfile,
-                        mode: "ordinary",
+                        videoId: feed.youtube,
                     });
                 }
-            }
 
-            if (feed.videoRoom) {
-                videoRoomObj = await new Parse.Query("VideoRoom")
-                    .equalTo("conference", conference)
-                    .equalTo("name", feedName)
-                    .first({ useMasterKey: true });
-                if (!videoRoomObj) {
-                    videoRoomObj = await createVideoRoom(
-                        {
-                            capacity: 50,
-                            ephemeral: false,
-                            isPrivate: false,
+                if (feed.zoomRoom) {
+                    zoomRoomObj = await createZoomRoom({
+                        conference,
+                        url: feed.zoomRoom,
+                    });
+                }
+
+                if (feed.textChat || feed.videoRoom) {
+                    textChatObj = await new Parse.Query("TextChat")
+                        .equalTo("conference", conference)
+                        .equalTo("name", feedName)
+                        .first({ useMasterKey: true });
+                    if (!textChatObj) {
+                        textChatObj = await createTextChat({
                             name: feedName,
                             conference,
-                            textChat: textChatObj,
-                        },
-                        user
-                    );
-                } else {
-                    await videoRoomObj.save({ textChat: textChatObj }, { useMasterKey: true });
+                            isPrivate: false,
+                            isDM: false,
+                            autoWatch: false,
+                            creator: adminProfile,
+                            mode: "ordinary",
+                        });
+                    }
                 }
-            }
 
-            feedsMap.set(
-                feedId,
-                await createContentFeed({
-                    name: feedName,
-                    conference,
-                    youtube: youtubeObj,
-                    zoomRoom: zoomRoomObj,
-                    videoRoom: videoRoomObj,
-                    textChat: !videoRoomObj ? textChatObj : undefined,
-                    originatingID: feedId,
-                })
-            );
+                if (feed.videoRoom) {
+                    videoRoomObj = await new Parse.Query("VideoRoom")
+                        .equalTo("conference", conference)
+                        .equalTo("name", feedName)
+                        .first({ useMasterKey: true });
+                    if (!videoRoomObj) {
+                        videoRoomObj = await createVideoRoom(
+                            {
+                                capacity: 50,
+                                ephemeral: false,
+                                isPrivate: false,
+                                name: feedName,
+                                conference,
+                                textChat: textChatObj,
+                            },
+                            user
+                        );
+                    } else {
+                        await videoRoomObj.save({ textChat: textChatObj }, { useMasterKey: true });
+                    }
+                }
+
+                feedsMap.set(
+                    feedId,
+                    await createContentFeed({
+                        name: feedName,
+                        conference,
+                        youtube: youtubeObj,
+                        zoomRoom: zoomRoomObj,
+                        videoRoom: videoRoomObj,
+                        textChat: !videoRoomObj ? textChatObj : undefined,
+                        originatingID: feedId,
+                    })
+                );
+            }
 
             incrementProgress();
         }
