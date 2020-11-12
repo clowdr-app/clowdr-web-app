@@ -39,6 +39,7 @@ import ComingSoon from "../Pages/ComingSoon/ComingSoon";
 import ForgotPassword from "../Pages/Login/ForgotPassword/ForgotPassword";
 import ResetPassword from "../Pages/Login/ResetPassword/ResetPassword";
 import Exhibits from "../Pages/Exhibits/Exhibits";
+import WatchedChats from "../Pages/WatchedChats/WatchedChats";
 import WatchedItems from "../Pages/WatchedItems/WatchedItems";
 import About from "../Pages/About/About";
 import Legal from "../Pages/Legal/Legal";
@@ -172,7 +173,8 @@ function Page(props: Props) {
                     <Route exact path="/" component={LoggedInWelcome} />
                     <Route path="/signup" component={() => <Redirect to="/" />} />
 
-                    <Route path="/watched" component={WatchedItems} />
+                    <Route path="/watched/chats" component={WatchedChats} />
+                    <Route path="/watched/items" component={WatchedItems} />
                     <Route path="/exhibits" component={Exhibits} />
                     <Route path="/attendees" component={AllAttendees} />
 

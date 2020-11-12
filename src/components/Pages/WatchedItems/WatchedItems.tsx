@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import useHeading from "../../../hooks/useHeading";
 import useUserProfile from "../../../hooks/useUserProfile";
 import { ProgramSession, ProgramSessionEvent, ProgramTrack, VideoRoom, WatchedItems } from "@clowdr-app/clowdr-db-schema";
@@ -7,16 +7,12 @@ import useSafeAsync from "../../../hooks/useSafeAsync";
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import useDataSubscription from "../../../hooks/useDataSubscription";
 import useConference from "../../../hooks/useConference";
-import useMaybeChat from "../../../hooks/useMaybeChat";
-import { computeChatDisplayName, SidebarChatDescriptor, upgradeChatDescriptor } from "../../Sidebar/Groups/ChatsGroup";
-import Message, { RenderedMessage, renderMessage } from "../../Chat/MessageList/Message";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
-import { addError } from "../../../classes/Notifications/Notifications";
 import { Link } from "react-router-dom";
 import Column, { Item as ColumnItem } from "../../Columns/Column/Column";
 import TrackMarker from "../Program/All/TrackMarker";
-// TODO SPLASH: import SessionGroup from "../Program/All/SessionGroup";
-import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
+import SessionGroup from "../Program/All/SessionGroup";
+import { SortedEventData, SortedSessionData } from "../Program/WholeProgramData";
 
 function renderTrack(item: ColumnItem<ProgramTrack>): JSX.Element {
     return <>
@@ -26,39 +22,24 @@ function renderTrack(item: ColumnItem<ProgramTrack>): JSX.Element {
 }
 
 function renderSession(item: ColumnItem<SessionItemData>): JSX.Element {
-    return <></>;
-    // TODO: SPLASH: <SessionGroup session={item.renderData.session} includeEvents={item.renderData.includeEvents} />;
+    return <SessionGroup session={item.renderData.session} includeEvents={item.renderData.includeEvents} />;
 }
 
 interface SessionItemData {
-    session: ProgramSession;
+    session: SortedSessionData;
     includeEvents: string[] | undefined;
 }
 
 export default function WatchedItemsPage() {
     const conference = useConference();
     const userProfile = useUserProfile();
-    const mChat = useMaybeChat();
     const [watchedItems, setWatchedItems] = useState<WatchedItems | null>(null);
-    const [activeChats, setActiveChats] = useState<Array<SidebarChatDescriptor> | null>(null);
     const [rooms, setRooms] = useState<Array<VideoRoom> | null>(null);
-    const [messages, setMessages] = useState<Array<RenderedMessage> | null>(null);
 
     useHeading("Followed Items");
 
     // Initial fetch of user's watched items
     useSafeAsync(async () => userProfile.watched, setWatchedItems, [userProfile.watchedId], "WatchedItems:setWatchedItems");
-
-    useSafeAsync(async () => {
-        if (mChat && watchedItems?.watchedChats) {
-            const watchedChatIds = watchedItems?.watchedChats;
-            const chats = removeNull(await Promise.all(watchedChatIds.map(id => mChat.getChat(id))));
-            const chatsWithName: Array<SidebarChatDescriptor>
-                = await Promise.all(chats.map(x => upgradeChatDescriptor(conference, x)));
-            return chatsWithName;
-        }
-        return undefined;
-    }, setActiveChats, [conference, conference.id, mChat, watchedItems?.watchedChats], "WatchedItems:setActiveChats");
 
     // Subscribe to watched items updates
     const onWatchedItemsUpdated = useCallback(async function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
@@ -74,115 +55,6 @@ export default function WatchedItemsPage() {
         });
     }, []);
     useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, !watchedItems, conference);
-
-    // Subscribe to chat messages
-    useEffect(() => {
-        const addFunctionsToOff = activeChats ? Promise.all(activeChats.map(async c => {
-            const chatName = computeChatDisplayName(c, userProfile).friendlyName;
-            return {
-                id: c.id,
-                f: await mChat?.channelEventOn(c.id, "messageAdded", {
-                    componentName: "WatchedItems",
-                    caller: "setMessages",
-                    function: async (msg) => {
-                        if (msg.author !== userProfile.id) {
-                            const renderedMsg = await renderMessage(conference, userProfile, c.id, msg, c.isDM, chatName);
-                            // We only ever add to the list
-                            setMessages(oldMessages => oldMessages ? [...oldMessages, renderedMsg] : [renderedMsg]);
-                        }
-                    }
-                })
-            };
-        })) : Promise.resolve([]);
-
-        const updateFunctionsToOff = activeChats ? Promise.all(activeChats.map(async c => {
-            const chatName = computeChatDisplayName(c, userProfile).friendlyName;
-            return {
-                id: c.id,
-                f: await mChat?.channelEventOn(c.id, "messageUpdated", {
-                    componentName: "WatchedItems",
-                    caller: "setMessages",
-                    function: async (msg) => {
-                        if (msg.updateReasons.includes("body") ||
-                            msg.updateReasons.includes("author") ||
-                            msg.updateReasons.includes("attributes")) {
-                            const renderedMsg = await renderMessage(conference, userProfile, c.id, msg.message, c.isDM, chatName);
-                            setMessages(oldMessages => oldMessages
-                                ? oldMessages.map(x => x.sid === msg.message.sid ? renderedMsg : x)
-                                : oldMessages
-                            );
-                        }
-                    }
-                })
-            };
-        })) : Promise.resolve([]);
-
-        const removeFunctionsToOff = activeChats ? Promise.all(activeChats.map(async c => {
-            return {
-                id: c.id,
-                f: await mChat?.channelEventOn(c.id, "messageRemoved", {
-                    componentName: "WatchedItems",
-                    caller: "setMessages",
-                    function: async (msg) => {
-                        setMessages(oldMessages => oldMessages
-                            ? oldMessages.filter(x => x.sid !== msg.sid)
-                            : oldMessages
-                        );
-                    }
-                })
-            };
-        })) : Promise.resolve([]);
-
-        return () => {
-            addFunctionsToOff.then(fs => {
-                fs.forEach(f => {
-                    if (f.f) {
-                        mChat?.channelEventOff(f.id, "messageAdded", f.f);
-                    }
-                });
-            });
-
-            updateFunctionsToOff.then(fs => {
-                fs.forEach(f => {
-                    if (f.f) {
-                        mChat?.channelEventOff(f.id, "messageUpdated", f.f);
-                    }
-                });
-            });
-
-            removeFunctionsToOff.then(fs => {
-                fs.forEach(f => {
-                    if (f.f) {
-                        mChat?.channelEventOff(f.id, "messageRemoved", f.f);
-                    }
-                });
-            });
-        };
-    }, [mChat, userProfile, activeChats, conference]);
-
-    // Fetch chat messages
-    useSafeAsync(async () => {
-        if (mChat && activeChats && !messages) {
-            try {
-                return (await Promise.all(activeChats.map(async c => {
-                    const chatName = computeChatDisplayName(c, userProfile).friendlyName;
-                    const msgs = (await mChat.getMessages(c.id, 5))?.items;
-                    if (msgs) {
-                        return Promise.all(msgs
-                            .filter(x => x.author !== userProfile.id)
-                            .map(x => renderMessage(conference, userProfile, c.id, x, c.isDM, chatName))
-                        );
-                    }
-                    return null;
-                }))).reduce<RenderedMessage[]>((acc, xs) => xs ? acc.concat(xs) : [], []);
-            }
-            catch (e) {
-                console.error("Failed to fetch chat messages.", e);
-                addError("Failed to fetch chat messages.");
-            }
-        }
-        return undefined;
-    }, setMessages, [mChat, activeChats, messages], "WatchedItems:setMessages");
 
     // Fetch rooms
     useSafeAsync(async () => watchedItems?.watchedRoomObjects ?? null, setRooms, [watchedItems?.watchedRooms], "WatchedItems:setRooms");
@@ -263,81 +135,100 @@ export default function WatchedItemsPage() {
         return sessions;
     }, setProgramPartialSessions, [programSessionEvents], "WatchedItems:setProgramPartialSessions");
 
-    const watchedSessions = useMemo<Map<string, { session: ProgramSession, events: string[] | undefined }> | undefined>(() => {
+    const watchedSessions = useMemo<Map<string, { session: ProgramSession, watchedEvents: string[] | undefined }> | undefined>(() => {
         if (!programSessions || !programPartialSessions) {
             return undefined;
         }
 
-        const fullSessions: Map<string, { session: ProgramSession, events: string[] | undefined }> = new Map(programSessions?.map(session => [session.id, { session, events: undefined }]));
+        const fullSessions: Map<string, { session: ProgramSession, watchedEvents: string[] | undefined }> = new Map(programSessions?.map(session => [session.id, { session, watchedEvents: undefined }]));
 
         for (const partialSession of programPartialSessions) {
             if (fullSessions.has(partialSession.session.id)) {
                 const existingEvents = fullSessions.get(partialSession.session.id);
-                if (existingEvents?.events === undefined) {
+                if (existingEvents?.watchedEvents === undefined) {
                     // Full session already included
                     continue;
                 } else {
                     // Partial session already included
-                    existingEvents.events?.push(partialSession.event.id);
+                    existingEvents.watchedEvents?.push(partialSession.event.id);
                     fullSessions.set(partialSession.session.id, existingEvents);
                 }
             } else {
                 // Session not yet included
-                fullSessions.set(partialSession.session.id, { session: partialSession.session, events: [partialSession.event.id] });
+                fullSessions.set(partialSession.session.id, { session: partialSession.session, watchedEvents: [partialSession.event.id] });
             }
         }
 
         return fullSessions;
     }, [programPartialSessions, programSessions]);
 
-    const programSessionItems = useMemo<Array<ColumnItem<SessionItemData>> | undefined>(() => {
+    const [programSessionItems, setProgramSessionItems] = useState<Array<ColumnItem<SessionItemData>> | undefined>();
+
+    useSafeAsync(async () => {
         if (!watchedSessions) {
             return undefined;
         }
 
-        const items = [];
+        const items: Array<ColumnItem<SessionItemData>> = [];
 
-        for (const [sessionId, { session, events }] of watchedSessions) {
-            items.push({
-                key: sessionId,
+        for (const [sessionId, { session, watchedEvents: events }] of watchedSessions) {
+            const allEvents = (await session.events)
+                .sort((x, y) =>
+                    x.startTime < y.startTime ? -1
+                        : x.startTime === y.startTime ? 0
+                            : 1);
+            const earliestStart = allEvents.reduce((r, e) => r.getTime() < e.startTime.getTime() ? r : e.startTime, new Date(32503680000000));
+            const latestEnd = allEvents.reduce((r, e) => r.getTime() > e.endTime.getTime() ? r : e.endTime, new Date(0));
+            const sessionCol: ColumnItem<SessionItemData> = {
+                key: session.id,
                 text: session.title,
                 link: `/session/${sessionId}`,
-                renderData: { session, includeEvents: events },
-            });
+                renderData: {
+                    session: {
+                        session,
+                        earliestStart,
+                        latestEnd,
+                        eventsOfSession: await Promise.all(allEvents.map(async event => {
+                            const item = await event.item;
+                            const r: SortedEventData = {
+                                event,
+                                item: {
+                                    authors: await item.authorPerons,
+                                    item,
+                                    eventsForItem: [event]
+                                }
+                            };
+                            return r;
+                        }))
+                    },
+                    includeEvents: events
+                },
+            };
+            items.push(sessionCol);
         }
 
         return items;
-    }, [watchedSessions]);
+    }, setProgramSessionItems, [watchedSessions], "WatchedItems:setProgramSessionItems");
 
     return <div className="watched-items">
         <p className="info">
-            On this page you will find recent messages from chats you are following (including all direct messages and announcements)
-            as well as lists of the breakout rooms, tracks, sessions and events you are following.
+            On this page you will find lists of the breakout rooms, tracks, sessions and events you are following.
         </p>
-        <div className="columns">
-            <div className="column messages">
-                <div className="messages-inner">
-                    {messages
-                        ? messages.length === 0
-                            ? <>No recent chat messages from followed chats.</>
-                            : messages
-                                .sort((x, y) => x.time < y.time ? -1 : x.time === y.time ? 0 : 1)
-                                .map(x => <Message key={x.sid} msg={x} />)
-                        : <LoadingSpinner message="Loading chats" />}
-                </div>
-            </div>
+        <div className="columns whole-program">
             <div className="column rooms">
+                <h2>Rooms</h2>
                 {rooms
-                    ? rooms.map(room =>
-                        <div className="room-item" key={room.id}>
-                            <span>{room.name}</span>
-                            <span>({room.participants.length} members)</span>
-                            <Link className="button" to={`/room/${room.id}`}>Go to room</Link>
-                        </div>)
+                    ? rooms.length > 0 ?
+                        rooms.map(room =>
+                            <div className="room-item" key={room.id}>
+                                <span>{room.name}</span>
+                                <span>({room.participants.length} members)</span>
+                                <Link className="button" to={`/room/${room.id}`}>Go to room</Link>
+                            </div>)
+                        : <>You are not following any rooms.</>
                     : <LoadingSpinner message="Loading rooms" />}
             </div>
             <Column
-                className="column tracks"
                 itemRenderer={{ render: renderTrack }}
                 emptyMessage="You are not following any program tracks."
                 loadingMessage="Loading program tracks"
@@ -346,12 +237,11 @@ export default function WatchedItemsPage() {
                 <h2>Tracks</h2>
             </Column>
             <Column
-                className="column sessions"
                 itemRenderer={{ render: renderSession }}
                 emptyMessage="You are not following any sessions or events."
                 loadingMessage="Loading sessions and events"
                 items={programSessionItems}
-                // TODO: Sort sessions by time: sort={(a, b) => a.renderData.session.startTime.getTime() - b.renderData.session.endTime.getTime()}
+                sort={(a, b) => a.renderData.session.earliestStart.getTime() - b.renderData.session.latestEnd.getTime()}
             >
                 <h2>Sessions and events</h2>
             </Column>

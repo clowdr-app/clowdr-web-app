@@ -1,44 +1,24 @@
 @import "../../../styles/util.scss";
 
 .watched-items {
+    display       : flex;
+    flex-direction: column;
+    height        : 100%;
+
     .info {
-        flex-basis  : 100%;
         width       : 100%;
-        min-width   : 100%;
         justify-self: center;
         align-self  : start;
     }
 
     .columns {
-        display       : flex;
-        flex-direction: row;
-        align-items   : stretch;
-        align-content : stretch;
-        flex-wrap     : wrap;
-        row-gap       : 3ex;
-        column-gap    : 0;
+        height    : auto;
+        column-gap: 2em;
+        row-gap   : 5em;
 
         .column {
-            flex: 1 1 auto;
-
-            // flex-basis: 20%;
-            min-width: min-content;
-            margin   : 0;
-            padding  : 0 0.2em;
-
-            &.messages {
-                flex-basis: 40%;
-                max-height: 70vh;
-                overflow  : auto;
-
-                display       : flex;
-                flex-direction: column-reverse;
-
-                .chat-message {
-                    margin-left : 0;
-                    margin-right: 0;
-                }
-            }
+            flex-basis: calc(33% - 2em);
+            height    : auto;
 
             &.rooms {
                 .room-item {
@@ -57,27 +37,8 @@
                 }
             }
 
-            &.sessions {
-                max-height: 70vh;
-                overflow-y: auto;
-
-                .session {
-                    font-size: 80%;
-                    padding: mm(2);
-
-                    &:hover {
-                        background-color: rgba($color: #000000, $alpha: 0.05);
-                    }
-
-                    h2 {
-                        font-size: 100%;
-                    }
-                }
-            }
-
-            &.tracks {
-                max-height: 70vh;
-                overflow-y: auto;
+            &>h2 {
+                font-size: 130%;
             }
         }
     }

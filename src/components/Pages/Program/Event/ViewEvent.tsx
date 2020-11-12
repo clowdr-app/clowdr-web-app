@@ -218,9 +218,9 @@ export default function ViewEvent(props: Props) {
                     throw e;
                 }
             }
-            // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
-            // eslint-disable-next-line react-hooks/exhaustive-deps
         },
+        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [props.eventId, userProfile.watchedId]
     );
 
@@ -245,9 +245,9 @@ export default function ViewEvent(props: Props) {
                     throw e;
                 }
             }
-            // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
-            // eslint-disable-next-line react-hooks/exhaustive-deps
         },
+        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [props.eventId, userProfile.watchedId]
     );
 

@@ -209,10 +209,9 @@ export default function MessageList(props: Props) {
     }
 
     async function loadMoreMessages() {
-        const { messages, pager } = await getNextPageMessages();
-
+        const { messages: _messages, pager } = await getNextPageMessages();
         setMessagesPager(pager);
-        setMessages(messages);
+        setMessages(_messages);
     }
 
     return (

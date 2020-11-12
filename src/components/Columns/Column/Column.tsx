@@ -52,13 +52,14 @@ export default function Column<RenderData = undefined>(props: Props<RenderData>)
             .sort(props.sort ? props.sort : (a, b) => a.text.localeCompare(b.text));
     }, [props.items, props.sort, searchString]);
 
-    function renderListItem(data: ListChildComponentProps | { index: number }): JSX.Element {
+    function renderListItem(data: ListChildComponentProps | { index: number }, itemHeight?: number): JSX.Element {
         if (items && items.length > data.index) {
+            const style = "style" in data ? data.style : {};
             return (
                 <div
                     key={items[data.index].key}
                     className="column-item"
-                    style={"style" in data ? data.style : undefined}
+                    style={{ ...style, height: itemHeight }}
                 >
                     {props.itemRenderer.render(items[data.index])}
                 </div>
@@ -68,7 +69,7 @@ export default function Column<RenderData = undefined>(props: Props<RenderData>)
     }
 
     return (
-        <div className={`column ${props.className}`}>
+        <div className={`column ${props.className ? props.className : ""}`}>
             {props.children}
             {props.items && props.items.length > 0 && search}
             {props.items ? (
@@ -83,7 +84,7 @@ export default function Column<RenderData = undefined>(props: Props<RenderData>)
                                         itemCount={items.length ?? 0}
                                         itemSize={props.windowWithItemHeight ?? 0}
                                     >
-                                        {renderListItem}
+                                        {(data) => renderListItem(data, props.windowWithItemHeight)}
                                     </List>
                                 )}
                             </AutoSizer>

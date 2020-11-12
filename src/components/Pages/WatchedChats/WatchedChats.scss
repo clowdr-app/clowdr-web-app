@@ -1,0 +1,40 @@
+@import "../../../styles/util.scss";
+
+.watched-chats {
+    display       : flex;
+    flex-direction: column;
+    height        : 100%;
+
+    .info {
+        width       : 100%;
+        min-width   : 100%;
+        justify-self: center;
+        align-self  : start;
+    }
+
+    .messages {
+        width   : 100%;
+        height  : 100%;
+        overflow: hidden;
+
+        display       : flex;
+        flex-direction: column-reverse;
+        position      : relative;
+
+        .messages-inner {
+            width     : 100%;
+            height    : 100%;
+            overflow-x: hidden;
+            overflow-y: auto;
+
+            display       : flex;
+            flex-direction: column-reverse;
+            position      : relative;
+
+            .chat-message {
+                margin-left : 0;
+                margin-right: 0;
+            }
+        }
+    }
+}

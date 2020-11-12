@@ -190,6 +190,7 @@ export default function AllAttendees() {
             items={userProfileItems}
             itemRenderer={{ render: attendeeItemRenderer }}
             loadingMessage="Loading attendees"
+            windowWithItemHeight={50}
         />
     );
 }

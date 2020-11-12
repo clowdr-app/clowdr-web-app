@@ -38,12 +38,23 @@ export default function MainMenuGroup(props: Props) {
             ),
         },
         {
+            key: "watched-chats",
+            element: (
+                <MenuItem
+                    title="Followed chats"
+                    label="Followed chats"
+                    action="/watched/chats"
+                    onClick={props.onItemClicked}
+                />
+            ),
+        },
+        {
             key: "watched-items",
             element: (
                 <MenuItem
                     title="Followed items"
                     label="Followed items"
-                    action="/watched"
+                    action="/watched/items"
                     onClick={props.onItemClicked}
                 />
             ),
