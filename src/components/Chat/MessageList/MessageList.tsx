@@ -59,43 +59,7 @@ export default function MessageList(props: Props) {
                         caller: "setMessages",
                         function: async msg => {
                             const newMessages = [...messages, msg];
-                            chat.setLastReadIndex(props.chatId, msg.index, 0);
-                            setMessages(sortMessages(newMessages));
-                        },
-                    })
-                );
-
-                listeners.set(
-                    "messageUpdated",
-                    await chat.channelEventOn(props.chatId, "messageUpdated", {
-                        componentName: "MessageList",
-                        caller: "setMessages",
-                        function: async msg => {
-                            if (
-                                msg.updateReasons.includes("body") ||
-                                msg.updateReasons.includes("author") ||
-                                msg.updateReasons.includes("attributes")
-                            ) {
-                                const newMessages = messages.map(x => {
-                                    if (x.index === msg.message.index) {
-                                        return msg.message;
-                                    } else {
-                                        return x;
-                                    }
-                                });
-                                setMessages(newMessages);
-                            }
-                        },
-                    })
-                );
-
-                listeners.set(
-                    "messageAdded",
-                    await chat.channelEventOn(props.chatId, "messageAdded", {
-                        componentName: "MessageList",
-                        caller: "setMessages",
-                        function: async msg => {
-                            const newMessages = [...messages, msg];
+                            await chat.setLastReadIndex(props.chatId, msg.index, 0);
                             setMessages(sortMessages(newMessages));
                         },
                     })

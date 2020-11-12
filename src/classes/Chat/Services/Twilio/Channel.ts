@@ -153,17 +153,24 @@ export default class Channel implements IChannel {
         // const channel = await this.upgrade();
         // await channel.removeMember(member.sid);
     }
-    async getMember(memberProfileId: string | null): Promise<Member | "system" | "unknown"> {
+    async getMember(memberProfileIdOrSID: {
+        sid: string | null
+    } | {
+        profileId: string
+    }): Promise<Member | "system" | "unknown"> {
         try {
             const channel = await this.upgrade();
-            if (memberProfileId) {
-                return new Member(await channel.getMemberBySid(memberProfileId));
+            if ("sid" in memberProfileIdOrSID && memberProfileIdOrSID.sid) {
+                return new Member(await channel.getMemberBySid(memberProfileIdOrSID.sid));
+            }
+            else if ("profileId" in memberProfileIdOrSID) {
+                return new Member(await channel.getMemberByIdentity(memberProfileIdOrSID.profileId));
             }
             else {
                 return "system";
             }
         }
-        catch {
+        catch (e) {
             return "unknown";
         }
     }

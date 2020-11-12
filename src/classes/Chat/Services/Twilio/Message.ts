@@ -39,7 +39,7 @@ export default class Message implements IMessage {
     }
     async getMember(): Promise<Member | "system" | "unknown"> {
         try {
-            return this.channel.getMember(this.twilioMessage.memberSid);
+            return this.channel.getMember({ sid: this.twilioMessage.memberSid });
         }
         catch {
             return "unknown";

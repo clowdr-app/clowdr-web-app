@@ -7,7 +7,7 @@ import IChannel from "./IChannel";
 import IChatManager from "./IChatManager";
 import IMessage from "./IMessage";
 import ParseMirrorChatService from "./Services/ParseMirror/ChatService";
-import { ChannelEventArgs, ChannelEventNames } from "./Services/Twilio/Channel";
+import { ChannelEventArgs, ChannelEventNames, MemberUpdatedEventArgs } from "./Services/Twilio/Channel";
 import TwilioChatService, { ServiceEventArgs, ServiceEventNames } from "./Services/Twilio/ChatService";
 import { StaticBaseImpl } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Interface/Base";
 import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
@@ -57,6 +57,10 @@ export type MemberDescriptor<isOnlineT extends Promise<boolean | undefined> | bo
     profileId: string;
     isOnline: isOnlineT;
 };
+
+type ChatEvents
+    = { event: "messageAdded"; f: string | null }
+    | { event: "memberUpdated", f: (arg: MemberUpdatedEventArgs) => Promise<void> };
 
 export default class Chat implements IChatManager {
     private static chat: Chat | null = null;
@@ -125,107 +129,149 @@ export default class Chat implements IChatManager {
         return this.initialisePromise;
     }
 
-    private messageNotificationFunctionsToOff: Map<string, string | null> = new Map();
+    private messageNotificationFunctionsToOff: Map<string, ChatEvents[]> = new Map();
     async setupMessageNotifications() {
         const doEmojify = (val: any) => <>{emojify(val, { output: "unicode" })}</>;
         const renderEmoji = (text: any) => doEmojify(text.value);
 
         const activeChats = await this.listWatchedChatsUnfiltered();
 
-        const listenToChat = (c: ChatDescriptor) => this.channelEventOn(c.id, "messageAdded", {
-            componentName: "ChatsGroup",
-            caller: "addNotification",
-            function: async (msg) => {
-                if (msg.author !== this.profile.id
-                    && !window.location.pathname.includes(`/chat/${c.id}`)
-                    && !window.location.pathname.includes(`/moderation/${c.id}`)
-                    && (!c.isModerationHub || !window.location.pathname.includes("/moderation/hub"))
-                ) {
-                    const isAnnouncement = c.friendlyName === "Announcements";
-                    const title
-                        = isAnnouncement
-                            ? ""
-                            : `**${c.isDM
-                                ? (await UserProfile.get(c.member1.profileId === this.profile.id ? c.member2.profileId : c.member1.profileId, this.conference.id))?.displayName
-                                : c.friendlyName}**\n\n`;
-                    const body = `${title}${msg.body}`;
-                    addNotification(
-                        <ReactMarkdown
-                            linkTarget="_blank"
-                            escapeHtml={true}
-                            renderers={{
-                                text: renderEmoji
-                            }}
-                        >
-                            {body}
-                        </ReactMarkdown>,
-                        isAnnouncement
-                            ? undefined
-                            : c.isModerationHub
-                                ? (msg.attributes?.moderationChat
-                                    ? {
-                                        url: `/moderation/${msg.attributes.moderationChat}`,
-                                        text: "Go to moderation channel"
-                                    }
-                                    : {
-                                        url: `/moderation/hub`,
-                                        text: "Go to moderation hub"
-                                    }
-                                )
-                                : c.isModeration
-                                    ? {
-                                        url: `/moderation/${c.id}`,
-                                        text: "Go to moderation channel"
-                                    }
-                                    : {
-                                        url: `/chat/${c.id}`,
-                                        text: "Go to chat"
-                                    },
-                        3000
-                    );
-
-                    const unreadCount = await c.getUnreadCount();
-                    this.chatUnreadCountChangedEvent.dispatch({
-                        chatId: c.id,
-                        unreadCount
-                    });
-                }
+        const listenToChat = async (c: ChatDescriptor) => {
+            const member = await (await this.twilioService?.getChannel(c.id))?.getMember({ profileId: this.profile.id });
+            let memUpdatedF;
+            if (member && typeof member !== "string") {
+                memUpdatedF = async (arg: MemberUpdatedEventArgs) => {
+                    if (arg.updateReasons.includes("lastConsumedMessageIndex") ||
+                        arg.updateReasons.includes("lastConsumptionTimestamp")) {
+                        setTimeout(async () => {
+                            const unreadCount = await c.getUnreadCount();
+                            this.chatUnreadCountChangedEvent.dispatch({
+                                chatId: c.id,
+                                unreadCount
+                            });
+                        }, 1000);
+                    }
+                };
+                member.onUpdated(memUpdatedF);
             }
-        });
+
+            const msgAddedF = await this.channelEventOn(c.id, "messageAdded", {
+                componentName: "ChatsGroup",
+                caller: "addNotification",
+                function: async (msg) => {
+                    if (msg.author !== this.profile.id
+                        && !window.location.pathname.includes(`/chat/${c.id}`)
+                        && !window.location.pathname.includes(`/moderation/${c.id}`)
+                        && (!c.isModerationHub || !window.location.pathname.includes("/moderation/hub"))
+                    ) {
+                        const isAnnouncement = c.friendlyName === "Announcements";
+                        const title
+                            = isAnnouncement
+                                ? ""
+                                : `**${c.isDM
+                                    ? (await UserProfile.get(c.member1.profileId === this.profile.id ? c.member2.profileId : c.member1.profileId, this.conference.id))?.displayName
+                                    : c.friendlyName}**\n\n`;
+                        const body = `${title}${msg.body}`;
+                        addNotification(
+                            <ReactMarkdown
+                                linkTarget="_blank"
+                                escapeHtml={true}
+                                renderers={{
+                                    text: renderEmoji
+                                }}
+                            >
+                                {body}
+                            </ReactMarkdown>,
+                            isAnnouncement
+                                ? undefined
+                                : c.isModerationHub
+                                    ? (msg.attributes?.moderationChat
+                                        ? {
+                                            url: `/moderation/${msg.attributes.moderationChat}`,
+                                            text: "Go to moderation channel"
+                                        }
+                                        : {
+                                            url: `/moderation/hub`,
+                                            text: "Go to moderation hub"
+                                        }
+                                    )
+                                    : c.isModeration
+                                        ? {
+                                            url: `/moderation/${c.id}`,
+                                            text: "Go to moderation channel"
+                                        }
+                                        : {
+                                            url: `/chat/${c.id}`,
+                                            text: "Go to chat"
+                                        },
+                            3000
+                        );
+
+                        const unreadCount = await c.getUnreadCount();
+                        this.chatUnreadCountChangedEvent.dispatch({
+                            chatId: c.id,
+                            unreadCount
+                        });
+                    }
+                }
+            });
+
+            const results: ChatEvents[] = [
+                { event: "messageAdded", f: msgAddedF }
+            ];
+            if (memUpdatedF) {
+                results.push({
+                    event: "memberUpdated",
+                    f: memUpdatedF
+                });
+            }
+            return results;
+        };
 
         const p = await Promise.all(activeChats.map(async c => [c.id, await listenToChat(c)]));
         this.messageNotificationFunctionsToOff = new Map(p as any);
 
+        // TODO: Deal with the unsubscribe
         (await WatchedItems.onDataUpdated(this.conference.id)).subscribe(async (ev) => {
             const objs = ev.objects as WatchedItems[];
             for (const obj of objs) {
                 const watchedChats = obj.watchedChats;
                 const newlyActive = watchedChats.filter(x => !this.messageNotificationFunctionsToOff.has(x));
                 const previouslyActive = Array.from(this.messageNotificationFunctionsToOff.keys()).filter(x => !watchedChats.includes(x));
-                assert(this.twilioService);
-                for (const chatId of newlyActive) {
-                    const c = await this.getChat(chatId);
-                    if (c) {
-                        this.messageNotificationFunctionsToOff.set(chatId, await listenToChat(c));
+                if (this.twilioService) {
+                    for (const chatId of newlyActive) {
+                        const c = await this.getChat(chatId);
+                        if (c) {
+                            this.messageNotificationFunctionsToOff.set(chatId, await listenToChat(c));
+                        }
                     }
-                }
-                for (const chatId of previouslyActive) {
-                    const listenerId = this.messageNotificationFunctionsToOff.get(chatId);
-                    if (listenerId) {
-                        this.channelEventOff(chatId, "messageAdded", listenerId);
+                    for (const chatId of previouslyActive) {
+                        this.teardownMessageNotificationsForChat(chatId);
                     }
                 }
             }
         });
     }
 
-    async teardownMessageNotifications() {
-        await Promise.all(Array.from(this.messageNotificationFunctionsToOff.keys()).map(async (key) => {
-            const f = this.messageNotificationFunctionsToOff.get(key);
-            if (f) {
-                await this.channelEventOff(key, "messageAdded", f);
+    async teardownMessageNotificationsForChat(chatId: string) {
+        const fs = this.messageNotificationFunctionsToOff.get(chatId) ?? [];
+        for (const f of fs) {
+            if (f.event === "messageAdded") {
+                if (f.f) {
+                    await this.channelEventOff(chatId, f.event as ChannelEventNames, f.f);
+                }
             }
-        }));
+            else if (f.event === "memberUpdated") {
+                const member = await (await this.twilioService?.getChannel(chatId))?.getMember({ profileId: this.profile.id });
+                if (member && typeof member !== "string") {
+                    member.offUpdated(f.f);
+                }
+            }
+        }
+    }
+
+    async teardownMessageNotifications() {
+        await Promise.all(Array.from(this.messageNotificationFunctionsToOff.keys()).map(async (key) => this.teardownMessageNotificationsForChat(key)));
     }
 
     private async teardown(): Promise<void> {
