@@ -8,6 +8,7 @@ import useVideoTrackDimensions from '../../hooks/useVideoTrackDimensions/useVide
 const Video = styled('video')({
     maxWidth: "100%",
     maxHeight: "100%",
+    width: "100%",
     objectFit: "contain"
 });
 
