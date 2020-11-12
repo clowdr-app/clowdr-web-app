@@ -11,10 +11,12 @@ import useSafeAsync from "../../../../hooks/useSafeAsync";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import ReactPlayer from "react-player";
 import "./AttachmentLink.scss";
+import { Tooltip } from "@material-ui/core";
 
 interface Props {
     attachment: ProgramItemAttachment;
     showVideo?: boolean;
+    onClick?: () => void;
 }
 
 export default function AttachmentLink(props: Props) {
@@ -66,7 +68,28 @@ export default function AttachmentLink(props: Props) {
         if (!displayAsLink) {
             if (attachmentType.fileTypes.includes("image/png") || attachmentType.fileTypes.includes("image/jpeg")) {
                 // Display as an image
-                return <img className="attachment-link__image" src={url} alt={attachmentType.name} />;
+                const imgEl = <img
+                    className="attachment-link__image"
+                    src={url}
+                    alt={attachmentType.name}
+                    style={{
+                        cursor: props.onClick ? "pointer" : undefined
+                    }}
+                    onClick={(ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        props.onClick?.();
+                    }}
+                    title={props.onClick ? "Click to reveal" : undefined}
+                />;
+                if (props.onClick) {
+                    return <Tooltip title="Click to reveal">
+                        {imgEl}
+                    </Tooltip>;
+                }
+                else {
+                    return imgEl;
+                }
             } else if (attachmentType.fileTypes.includes("video")) {
                 // Display as an embedded video
                 return showVideo ? (

@@ -18,6 +18,8 @@ export default function ExhibitAttachment(props: Props) {
     const conference = useConference();
     const [attachmentTypes, setAttachmentTypes] = useState<AttachmentType[] | undefined>();
     const [bestAttachment, setBestAttachment] = useState<ProgramItemAttachment | undefined>();
+    const [altAttachment, setAltAttachment] = useState<ProgramItemAttachment | undefined>();
+    const [showAlt, setShowAlt] = useState<boolean>(false);
 
     useSafeAsync(
         async () => await AttachmentType.getAll(conference.id),
@@ -80,40 +82,67 @@ export default function ExhibitAttachment(props: Props) {
         const posterAttachments = props.attachments.filter(attachment =>
             posterTypeIds?.includes(attachment.attachmentTypeId)
         );
+        let bestFound = false;
+        const setAttachment = (a: ProgramItemAttachment | undefined) => {
+            if (!bestFound) {
+                bestFound = true;
+                setBestAttachment(a);
+                return false;
+            }
+            else {
+                setAltAttachment(a);
+                return true;
+            }
+        };
         if (posterAttachments.length > 0) {
-            setBestAttachment(posterAttachments[0]);
-            return;
+            if (setAttachment(posterAttachments[0])) {
+                return;
+            }
         }
 
         const videoAttachments = props.attachments.filter(attachment =>
             videoTypeIds?.includes(attachment.attachmentTypeId)
         );
         if (videoAttachments.length > 0) {
-            setBestAttachment(videoAttachments[0]);
-            return;
+            if (setAttachment(videoAttachments[0])) {
+                return;
+            }
         }
 
         const paperAttachments = props.attachments.filter(attachment =>
             paperTypeIds?.includes(attachment.attachmentTypeId)
         );
         if (paperAttachments.length > 0) {
-            setBestAttachment(paperAttachments[0]);
-            return;
+            if (setAttachment(paperAttachments[0])) {
+                return;
+            }
         }
 
-        setBestAttachment(undefined);
+        setAttachment(undefined);
     }, [attachmentTypes, props.attachments]);
 
     return (
         <>
             {" "}
-            {bestAttachment ? (
-                <div className="exhibit-attachment">
-                    <AttachmentLink key={bestAttachment.id} attachment={bestAttachment} />
-                </div>
-            ) : (
-                <></>
-            )}
+            {showAlt && altAttachment
+                ? (
+                    <div className="exhibit-attachment">
+                        <AttachmentLink key={altAttachment.id} attachment={altAttachment} showVideo={true} />
+                    </div>
+                ) : bestAttachment
+                    ? (
+                        <div className="exhibit-attachment">
+                            <AttachmentLink
+                                key={bestAttachment.id}
+                                attachment={bestAttachment}
+                                onClick={altAttachment ? () => {
+                                    setShowAlt(true);
+                                } : undefined}
+                            />
+                        </div>
+                    ) : (
+                        <></>
+                    )}
         </>
     );
 }

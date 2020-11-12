@@ -41,5 +41,5 @@ export default function ExhibitAuthorsList(props: ExhibitAuthorsListProps) {
 
     useDataSubscription("ProgramPerson", onAuthorUpdated, onAuthorDeleted, !authors, conference);
 
-    return <AuthorsList authors={authors} idOrdering={item.authors} />;
+    return <AuthorsList authors={authors} idOrdering={item.authors} hideAffiliations={true} />;
 }

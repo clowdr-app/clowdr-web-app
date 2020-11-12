@@ -6,6 +6,7 @@ import "./AuthorsList.scss";
 interface Props {
     authors: Array<ProgramPerson> | null;
     idOrdering: Array<string>;
+    hideAffiliations?: boolean;
 }
 
 export default function AuthorsList(props: Props) {
@@ -20,7 +21,7 @@ export default function AuthorsList(props: Props) {
             .map(author => {
                 return (
                     <Link key={author.id} to={`/author/${author.id}`} onClick={ev => ev.stopPropagation()}>
-                        {author.name} {author.affiliation ? `(${author.affiliation})` : ""}
+                        {author.name} {!props.hideAffiliations && author.affiliation ? `(${author.affiliation})` : ""}
                     </Link>
                 );
             });

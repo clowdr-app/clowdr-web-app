@@ -22,6 +22,14 @@
         }
     }
 
+    .exhibit__abstract {
+        display           : -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 10;
+        overflow          : hidden;
+        text-overflow     : ellipsis;
+    }
+
     .view-item {
         margin-top: auto;
         text-align: right;
