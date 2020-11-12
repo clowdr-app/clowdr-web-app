@@ -1,12 +1,17 @@
 .admin-program-editor {
     height: 100%;
 
+    h2 {
+        font-size: 180%;
+        margin-top: 1em;
+    }
+
     .react-tabs {
         height               : 100%;
         width                : 100%;
         overflow             : hidden;
         display              : grid;
-        grid-template-rows   : min-content 1fr;
+        grid-template-rows   : 50px 93%;
         grid-template-columns: 1fr;
         grid-template-areas  :
             "tabs"
@@ -33,8 +38,7 @@
             column-gap: 1em;
 
             width : 100%;
-            // height: calc(100vh - 140px);
-            height: calc(100vh - 280px);
+            height: 100%;
 
             &:empty {
                 display: none;
@@ -44,7 +48,7 @@
                 grid-area     : tab;
                 width         : 100%;
                 height        : 100%;
-                // overflow      : auto;
+                overflow      : auto;
                 // display       : flex;
                 // flex-direction: column;
             }

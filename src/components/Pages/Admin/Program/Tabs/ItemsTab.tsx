@@ -10,6 +10,8 @@ import Toggle from "react-toggle";
 import assert from "assert";
 import { removeUndefined } from "@clowdr-app/clowdr-db-schema/build/Util";
 import { v4 as uuidv4 } from "uuid";
+import { CSVReader } from "react-papaparse";
+import { generateTrackId } from "./TracksTab";
 
 const Editor = (props: EditorProps<ItemSpec | undefined, {
     title: string;
@@ -351,7 +353,159 @@ export default function ItemsTab(props: Props) {
     return (
         <>
             <p>TODO: Instructions</p>
-            <p>TODO: CSV/JSON/XML import</p>
+            <div className="import">
+                <label><h2>Import CSV</h2></label><br />
+                <p>Import new items.</p>
+                <p>The first line of your data should contain column names (/headings). Author's names should be separated by semi-colons and formatted as "First Last (Affiliation)".</p>
+                <CSVReader
+                    onFileLoad={(data) => {
+                        console.log("Parsed item data (not processed yet)", data);
+                        if (data.length === 0) {
+                            return;
+                        }
+
+                        let titleColumnIdx = -1;
+                        let trackColumnIdx = -1;
+                        let exhibitColumnIdx = -1;
+                        let videoChatColumnIdx = -1;
+                        let abstractColumnIdx = -1;
+                        let authorsColumnIdx = -1;
+
+                        const item0 = data[0];
+                        if (item0.errors.length) {
+                            addError("Headings row contains errors.");
+                            return;
+                        }
+
+                        for (let colIdx = 0; colIdx < item0.data.length; colIdx++) {
+                            const col = item0.data[colIdx].trim().toLowerCase();
+                            switch (col) {
+                                case "title":
+                                    titleColumnIdx = colIdx;
+                                    break;
+                                case "track":
+                                    trackColumnIdx = colIdx;
+                                    break;
+                                case "exhibit":
+                                    exhibitColumnIdx = colIdx;
+                                    break;
+                                case "videoChat":
+                                    videoChatColumnIdx = colIdx;
+                                    break;
+                                case "abstract":
+                                    abstractColumnIdx = colIdx;
+                                    break;
+                                case "authors":
+                                    authorsColumnIdx = colIdx;
+                                    break;
+                                default:
+                                    addError(`Column name not recognised ${col}`);
+                                    return;
+                            }
+                        }
+
+                        if (titleColumnIdx === -1) {
+                            addError("Title column not found!");
+                            return;
+                        }
+
+                        if (trackColumnIdx === -1) {
+                            addError("Track column not found!");
+                            return;
+                        }
+
+                        if (abstractColumnIdx === -1) {
+                            addError("Abstract column not found!");
+                            return;
+                        }
+
+                        const rows = data.slice(1);
+                        for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
+                            const row = rows[rowIdx];
+                            if (row.errors.length) {
+                                addError(`Row contains errors - please fix row ${rowIdx} then try again.`);
+                                return;
+                            }
+                        }
+
+                        const newItems: { [K: string]: ItemSpec } = {};
+                        for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
+                            const row = rows[rowIdx];
+                            const cols = row.data as string[];
+                            const title = cols[titleColumnIdx]?.trim();
+                            const track = cols[trackColumnIdx]?.trim();
+                            const abstract = cols[abstractColumnIdx]?.trim();
+
+                            const exhibit = exhibitColumnIdx !== -1 ? cols[exhibitColumnIdx] === "true" ?? false : false;
+                            let videoChat = videoChatColumnIdx !== -1 ? cols[videoChatColumnIdx] ?? "video-chat" : "video-chat";
+                            const authorsStr = authorsColumnIdx !== -1 ? cols[authorsColumnIdx] ?? "" : "";
+                            const authorStrs = authorsStr.split(";");
+                            const authors = removeUndefined(authorStrs.map(authorStr => {
+                                authorStr = authorStr.trim();
+                                if (authorStr !== "") {
+                                    const authorParts = authorStr.split("(");
+                                    assert(authorParts.length === 2);
+                                    const authorName = authorParts[0].trim();
+                                    const _aff = authorParts[1].trim();
+                                    const authorAffiliation = _aff.substr(0, _aff.length - 1);
+                                    return propsAddAuthor(authorName, authorAffiliation);
+                                }
+                                return undefined;
+                            }));
+
+                            if ((title === "" || !title) &&
+                                (track === "" || !track) &&
+                                (abstract === "" || !abstract)) {
+                                continue;
+                            }
+                            else if (title === "" || track === "" || abstract === "" ||
+                                    !title || !track || !abstract) {
+                                addError(`Title, track and abstract cannot be blank in row ${rowIdx}`);
+                                return;
+                            }
+
+                            if (!videoChat || videoChat === "") {
+                                videoChat = "none";
+                            }
+
+                            if (videoChat !== "none" &&
+                                videoChat !== "chat" &&
+                                videoChat !== "video-chat") {
+                                addError(`Video chat column must be either none, chat or video-chat in row ${rowIdx}`);
+                                return;
+                            }
+
+                            let trackId = generateTrackId({
+                                name: track,
+                                colour: ""
+                            });
+                            if (!propsData.tracks[trackId]) {
+                                trackId = propsCreateTrack(track);
+                            }
+
+                            const newSpec: ItemSpec = {
+                                id: uuidv4(),
+                                abstract,
+                                title,
+                                track: trackId,
+                                exhibit,
+                                feed: videoChat,
+                                authors
+                            };
+                            propsAddItem(newSpec);
+                            newItems[newSpec.id] = newSpec;
+                        }
+
+                        console.log("Processed item data", newItems);
+                    }}
+                    onError={(err, file, inputElem, reason) => {
+                        addError(err);
+                    }}
+                >
+                    Select a file to import
+                </CSVReader>
+            </div>
+            <h2>Edit Items</h2>
             <p>Note: Double click to select a single item. Use checkboxes to select multiple.</p>
             <p className="highlighting-controls">
                 <button

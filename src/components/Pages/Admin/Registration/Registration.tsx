@@ -214,7 +214,7 @@ export default function AdminRegistration() {
                 <p>The first line of your data should contain column names (/headings).</p>
                 <CSVReader
                     onFileLoad={(data) => {
-                        console.log("Parsed registration data", data);
+                        console.log("Parsed registration data (not processed yet)", data);
                         if (data.length === 0) {
                             return;
                         }
@@ -317,6 +317,7 @@ export default function AdminRegistration() {
                             addNotification(`Ignoring ${duplicateEmails.size} duplicate emails.`, undefined, 60000);
                         }
 
+                        console.log("Processed registration data", newRegs);
                         setRegs(oldRegs => ({
                             ...newRegs, ...oldRegs
                         }));

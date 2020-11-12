@@ -52,7 +52,7 @@ function InnerProgramEditor(props: {
             }
             else {
                 try {
-                    const result = parseInt(progressStr, 10);
+                    const result = parseFloat(progressStr);
                     if (result === 100) {
                         addNotification("Upload completed.");
                         return false;
@@ -825,7 +825,7 @@ export default function ProgramEditor() {
 
     return (
         !defaultProgramSpec
-            ? <LoadingSpinner message="Loading program..." />
+            ? <LoadingSpinner message="Loading program" />
             : <InnerProgramEditor defaultProgramSpec={defaultProgramSpec} />
     );
 }
