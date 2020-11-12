@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import useLogger from "../../../hooks/useLogger";
 import useMaybeChat from "../../../hooks/useMaybeChat";
 import useSafeAsync from "../../../hooks/useSafeAsync";
@@ -95,8 +95,9 @@ export default function ChatFrame(props: Props) {
     //       all without changing the page url, then you might get an Access Forbidden error from
     //       Twilio because the chat will try to load before User B has joined it.
 
+    const messagesEl = useMemo(() => <MessageList chatId={props.chatId} hideMessageReportButtons={props.hideMessageReportButtons} />, [props.chatId, props.hideMessageReportButtons]);
     const chatEl = <div className="chat-frame">
-        <MessageList chatId={props.chatId} hideMessageReportButtons={props.hideMessageReportButtons} />
+        {messagesEl}
         {!tc?.isAnnouncements || isAdmin
             ? <div className="compose-message">
                 <textarea
