@@ -93,8 +93,8 @@ export default function ViewContentFeed(props: Props) {
                 <div className="zoom">
                     <h3>Connect to Zoom</h3>
                     <p>
-                        This content is available from Zoom. You may choose to join directly in your browser (only
-                        compatible with Chrome and Edge), or install the Zoom application if you haven't already and
+                        Q&amp;A is available within Zoom. You may choose to join directly in your browser (only
+                        compatible with Chrome and Edge), or install the Zoom application (if you haven't already) and
                         join in the app. We suggest joining through the Zoom app if possible.
                     </p>
                     <a
@@ -111,11 +111,9 @@ export default function ViewContentFeed(props: Props) {
                             <IframeResizer
                                 className="zoom-frame"
                                 title="zoom-frame"
-                                src={`/zoom.html?signature=${zoomDetails.signature}&meetingNumber=${
-                                    zoomRoomToMeetingDetails()?.meetingNumber
-                                }&password=${zoomRoomToMeetingDetails()?.password}&apiKey=${
-                                    zoomDetails.apiKey
-                                }&userName=${user.displayName}`}
+                                src={`/zoom.html?signature=${zoomDetails.signature}&meetingNumber=${zoomRoomToMeetingDetails()?.meetingNumber
+                                    }&password=${zoomRoomToMeetingDetails()?.password}&apiKey=${zoomDetails.apiKey
+                                    }&userName=${user.displayName}`}
                                 allowFullScreen={true}
                                 frameBorder="0"
                                 onLoad={event => {
@@ -126,9 +124,7 @@ export default function ViewContentFeed(props: Props) {
                                 allow="microphone; camera"
                             />
                         </div>
-                    ) : (
-                        <></>
-                    ) /*<button className="zoom-frame-button" onClick={() => setJoinZoom(true)}>Join Zoom in browser</button>*/}
+                    ) : <button className="zoom-frame-button" onClick={() => setJoinZoom(true)}>Join Zoom in browser</button>}
                 </div>
             ) : (
                 <></>
@@ -148,7 +144,10 @@ export default function ViewContentFeed(props: Props) {
                 <></>
             )}
             {!props.hideZoomOrVideo && videoRoom && videoRoom !== "not present" ? (
-                <VideoGrid room={videoRoom} sponsorView={false} />
+                <>
+                    <p>Join the discussion by entering this breakout room.</p>
+                    <VideoGrid room={videoRoom} sponsorView={false} />
+                </>
             ) : (
                 <></>
             )}
