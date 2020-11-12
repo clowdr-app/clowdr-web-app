@@ -22,12 +22,12 @@
         }
 
         @media only screen and (min-width: $break-md) {
-            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            grid-template-columns: minmax(0, 1fr);
             margin               : 2.5%;
         }
 
         @media only screen and (min-width: $break-lg) {
-            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         }
 
         @media only screen and (max-width: $break-md) {
