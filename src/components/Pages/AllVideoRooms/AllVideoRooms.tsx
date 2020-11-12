@@ -1,8 +1,9 @@
-import { ContentFeed, Sponsor, UserProfile, VideoRoom } from "@clowdr-app/clowdr-db-schema";
+import { ContentFeed, ProgramItem, Sponsor, UserProfile, VideoRoom } from "@clowdr-app/clowdr-db-schema";
 import {
     DataDeletedEventDetails,
     DataUpdatedEventDetails,
 } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
+import { StaticBaseImpl } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Interface/Base";
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import useConference from "../../../hooks/useConference";
@@ -16,8 +17,8 @@ import "./AllVideoRooms.scss";
 type RoomData = {
     room: VideoRoom;
     participants: Array<UserProfile>;
-    contentFeeds: Array<ContentFeed>;
     sponsors: Array<Sponsor>;
+    items: ProgramItem[];
 };
 
 export default function AllVideoRooms() {
@@ -69,8 +70,9 @@ export default function AllVideoRooms() {
                       videoRooms.map(async room => {
                           const participants = await room.participantProfiles;
                           const relatedContentFeeds = await ContentFeed.getAllByVideoRoom(room.id, conference.id);
+                          const relatedItems = (await Promise.all<ProgramItem[]>(relatedContentFeeds.flatMap(feed => StaticBaseImpl.getAllByField("ProgramItem", "feed", feed.id, conference.id)))).flat(1);
                           const relatedSponsors = await Sponsor.getAllByVideoRoom(room.id, conference.id);
-                          return { room, participants, contentFeeds: relatedContentFeeds, sponsors: relatedSponsors };
+                          return { room, participants, sponsors: relatedSponsors, items: relatedItems };
                       })
                   )
                 : null;
@@ -82,7 +84,7 @@ export default function AllVideoRooms() {
 
     useEffect(() => {
         const items = rooms
-            ?.filter(room => room.contentFeeds.length === 0)
+            ?.filter(room => room.items.length === 0)
             ?.filter(room => room.sponsors.length === 0)
             ?.sort(sortRooms)
             ?.map(room => {
@@ -98,7 +100,7 @@ export default function AllVideoRooms() {
 
     useEffect(() => {
         const items = rooms
-            ?.filter(room => room.contentFeeds.length > 0)
+            ?.filter(room => room.items.length > 0)
             ?.filter(room => room.sponsors.length === 0)
             ?.sort(sortRooms)
             ?.map(room => {
@@ -130,23 +132,45 @@ export default function AllVideoRooms() {
 
     function roomRenderer(item: ColumnItem<RoomData>): JSX.Element {
         const data = item.renderData;
-        return (
-            <>
-                <Link to={`/room/${data.room.id}`} className="room-item" title={data.room.name}>
-                    <i className="fas fa-video room-item__icon"></i>
-                    <div className="room-item__name">{data.room.name}</div>
-                    {data.participants.length > 0 ? (
-                        <ul className="room-item__participants">
-                            {data.participants.map(participant => (
-                                <li key={participant.id}>{participant.displayName}</li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <></>
-                    )}
-                </Link>
-            </>
-        );
+        // TODO: How do we handle multiple items pointing at the same room
+        if (data.items.length === 1) {
+            return (
+                <>
+                    <Link to={`/item/${data.items[0].id}`} className="room-item" title={data.items[0].title}>
+                        <i className="fas fa-video room-item__icon"></i>
+                        <div className="room-item__name">{data.items[0].title}</div>
+                        {data.participants.length > 0 ? (
+                            <ul className="room-item__participants">
+                                {data.participants.map(participant => (
+                                    <li key={participant.id}>{participant.displayName}</li>
+                                ))}
+                            </ul>
+                        ) : (
+                                <></>
+                            )}
+                    </Link>
+                </>
+            );
+        }
+        else {
+            return (
+                <>
+                    <Link to={`/room/${data.room.id}`} className="room-item" title={data.room.name}>
+                        <i className="fas fa-video room-item__icon"></i>
+                        <div className="room-item__name">{data.room.name}</div>
+                        {data.participants.length > 0 ? (
+                            <ul className="room-item__participants">
+                                {data.participants.map(participant => (
+                                    <li key={participant.id}>{participant.displayName}</li>
+                                ))}
+                            </ul>
+                        ) : (
+                                <></>
+                            )}
+                    </Link>
+                </>
+            );
+        }
     }
 
     return (
