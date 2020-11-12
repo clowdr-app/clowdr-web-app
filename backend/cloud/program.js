@@ -582,7 +582,8 @@ async function createProgramItem(data) {
     if (data.originatingID) {
         existing = await new Parse.Query("ProgramItem")
             .equalTo("conference", data.conference)
-            .get(data.originatingID, { useMasterKey: true });
+            .equalTo("id", data.originatingID)
+            .first({ useMasterKey: true });
         if (!existing) {
             existing = await new Parse.Query("ProgramItem")
                 .equalTo("conference", data.conference)
@@ -814,7 +815,8 @@ async function createProgramSession(data) {
     if (data.originatingID) {
         existing = await new Parse.Query("ProgramSession")
             .equalTo("conference", data.conference)
-            .get(data.originatingID, { useMasterKey: true });
+            .equalTo("id", data.originatingID)
+            .first({ useMasterKey: true });
         if (!existing) {
             existing = await new Parse.Query("ProgramSession")
                 .equalTo("conference", data.conference)
@@ -918,7 +920,8 @@ async function createProgramSessionEvent(data) {
     if (data.originatingID) {
         existing = await new Parse.Query("ProgramSessionEvent")
             .equalTo("conference", data.conference)
-            .get(data.originatingID, { useMasterKey: true });
+            .equalTo("id", data.originatingID)
+            .first({ useMasterKey: true });
         if (!existing) {
             existing = await new Parse.Query("ProgramSessionEvent")
                 .equalTo("conference", data.conference)
