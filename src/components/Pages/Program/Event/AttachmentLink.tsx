@@ -12,6 +12,7 @@ import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import ReactPlayer from "react-player";
 import "./AttachmentLink.scss";
 import { Tooltip } from "@material-ui/core";
+import { Link } from "react-router-dom";
 
 interface Props {
     attachment: ProgramItemAttachment;
@@ -75,11 +76,11 @@ export default function AttachmentLink(props: Props) {
                     style={{
                         cursor: props.onClick ? "pointer" : undefined
                     }}
-                    onClick={(ev) => {
+                    onClick={props.onClick ? (ev) => {
                         ev.preventDefault();
                         ev.stopPropagation();
                         props.onClick?.();
-                    }}
+                    } : undefined}
                     title={props.onClick ? "Click to reveal" : undefined}
                 />;
                 if (props.onClick) {
@@ -88,7 +89,13 @@ export default function AttachmentLink(props: Props) {
                     </Tooltip>;
                 }
                 else {
-                    return imgEl;
+                    return (
+                        <Tooltip title="Click to view in more detail">
+                            <Link to={url ?? ""} title="View image" target="_blank">
+                                {imgEl}
+                            </Link>
+                        </Tooltip>
+                    );
                 }
             } else if (attachmentType.fileTypes.includes("video")) {
                 // Display as an embedded video
@@ -104,14 +111,14 @@ export default function AttachmentLink(props: Props) {
                         url={url}
                     />
                 ) : (
-                    <button
-                        onClick={() => {
-                            setShowVideo(true);
-                        }}
-                    >
-                        Reveal Video
-                    </button>
-                );
+                        <button
+                            onClick={() => {
+                                setShowVideo(true);
+                            }}
+                        >
+                            Reveal Video
+                        </button>
+                    );
             } else {
                 displayAsLink = true;
             }
