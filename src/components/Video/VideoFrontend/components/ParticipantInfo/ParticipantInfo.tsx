@@ -16,7 +16,6 @@ import useTrack from "../../hooks/useTrack/useTrack";
 import useParticipantIsReconnecting from "../../hooks/useParticipantIsReconnecting/useParticipantIsReconnecting";
 import { UserProfile } from "@clowdr-app/clowdr-db-schema";
 import BioPopover from "../../../../Profile/BioPopover/BioPopover";
-import { Link } from "react-router-dom";
 
 const BORDER_SIZE = 3;
 
@@ -183,30 +182,6 @@ export default function ParticipantInfo({
     const isParticipantReconnecting = useParticipantIsReconnecting(participant);
 
     const classes = useStyles();
-
-    const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
-
-    const handlePopoverOpen = useCallback((event: React.MouseEvent<HTMLElement, MouseEvent>) => {
-        setAnchorEl(event.currentTarget);
-    }, []);
-
-    const handlePopoverClose = useCallback(() => {
-        setAnchorEl(null);
-    }, []);
-
-    const bioPopoverOpen = Boolean(anchorEl);
-
-    const profilePopoverEl = useMemo(() => {
-        return profile ? (
-            <BioPopover
-                id={`${profile.id}-mouse-over-popover`}
-                profile={profile}
-                open={bioPopoverOpen}
-                anchorEl={anchorEl}
-                onClose={handlePopoverClose}
-            />
-        ) : <></>;
-    }, [anchorEl, bioPopoverOpen, handlePopoverClose, profile]);
 
     const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
 

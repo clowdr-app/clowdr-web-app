@@ -1,6 +1,7 @@
 import { Flair, UserProfile } from "@clowdr-app/clowdr-db-schema";
 import { Popover } from "@material-ui/core";
 import React, { useState } from "react";
+import { ReactMarkdownCustomised } from "../../../classes/Utils";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import FlairChip from "../FlairChip/FlairChip";
 import "./BioPopover.scss";
@@ -37,10 +38,10 @@ export default function BioPopover(props: Props) {
         >
             <div className="bio-popover">
                 <div className="bio-pronouns">
-                    {props.profile.pronouns.length > 0 ? <>({props.profile.pronouns.reduce((acc, s) => `${acc} / ${s}`, "").substr(3)})</> : <></>}
+                    {props.profile.pronouns.length > 0 ? <>({props.profile.pronouns.reduce((acc, s) => `${acc}/${s}`, "").substr(1)})</> : <></>}
                 </div>
                 <div className="bio-affiliation">{props.profile.affiliation}</div>
-                <div className="bio-bio">{props.profile.bio}</div>
+                <div className="bio-bio"><ReactMarkdownCustomised>{props.profile.bio}</ReactMarkdownCustomised></div>
                 <div className="bio-flairs">{flairs.map(flair => <FlairChip flair={flair} key={flair.id} />)}</div>
             </div>
         </Popover>
