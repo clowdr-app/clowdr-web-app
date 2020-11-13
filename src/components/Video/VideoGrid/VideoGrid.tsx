@@ -25,6 +25,7 @@ import useLocalVideoToggle from "../VideoFrontend/hooks/useLocalVideoToggle/useL
 import { Prompt } from "react-router-dom";
 import "./VideoGrid.scss";
 import MediaErrorSnackbar from "../VideoFrontend/components/PreJoinScreens/MediaErrorSnackbar/MediaErrorSnackbar";
+import usePresenting from "../VideoFrontend/components/VideoProvider/usePresenting/usePresenting";
 
 const Container = styled("div")({
     display: "grid",
@@ -42,8 +43,10 @@ const Main = styled("main")(({ theme: _theme }: { theme: Theme }) => ({
 
 interface Props {
     room: VideoRoom;
-    sponsorView: boolean;
-    highlightedProfiles?: { profiles: string[]; hexColour: string };
+    highlightedProfiles?: string[];
+    hexColour?: string;
+    preferredMode: "sidebar" | "fullwidth";
+    onPresentingChanged?(presenting: boolean): void;
 }
 
 function VideoGrid(props: Props) {
@@ -56,6 +59,7 @@ function VideoGrid(props: Props) {
     const unloadRef = useRef<EventListener>();
     const existingRoomRef = useRef<TwilioRoom | undefined>();
     const [mediaError, setMediaError] = useState<Error>();
+    const presenting = usePresenting();
 
     useEffect(() => {
         function stop() {
@@ -112,6 +116,13 @@ function VideoGrid(props: Props) {
         existingRoomRef.current = room;
     }, [room.sid, room, props.room.id, props.room]);
 
+    useEffect(() => {
+        const isPresenting = presenting === "presenting";
+        if (props.onPresentingChanged) {
+            props.onPresentingChanged(isPresenting);
+        }
+    }, [presenting, props]);
+
     return (
         <>
             <Prompt when={roomState !== "disconnected"} message="Are you sure you want to leave the video room?" />
@@ -122,7 +133,7 @@ function VideoGrid(props: Props) {
                     <Main style={{ paddingBottom: "90px" }}>
                         <ReconnectingNotification />
                         <MobileTopMenuBar />
-                        <Room sponsorView={props.sponsorView} highlightedProfiles={props.highlightedProfiles} />
+                        <Room />
                         <MenuBar setMediaError={setMediaError} />
                     </Main>
                 )}
@@ -148,8 +159,8 @@ function VideoGridVideoWrapper(props: Props) {
 
 export default function VideoGridStateWrapper(props: Props) {
     return (
-        <MuiThemeProvider theme={theme}>
-            <AppStateProvider>
+        <MuiThemeProvider theme={theme(props.hexColour ?? "rgb(185, 37, 0)")}>
+            <AppStateProvider preferredMode={props.preferredMode} highlightedProfiles={props.highlightedProfiles ?? []}>
                 <VideoGridVideoWrapper {...props} />
             </AppStateProvider>
         </MuiThemeProvider>

@@ -1,18 +1,20 @@
-import React, { createContext, useContext, useReducer, useState } from 'react';
-import { RoomType } from '../types';
-import { TwilioError } from 'twilio-video';
-import { settingsReducer, initialSettings, Settings, SettingsAction } from './settings/settingsReducer';
-import useMaybeVideo from '../../../../hooks/useMaybeVideo';
-import { VideoRoom } from '@clowdr-app/clowdr-db-schema';
-import assert from 'assert';
+import React, { createContext, useContext, useReducer, useState } from "react";
+import { RoomType } from "../types";
+import { TwilioError } from "twilio-video";
+import { settingsReducer, initialSettings, Settings, SettingsAction } from "./settings/settingsReducer";
+import { VideoRoom } from "@clowdr-app/clowdr-db-schema";
+import assert from "assert";
+import useMaybeVideo from "../../../../hooks/useMaybeVideo";
 
 export interface StateContextType {
     error: TwilioError | null;
     setError(error: TwilioError | null): void;
-    getToken(room: VideoRoom): Promise<{
-        token: string | null,
-        expiry: Date | null,
-        twilioRoomId: string | null
+    getToken(
+        room: VideoRoom
+    ): Promise<{
+        token: string | null;
+        expiry: Date | null;
+        twilioRoomId: string | null;
     }>;
     isAuthReady?: boolean;
     isFetching: boolean;
@@ -21,6 +23,9 @@ export interface StateContextType {
     settings: Settings;
     dispatchSetting: React.Dispatch<SettingsAction>;
     roomType?: RoomType;
+    toggleWidth(): void;
+    preferredMode: "sidebar" | "fullwidth";
+    highlightedProfiles: string[];
 }
 
 export const StateContext = createContext<StateContextType>(null!);
@@ -34,10 +39,16 @@ export const StateContext = createContext<StateContextType>(null!);
   included in the bundle that is produced (due to tree-shaking). Thus, in this instance, it
   is ok to call hooks inside if() statements.
 */
-export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
+export default function AppStateProvider(
+    props: React.PropsWithChildren<{
+        toggleWidth?: StateContextType["toggleWidth"];
+        preferredMode: StateContextType["preferredMode"];
+        highlightedProfiles: StateContextType["highlightedProfiles"];
+    }>
+) {
     const [error, setError] = useState<TwilioError | null>(null);
     const [isFetching, setIsFetching] = useState(false);
-    const [activeSinkId, setActiveSinkId] = useState('default');
+    const [activeSinkId, setActiveSinkId] = useState("default");
     const [settings, dispatchSetting] = useReducer(settingsReducer, initialSettings);
 
     let contextValue = {
@@ -48,18 +59,21 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
         setActiveSinkId,
         settings,
         dispatchSetting,
+        toggleWidth: props.toggleWidth ?? (() => {}),
+        preferredMode: props.preferredMode,
+        highlightedProfiles: props.highlightedProfiles,
     } as StateContextType;
 
     const mVideo = useMaybeVideo();
     contextValue = {
         ...contextValue,
-        getToken: async (room) => {
+        getToken: async room => {
             assert(mVideo);
             return await mVideo.fetchFreshToken(room);
         },
     };
 
-    const getToken: StateContextType['getToken'] = (room) => {
+    const getToken: StateContextType["getToken"] = room => {
         setIsFetching(true);
         return contextValue
             .getToken(room)
@@ -80,7 +94,7 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
 export function useAppState() {
     const context = useContext(StateContext);
     if (!context) {
-        throw new Error('useAppState must be used within the AppStateProvider');
+        throw new Error("useAppState must be used within the AppStateProvider");
     }
     return context;
 }

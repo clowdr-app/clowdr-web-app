@@ -90,6 +90,13 @@
         }
     }
 
+    &.presenting {
+        .sponsor__content {
+            display: none;
+            width  : 0%;
+        }
+    }
+
     &__video-room {
         height     : 100%;
         min-width  : 20em;

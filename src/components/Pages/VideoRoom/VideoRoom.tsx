@@ -380,7 +380,7 @@ export default function ViewVideoRoom(props: Props) {
                 onSecondaryPaneSizeChange={newSize => setSize(newSize)}
             >
                 <div className="split top-split">
-                    {room ? <VideoGrid room={room} sponsorView={false} /> : <LoadingSpinner />}
+                    {room ? <VideoGrid room={room} preferredMode="fullwidth" /> : <LoadingSpinner />}
                     <button onClick={() => setSize(100)}>&#9650;</button>
                 </div>
                 <div className="split bottom-split">

@@ -1,41 +1,43 @@
 import React from "react";
 import ParticipantList from "../ParticipantList/ParticipantList";
-import { styled } from "@material-ui/core/styles";
+import { makeStyles, Theme } from "@material-ui/core/styles";
 import MainParticipant from "../MainParticipant/MainParticipant";
-import useScreenShareParticipant from "../../hooks/useScreenShareParticipant/useScreenShareParticipant";
-import useSelectedParticipant from "../VideoProvider/useSelectedParticipant/useSelectedParticipant";
+import usePresenting from "../VideoProvider/usePresenting/usePresenting";
+import { useAppState } from "../../state";
+import clsx from "clsx";
 
-const Container = styled("div")(({ theme }) => ({
-    position: "relative",
-    height: "100%",
-    display: "grid",
-    gridTemplateColumns: `1fr`,
-    gridTemplateRows: "100%",
-    [theme.breakpoints.down("sm")]: {
-        gridTemplateColumns: `100%`,
-        gridTemplateRows: `1fr ${theme.sidebarMobileHeight + 26}px`,
-        overflow: "auto",
-    },
+type StyleProps = {
+    preferredMode: "sidebar" | "fullwidth";
+    presenting: "presenting" | "not presenting";
+};
+
+const useStyles = makeStyles<Theme, StyleProps>(theme => ({
+    container: props => ({
+        position: "relative",
+        height: "100%",
+        display: "grid",
+        gridTemplateColumns:
+            props.preferredMode === "sidebar" && props.presenting === "not presenting"
+                ? "1fr"
+                : `1fr ${theme.sidebarWidth}px`,
+        gridTemplateRows: "100%",
+        [theme.breakpoints.down("sm")]: {
+            gridTemplateColumns: `100%`,
+            gridTemplateRows: `1fr ${theme.sidebarMobileHeight + 26}px`,
+            overflow: "auto",
+        },
+    }),
 }));
 
-interface Props {
-    sponsorView: boolean;
-    highlightedProfiles?: { profiles: string[]; hexColour: string } | undefined;
-}
+export default function Room() {
+    const { preferredMode } = useAppState();
+    const presenting = usePresenting();
+    const classes = useStyles({ preferredMode, presenting });
 
-export default function Room(props: Props) {
-    const [selectedParticipant] = useSelectedParticipant();
-    const screenShareParticipant = useScreenShareParticipant();
-
-    const presenterView = selectedParticipant || screenShareParticipant;
     return (
-        <Container>
-            {presenterView && !props.sponsorView ? <MainParticipant /> : <></>}
-            <ParticipantList
-                gridView={!presenterView}
-                sponsorView={props.sponsorView}
-                highlightedProfiles={props.highlightedProfiles}
-            />
-        </Container>
+        <div className={clsx(classes.container)}>
+            {presenting === "presenting" ? <MainParticipant /> : <></>}
+            <ParticipantList gridView={presenting === "not presenting"} />
+        </div>
     );
 }

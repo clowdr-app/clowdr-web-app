@@ -12,8 +12,9 @@ import { UserProfile } from "@clowdr-app/clowdr-db-schema";
 import useConference from "../../../../../hooks/useConference";
 import useSafeAsync from "../../../../../hooks/useSafeAsync";
 import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
+import { useAppState } from "../../state";
 
-function useStyles(singleColumn: boolean) {
+function useStyles(width: "sidebar" | "fullwidth") {
     return makeStyles((theme: Theme) =>
         createStyles({
             container: {
@@ -48,13 +49,13 @@ function useStyles(singleColumn: boolean) {
             },
             gridInnerContainer: {
                 display: "grid",
-                gridTemplateColumns: singleColumn ? "1fr" : "1fr 1fr 1fr 1fr",
+                gridTemplateColumns: width === "sidebar" ? "1fr" : "1fr 1fr 1fr 1fr",
                 gridAutoRows: "1fr",
                 [theme.breakpoints.down("md")]: {
-                    gridTemplateColumns: singleColumn ? "1fr" : "1fr 1fr 1fr",
+                    gridTemplateColumns: width === "sidebar" ? "1fr" : "1fr 1fr 1fr",
                 },
                 [theme.breakpoints.down("sm")]: {
-                    gridTemplateColumns: singleColumn ? "1fr" : "1fr 1fr",
+                    gridTemplateColumns: width === "sidebar" ? "1fr" : "1fr 1fr",
                 },
                 [theme.breakpoints.down("xs")]: {
                     gridTemplateColumns: "1fr",
@@ -64,12 +65,7 @@ function useStyles(singleColumn: boolean) {
     )();
 }
 
-export default function ParticipantList(props: {
-    gridView: boolean;
-    sponsorView: boolean;
-    highlightedProfiles?: { profiles: string[]; hexColour: string };
-}) {
-    const classes = useStyles(props.sponsorView);
+export default function ParticipantList(props: { gridView: boolean }) {
     const {
         room: { localParticipant },
     } = useVideoContext();
@@ -82,6 +78,8 @@ export default function ParticipantList(props: {
     const localUserProfile = useUserProfile();
 
     const [remoteProfiles, setRemoteProfiles] = useState<Array<UserProfile> | null>(null);
+    const { preferredMode, highlightedProfiles } = useAppState();
+    const classes = useStyles(preferredMode);
 
     useSafeAsync(
         async () => {
@@ -108,11 +106,7 @@ export default function ParticipantList(props: {
                 profile={localUserProfile}
                 isLocalParticipant={true}
                 insideGrid={props.gridView}
-                highlightColour={
-                    props.highlightedProfiles?.profiles.includes(localUserProfile.id)
-                        ? props.highlightedProfiles.hexColour
-                        : undefined
-                }
+                highlight={highlightedProfiles?.includes(localUserProfile.id) ?? false}
                 slot={0}
             />
             {participants.sort(participantSorter).map(participantWithSlot => {
@@ -130,11 +124,7 @@ export default function ParticipantList(props: {
                 return (
                     <Participant
                         key={participant.sid}
-                        highlightColour={
-                            props.highlightedProfiles?.profiles.includes(participantWithSlot.participant.identity)
-                                ? props.highlightedProfiles.hexColour
-                                : undefined
-                        }
+                        highlight={highlightedProfiles?.includes(participant.identity) ?? false}
                         participant={participant}
                         profile={remoteProfile}
                         isSelected={participant === selectedParticipant}
@@ -148,7 +138,7 @@ export default function ParticipantList(props: {
         </>
     );
 
-    return props.gridView || props.sponsorView ? (
+    return props.gridView ? (
         <main
             className={clsx(
                 classes.gridContainer,
@@ -156,7 +146,9 @@ export default function ParticipantList(props: {
                     [classes.transparentBackground]: true,
                 },
                 "participants-grid-container",
-                props.sponsorView && "single-column"
+                {
+                    "single-column": preferredMode === "sidebar" && props.gridView,
+                }
             )}
         >
             <div className={classes.gridInnerContainer}>{participantsEl}</div>

@@ -28,24 +28,32 @@ export default function ViewContentFeed(props: Props) {
     const [zoomDetails, setZoomDetails] = useState<{ signature: string; apiKey: string } | undefined>(undefined);
 
     useSafeAsync(
-        async () => feed ? ((await feed.textChat) ?? "not present") : null,
+        async () => (feed ? (await feed.textChat) ?? "not present" : null),
         setTextChat,
-        [feed], "ViewContentFeed:setTextChat");
+        [feed],
+        "ViewContentFeed:setTextChat"
+    );
 
     useSafeAsync(
-        async () => feed ? ((await feed.videoRoom) ?? "not present") : null,
+        async () => (feed ? (await feed.videoRoom) ?? "not present" : null),
         setVideoRoom,
-        [feed], "ViewContentFeed:setVideoRoom");
+        [feed],
+        "ViewContentFeed:setVideoRoom"
+    );
 
     useSafeAsync(
-        async () => feed ? ((await feed.youtube) ?? "not present") : null,
+        async () => (feed ? (await feed.youtube) ?? "not present" : null),
         setYouTubeFeed,
-        [feed], "ViewContentFeed:setYouTubeFeed");
+        [feed],
+        "ViewContentFeed:setYouTubeFeed"
+    );
 
     useSafeAsync(
-        async () => feed ? ((await feed.zoomRoom) ?? "not present") : null,
+        async () => (feed ? (await feed.zoomRoom) ?? "not present" : null),
         setZoomRoom,
-        [feed], "ViewContentFeed:setZoomRoom");
+        [feed],
+        "ViewContentFeed:setZoomRoom"
+    );
 
     useSafeAsync(
         async () =>
@@ -56,7 +64,9 @@ export default function ViewContentFeed(props: Props) {
                   })
                 : undefined,
         setZoomDetails,
-        [joinZoom], "ViewContentFeed:generate-zoom-signature");
+        [joinZoom],
+        "ViewContentFeed:generate-zoom-signature"
+    );
 
     function handleZoomFrameRedirect(location: string) {
         // If the Zoom iframe has been redirected to about:blank, hide it
@@ -111,9 +121,11 @@ export default function ViewContentFeed(props: Props) {
                             <IframeResizer
                                 className="zoom-frame"
                                 title="zoom-frame"
-                                src={`/zoom.html?signature=${zoomDetails.signature}&meetingNumber=${zoomRoomToMeetingDetails()?.meetingNumber
-                                    }&password=${zoomRoomToMeetingDetails()?.password}&apiKey=${zoomDetails.apiKey
-                                    }&userName=${user.displayName}`}
+                                src={`/zoom.html?signature=${zoomDetails.signature}&meetingNumber=${
+                                    zoomRoomToMeetingDetails()?.meetingNumber
+                                }&password=${zoomRoomToMeetingDetails()?.password}&apiKey=${
+                                    zoomDetails.apiKey
+                                }&userName=${user.displayName}`}
                                 allowFullScreen={true}
                                 frameBorder="0"
                                 onLoad={event => {
@@ -124,7 +136,11 @@ export default function ViewContentFeed(props: Props) {
                                 allow="microphone; camera"
                             />
                         </div>
-                    ) : <button className="zoom-frame-button" onClick={() => setJoinZoom(true)}>Join Zoom in browser</button>}
+                    ) : (
+                        <button className="zoom-frame-button" onClick={() => setJoinZoom(true)}>
+                            Join Zoom in browser
+                        </button>
+                    )}
                 </div>
             ) : (
                 <></>
@@ -146,7 +162,7 @@ export default function ViewContentFeed(props: Props) {
             {!props.hideZoomOrVideo && videoRoom && videoRoom !== "not present" ? (
                 <>
                     <p>Join the discussion by entering this breakout room.</p>
-                    <VideoGrid room={videoRoom} sponsorView={false} />
+                    <VideoGrid room={videoRoom} preferredMode="fullwidth" />
                 </>
             ) : (
                 <></>

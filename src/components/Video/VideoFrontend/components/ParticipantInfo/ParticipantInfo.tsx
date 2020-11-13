@@ -21,7 +21,7 @@ import { Link } from "react-router-dom";
 const BORDER_SIZE = 3;
 
 const useStyles = makeStyles((theme: Theme) =>
-    createStyles<any, { highlightColour?: string }>({
+    createStyles<any, {}>({
         container: {
             position: "relative",
             display: "flex",
@@ -32,8 +32,8 @@ const useStyles = makeStyles((theme: Theme) =>
                 filter: "none",
                 objectFit: "contain !important" as any,
             },
-            border: props => `${BORDER_SIZE}px solid ${props.highlightColour ?? "black"}`,
             paddingTop: `calc(${(9 / 16) * 100}% - ${BORDER_SIZE}px)`,
+            border: `${BORDER_SIZE}px solid black`,
             background: "black",
         },
         notContainedInGrid: {
@@ -137,6 +137,9 @@ const useStyles = makeStyles((theme: Theme) =>
         cursorPointer: {
             cursor: "pointer",
         },
+        highlightParticipant: {
+            border: `${BORDER_SIZE}px solid ${theme.palette.primary.main}`,
+        },
     })
 );
 
@@ -150,7 +153,7 @@ interface ParticipantInfoProps {
     hideParticipant?: boolean;
     slot?: number;
     insideGrid: boolean;
-    highlightColour?: string;
+    highlight?: boolean;
 }
 
 export default function ParticipantInfo({
@@ -163,7 +166,7 @@ export default function ParticipantInfo({
     hideParticipant,
     slot,
     insideGrid,
-    highlightColour,
+    highlight,
 }: ParticipantInfoProps) {
     const publications = usePublications(participant);
 
@@ -179,7 +182,31 @@ export default function ParticipantInfo({
     const audioTrack = useTrack(audioPublication) as LocalAudioTrack | RemoteAudioTrack | undefined;
     const isParticipantReconnecting = useParticipantIsReconnecting(participant);
 
-    const classes = useStyles({ highlightColour });
+    const classes = useStyles();
+
+    const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+
+    const handlePopoverOpen = useCallback((event: React.MouseEvent<HTMLElement, MouseEvent>) => {
+        setAnchorEl(event.currentTarget);
+    }, []);
+
+    const handlePopoverClose = useCallback(() => {
+        setAnchorEl(null);
+    }, []);
+
+    const bioPopoverOpen = Boolean(anchorEl);
+
+    const profilePopoverEl = useMemo(() => {
+        return profile ? (
+            <BioPopover
+                id={`${profile.id}-mouse-over-popover`}
+                profile={profile}
+                open={bioPopoverOpen}
+                anchorEl={anchorEl}
+                onClose={handlePopoverClose}
+            />
+        ) : <></>;
+    }, [anchorEl, bioPopoverOpen, handlePopoverClose, profile]);
 
     const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
 
@@ -212,7 +239,8 @@ export default function ParticipantInfo({
                 {
                     [classes.hideParticipant]: hideParticipant,
                     [classes.cursorPointer]: Boolean(onClick),
-                    [classes.notContainedInGrid]: !insideGrid
+                    [classes.notContainedInGrid]: !insideGrid,
+                    [classes.highlightParticipant]: highlight,
                 },
                 slot !== undefined ? `area-${slot}` : undefined
             )}
