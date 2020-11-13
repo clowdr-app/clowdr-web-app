@@ -30,11 +30,19 @@ export default function useLocalVideoToggle() {
                 setIsPublishing(true);
                 try {
                     LocalStorage_TwilioVideo.twilioVideoCameraEnabled = true;
-                    const track = await getLocalVideoTrack({
-                        deviceId: { exact: LocalStorage_TwilioVideo.twilioVideoLastCamera ?? undefined },
-                    });
+                    const lastCamera = LocalStorage_TwilioVideo.twilioVideoLastCamera;
+                    const track = lastCamera
+                        ? await getLocalVideoTrack({
+                              deviceId: { exact: lastCamera },
+                          })
+                        : await getLocalVideoTrack();
                     localParticipant?.publishTrack(track, { priority: "low" });
                 } catch (e) {
+                    // If the device is not readable (probably in use by another app), don't try to
+                    // use it next time.
+                    if (e?.name === "NotReadableError") {
+                        LocalStorage_TwilioVideo.twilioVideoLastCamera = null;
+                    }
                     throw e;
                 } finally {
                     setIsPublishing(false);

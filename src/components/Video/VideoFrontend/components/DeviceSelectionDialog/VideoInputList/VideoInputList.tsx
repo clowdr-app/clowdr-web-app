@@ -1,20 +1,20 @@
-import React from 'react';
-import { DEFAULT_VIDEO_CONSTRAINTS } from '../../../constants';
-import { FormControl, MenuItem, Typography, Select } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import VideoTrack from '../../VideoTrack/VideoTrack';
-import useMediaStreamTrack from '../../../hooks/useMediaStreamTrack/useMediaStreamTrack';
-import useVideoContext from '../../../hooks/useVideoContext/useVideoContext';
-import { useVideoInputDevices } from '../../../hooks/deviceHooks/deviceHooks';
-import LocalStorage_TwilioVideo from '../../../../../../classes/LocalStorage/TwilioVideo';
+import React from "react";
+import { DEFAULT_VIDEO_CONSTRAINTS } from "../../../constants";
+import { FormControl, MenuItem, Typography, Select } from "@material-ui/core";
+import { makeStyles } from "@material-ui/core/styles";
+import VideoTrack from "../../VideoTrack/VideoTrack";
+import useMediaStreamTrack from "../../../hooks/useMediaStreamTrack/useMediaStreamTrack";
+import useVideoContext from "../../../hooks/useVideoContext/useVideoContext";
+import { useVideoInputDevices } from "../../../hooks/deviceHooks/deviceHooks";
+import LocalStorage_TwilioVideo from "../../../../../../classes/LocalStorage/TwilioVideo";
 
 const useStyles = makeStyles({
     preview: {
-        width: '300px',
-        maxHeight: '200px',
-        margin: '0.5em auto',
-        '& video': {
-            maxHeight: '200px',
+        width: "300px",
+        maxHeight: "200px",
+        margin: "0.5em auto",
+        "& video": {
+            maxHeight: "200px",
         },
     },
 });
@@ -27,8 +27,8 @@ export default function VideoInputList() {
     const localVideoInputDeviceId = mediaStreamTrack?.getSettings().deviceId;
 
     function replaceTrack(newDeviceId: string) {
+        LocalStorage_TwilioVideo.twilioVideoLastCamera = newDeviceId;
         if (localVideoTrack) {
-            LocalStorage_TwilioVideo.twilioVideoLastCamera = newDeviceId;
             localVideoTrack.restart({
                 ...(DEFAULT_VIDEO_CONSTRAINTS as {}),
                 deviceId: { exact: newDeviceId },
@@ -47,10 +47,10 @@ export default function VideoInputList() {
                 <FormControl fullWidth>
                     <Typography variant="subtitle2" gutterBottom>
                         Video Input
-          </Typography>
+                    </Typography>
                     <Select
                         onChange={e => replaceTrack(e.target.value as string)}
-                        value={localVideoInputDeviceId || ''}
+                        value={localVideoInputDeviceId || ""}
                         variant="outlined"
                     >
                         {videoInputDevices.map(device => (
@@ -61,13 +61,13 @@ export default function VideoInputList() {
                     </Select>
                 </FormControl>
             ) : (
-                    <>
-                        <Typography variant="subtitle2" gutterBottom>
-                            Video Input
-          </Typography>
-                        <Typography>{localVideoTrack?.mediaStreamTrack.label || 'No Local Video'}</Typography>
-                    </>
-                )}
+                <>
+                    <Typography variant="subtitle2" gutterBottom>
+                        Video Input
+                    </Typography>
+                    <Typography>{localVideoTrack?.mediaStreamTrack.label || "No Local Video"}</Typography>
+                </>
+            )}
         </div>
     );
 }
