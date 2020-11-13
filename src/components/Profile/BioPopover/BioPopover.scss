@@ -1,0 +1,48 @@
+@import "../../../styles/util.scss";
+
+.bio-popover {
+    padding  : 1em;
+    max-width: 40vw;
+    min-width: 300px;
+
+    display              : grid;
+    grid-template-rows   : min-content auto auto;
+    grid-template-columns: auto auto auto;
+    grid-template-areas  :
+        "affiliation pronouns ."
+        "bio bio bio"
+        "flairs flairs flairs";
+    column-gap: 1em;
+    row-gap   : 0.5em;
+
+    background-color: $gray-1;
+    color           : #fff;
+
+    .bio-pronouns {
+        grid-area: pronouns;
+    }
+
+    .bio-affiliation {
+        grid-area : affiliation;
+        font-style: italic;
+    }
+
+    .bio-bio {
+        grid-area: bio;
+    }
+
+    .bio-flairs {
+        grid-area     : flairs;
+        display       : flex;
+        flex-direction: row;
+        flex-wrap     : wrap;
+
+        .flair-chip {
+            margin-right: 0.5em;
+
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    }
+}

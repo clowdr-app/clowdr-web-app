@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import "./Message.scss";
 
 // @ts-ignore
@@ -23,6 +23,7 @@ import useUserRoles from "../../../hooks/useUserRoles";
 import useEmojiPicker from "../../../hooks/useEmojiPicker";
 import ReactDOM from "react-dom";
 import { emojify } from "react-emojione";
+import BioPopover from "../../Profile/BioPopover/BioPopover";
 
 export type RenderedMessage = {
     chatSid: string;
@@ -33,6 +34,7 @@ export type RenderedMessage = {
     profileName: string;
     profilePhotoUrl: string | null;
     profileFlair: Flair | undefined;
+    profile: UserProfile | null;
     time: number;
     timeStr: string;
     index: number;
@@ -133,6 +135,7 @@ export async function renderMessage(
         profileId: profile?.id ?? null,
         profileName: profile?.id === userProfile.id ? "You" : profile?.displayName ?? `<${member}>`,
         profilePhotoUrl,
+        profile: profile ?? null,
         time: time.getTime(),
         timeStr:
             (isDifferentDate ? time.toLocaleDateString(undefined, dateFormat) + " " : "") +
@@ -172,7 +175,7 @@ export default function Message(props: {
 
     const doEmojify = (val: any) => <>{emojify(val, { output: "unicode" })}</>;
 
-    const getEmojiPickerOffset = () => {
+    const getEmojiPickerOffset = useCallback(() => {
         if (emojiButton && emojiButton.current) {
             var rect = emojiButton.current.getBoundingClientRect();
             var win = emojiButton.current.ownerDocument.defaultView;
@@ -184,17 +187,17 @@ export default function Message(props: {
         } else {
             setEmojiButtonPosition(null);
         }
-    };
+    }, []);
 
-    function toggleAddReaction(msgSid: string) {
+    const toggleAddReaction = useCallback((msgSid: string) => {
         if (pickEmojiForMsgSid) {
             setPickEmojiForMsgSid(null);
         } else {
             setPickEmojiForMsgSid(msgSid);
         }
-    }
+    }, [pickEmojiForMsgSid]);
 
-    async function doReport() {
+    const doReport = useCallback(async () => {
         if (!mChat) {
             const errMsg = "Sorry, we were unable to report this message. The chat service is currently unavailable.";
             addError(errMsg);
@@ -214,9 +217,9 @@ export default function Message(props: {
             addError(errMsg);
             throw new Error(errMsg);
         }
-    }
+    }, [history, mChat, msg.chatSid, msg.index, msg.sid]);
 
-    async function doDelete() {
+    const doDelete = useCallback(async () => {
         if (!mChat) {
             const errMsg = "Sorry, we were unable to delete this message. The chat service is currently unavailable.";
             addError(errMsg);
@@ -229,14 +232,42 @@ export default function Message(props: {
             addError(errMsg);
             throw new Error(errMsg);
         }
-    }
+    }, [mChat, msg]);
 
     const moderationNamePrefix = "Moderation: ";
 
-    return (
-        <div className={`chat-message${showReportConfirm || showDeleteConfirm ? " highlight" : ""}`} key={msg.index}>
+    const [anchorEl, setAnchorEl] = React.useState<HTMLDivElement | null>(null);
+
+    const handlePopoverOpen = useCallback((event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        setAnchorEl(event.currentTarget);
+    }, []);
+
+    const handlePopoverClose = useCallback(() => {
+        setAnchorEl(null);
+    }, []);
+
+    const bioPopoverOpen = Boolean(anchorEl);
+
+    const profilePopoverEl = useMemo(() => {
+        return msg.profile ? (
+            <BioPopover
+                id={`${msg.profileId}-mouse-over-popover`}
+                profile={msg.profile}
+                open={bioPopoverOpen}
+                anchorEl={anchorEl}
+                onClose={handlePopoverClose}
+            />
+        ) : <></>;
+    }, [anchorEl, bioPopoverOpen, handlePopoverClose, msg.profile, msg.profileId]);
+
+    const profileEl = useMemo(() => {
+        return (
             <div
+                id={`${msg.profileId}-mouse-over-popover`}
                 className="profile"
+                aria-haspopup="true"
+                onMouseEnter={handlePopoverOpen}
+                onMouseLeave={handlePopoverClose}
                 onClick={ev => {
                     ev.preventDefault();
                     ev.stopPropagation();
@@ -257,6 +288,20 @@ export default function Message(props: {
                     )}
                 {msg.profileFlair ? <FlairChip flair={msg.profileFlair} small /> : <></>}
             </div>
+        );
+    }, [handlePopoverClose, handlePopoverOpen, msg.profileFlair, msg.profileId, msg.profileName, msg.profilePhotoUrl, showProfileOptions, userProfile.id]);
+
+    const profileEls = useMemo(() => {
+        return (
+            <>
+                {profilePopoverEl}
+                {profileEl}
+            </>
+        );
+    }, [profileEl, profilePopoverEl]);
+
+    const contentEl = useMemo(() => {
+        return (
             <div className="content">
                 <div className="content-inner">
                     {msg.chatName ? (
@@ -487,6 +532,13 @@ export default function Message(props: {
                         </div>
                     )}
             </div>
+        );
+    }, [deleting, doDelete, doReport, emoji, emojiButtonPosition, getEmojiPickerOffset, isAdmin, isManager, mChat, msg.body, msg.chatName, msg.chatSid, msg.isDM, msg.moderation, msg.profileId, msg.profileName, msg.reactions, msg.sid, msg.timeStr, pickEmojiForMsgSid, props.hideDeleteButton, props.hideReportButton, reporting, showDeleteConfirm, showProfileOptions, showReportConfirm, toggleAddReaction, userProfile.id]);
+
+    return (
+        <div className={`chat-message${showReportConfirm || showDeleteConfirm ? " highlight" : ""}`} key={msg.index}>
+            {profileEls}
+            {contentEl}
         </div>
     );
 }

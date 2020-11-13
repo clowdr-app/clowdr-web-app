@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import clsx from "clsx";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
 import { LocalAudioTrack, LocalVideoTrack, Participant, RemoteAudioTrack, RemoteVideoTrack } from "twilio-video";
@@ -15,6 +15,8 @@ import usePublications from "../../hooks/usePublications/usePublications";
 import useTrack from "../../hooks/useTrack/useTrack";
 import useParticipantIsReconnecting from "../../hooks/useParticipantIsReconnecting/useParticipantIsReconnecting";
 import { UserProfile } from "@clowdr-app/clowdr-db-schema";
+import BioPopover from "../../../../Profile/BioPopover/BioPopover";
+import { Link } from "react-router-dom";
 
 const BORDER_SIZE = 3;
 
@@ -179,6 +181,30 @@ export default function ParticipantInfo({
 
     const classes = useStyles({ highlightColour });
 
+    const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+
+    const handlePopoverOpen = useCallback((event: React.MouseEvent<HTMLElement, MouseEvent>) => {
+        setAnchorEl(event.currentTarget);
+    }, []);
+
+    const handlePopoverClose = useCallback(() => {
+        setAnchorEl(null);
+    }, []);
+
+    const bioPopoverOpen = Boolean(anchorEl);
+
+    const profilePopoverEl = useMemo(() => {
+        return profile ? (
+            <BioPopover
+                id={`${profile.id}-mouse-over-popover`}
+                profile={profile}
+                open={bioPopoverOpen}
+                anchorEl={anchorEl}
+                onClose={handlePopoverClose}
+            />
+        ) : <></>;
+    }, [anchorEl, bioPopoverOpen, handlePopoverClose, profile]);
+
     return (
         <div
             className={clsx(
@@ -203,13 +229,23 @@ export default function ParticipantInfo({
                             <ScreenShareIcon />
                         </span>
                     )}
-                    <span className={classes.identity}>
+                    {profilePopoverEl}
+                    <a
+                        className={classes.identity}
+                        id={profile ? `${profile.id}-mouse-over-popover` : undefined}
+                        aria-haspopup="true"
+                        onMouseEnter={handlePopoverOpen}
+                        onMouseLeave={handlePopoverClose}
+                        href={`/profile/${profile ? profile.id : ""}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
                         <AudioLevelIndicator audioTrack={audioTrack} />
                         <Typography variant="body1" className={classes.typeography} component="span">
                             {profile ? profile.displayName : ""}
                             {isLocalParticipant && " (You)"}
                         </Typography>
-                    </span>
+                    </a>
                 </div>
                 <div>{isSelected && <PinIcon />}</div>
             </div>
