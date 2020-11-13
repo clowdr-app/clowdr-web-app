@@ -1,21 +1,22 @@
 @import "../../../styles/util.scss";
 @import "../../../styles/form.scss";
 
-$gutter     : mm(10);
+$gutter     : 0;
 $main-width : mm(150);
 
 .register-form {
-    margin-top    : 10vh 2.5em;
     display       : flex;
+    align-items   : center;
     flex-direction: column;
-
-    .register-section-header {
-        margin: 0 $gutter;
-    }
+    padding       : 1em 1em;
 
     @include basic-form;
 
     p {
-        margin: 1em 0 0 0;
+        margin: 1em 0;
+    }
+
+    .sign-in {
+        display: inline-block;
     }
 }
