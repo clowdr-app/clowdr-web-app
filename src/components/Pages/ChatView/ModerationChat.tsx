@@ -161,6 +161,7 @@ export default function ModerationChat(props: Props) {
             label: "Back to moderation hub",
             icon: <i className="fas fa-arrow-left"></i>,
             action: "/moderation/hub",
+            ariaLabel: "Go to moderation hub"
         });
     }
 
@@ -253,6 +254,7 @@ export default function ModerationChat(props: Props) {
 
                 setShowPanel("chat");
             },
+            ariaLabel: "Show chat messages"
         });
     } else {
         if (members) {
@@ -265,6 +267,7 @@ export default function ModerationChat(props: Props) {
 
                     setShowPanel("members");
                 },
+                ariaLabel: `View list of${members ? ` ${members.length}` : ""} of this chat.`,
             });
         }
 
@@ -278,6 +281,7 @@ export default function ModerationChat(props: Props) {
 
                     setShowPanel("related");
                 },
+                ariaLabel: "View reported content"
             });
         }
 
@@ -291,6 +295,7 @@ export default function ModerationChat(props: Props) {
 
                     setShowPanel("invite");
                 },
+                ariaLabel: "Invite a user to this chat"
             });
         }
     }
@@ -305,6 +310,7 @@ export default function ModerationChat(props: Props) {
                     ev.stopPropagation();
                     doUnfollow();
                 },
+                ariaLabel: "Unfollow this chat"
             });
         } else {
             actionButtons.push({
@@ -315,6 +321,7 @@ export default function ModerationChat(props: Props) {
                     ev.stopPropagation();
                     doFollow();
                 },
+                ariaLabel: "Follow this chat"
             });
         }
     }
@@ -342,6 +349,7 @@ export default function ModerationChat(props: Props) {
 
                     setMarkingCompletedP(null);
                 },
+                ariaLabel: "Mark moderation request as completed"
             });
         } else if (markingCompletedP) {
             actionButtons.push({
@@ -351,6 +359,7 @@ export default function ModerationChat(props: Props) {
                     ev.stopPropagation();
                     ev.preventDefault();
                 },
+                ariaLabel: "Marking request completed, please wait"
             });
         }
     }

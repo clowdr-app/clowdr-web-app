@@ -12,6 +12,7 @@ export interface ActionButton {
     label: string;
     action: string | ((ev: React.FormEvent<HTMLButtonElement>) => void);
     icon: JSX.Element;
+    ariaLabel: string;
 }
 
 /**

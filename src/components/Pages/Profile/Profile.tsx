@@ -23,17 +23,18 @@ export default function Profile(props: Props) {
         buttons:
             profile && profile.id !== loggedInUserProfile.id
                 ? [
-                      {
-                          label: `Send DM`,
-                          icon: <i className="fas fa-envelope" />,
-                          action: `/chat/new/${profile.id}`,
-                      },
-                  ]
+                    {
+                        label: `Send DM`,
+                        icon: <i className="fas fa-envelope" />,
+                        action: `/chat/new/${profile.id}`,
+                        ariaLabel: "Send this user a direct message"
+                    },
+                ]
                 : [],
     });
 
     useEffect(() => {
-        let cancel: () => void = () => {};
+        let cancel: () => void = () => { };
 
         async function updateProfile() {
             try {
@@ -45,7 +46,7 @@ export default function Profile(props: Props) {
                     throw e;
                 }
             } finally {
-                cancel = () => {};
+                cancel = () => { };
             }
         }
 
@@ -61,8 +62,8 @@ export default function Profile(props: Props) {
                     {editing ? (
                         <ProfileEditor profile={loggedInUserProfile} setViewing={() => setEditing(false)} />
                     ) : (
-                        <ProfileView profile={loggedInUserProfile} setEditing={() => setEditing(true)} />
-                    )}
+                            <ProfileView profile={loggedInUserProfile} setEditing={() => setEditing(true)} />
+                        )}
                 </>
             );
         } else if (profile) {

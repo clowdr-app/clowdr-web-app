@@ -41,7 +41,7 @@ export default function LoggedInWelcome() {
 
     useDataSubscription("PrivilegedConferenceDetails", onTextUpdated, null, contents === "You are logged in. Loading conference information...", conference);
 
-    return <section aria-labelledby="page-title" tabIndex={0}>
+    return <section aria-labelledby="page-title">
         <ReactMarkdownCustomised>{contents}</ReactMarkdownCustomised>
     </section>;
 }

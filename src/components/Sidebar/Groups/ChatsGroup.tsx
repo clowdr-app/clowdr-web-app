@@ -317,7 +317,7 @@ export function computeChatDisplayName(chat: SidebarChatDescriptor, mUser: UserP
         icon = <i className="fas fa-hashtag"></i>;
     }
 
-    return { friendlyName, icon, unreadCount: chat.unreadCount };
+    return { friendlyName, icon, unreadCount: chat.unreadCount, isDM: chat.isDM };
 }
 
 interface Props {
@@ -664,7 +664,7 @@ export default function ChatsGroup(props: Props) {
                 dispatchUpdate({ action: "searchChats", search: null });
             }
         },
-        { type: "link", label: "Show all chats", icon: "fas fa-users", url: "/chat" },
+        { type: "link", label: "View all chats", icon: "fas fa-users", url: "/chat" },
         { type: "link", label: "Create new chat", icon: "fas fa-plus", url: "/chat/new" }
     ];
 
@@ -686,10 +686,11 @@ export default function ChatsGroup(props: Props) {
             const renderedChats = chats
                 .filter(x => !x.exists || (!x.isModeration && !x.isModerationHub))
                 .map(chat => {
-                    const { friendlyName, icon, unreadCount }
+                    const { friendlyName, icon, unreadCount, isDM }
                         = chat.exists
                             ? computeChatDisplayName(chat, mUser)
                             : {
+                                isDM: true,
                                 friendlyName: chat.friendlyName,
                                 icon: <i className="fas fa-plus" />,
                                 unreadCount: undefined
@@ -697,6 +698,7 @@ export default function ChatsGroup(props: Props) {
                     return {
                         friendlyName,
                         icon,
+                        isDM,
                         unreadCount,
                         key: chat.exists ? chat.id : `new-${friendlyName}`,
                         path: chat.exists ? `/chat/${chat.id}` : chat.targetPath
@@ -706,18 +708,18 @@ export default function ChatsGroup(props: Props) {
 
             const chatMenuItems: MenuGroupItems = [];
             const showTooltip = randomBackoff(mUser.createdAt, state.randomDeterminant, 6);
-            for (const { key, friendlyName, icon, path, unreadCount } of renderedChats) {
+            for (const { key, friendlyName, icon, path, unreadCount, isDM } of renderedChats) {
                 chatMenuItems.push({
                     key,
                     element:
                         <MenuItem
                             title={friendlyName + (!!unreadCount ? ` (${unreadCount})` : "")}
-                            label={friendlyName + (unreadCount !== undefined ? ` (${unreadCount} unread messages)` : "")}
+                            label={(isDM ? "Direct messages with " : "Group chat: ") + friendlyName + (unreadCount !== undefined ? ` (${unreadCount} unread messages)` : "")}
                             icon={icon}
                             action={path}
                             bold={unreadCount ? unreadCount > 0 : false}
                             onClick={props.onItemClicked}
-                            tooltip={showTooltip ? "You can open multiple chats in separate tabs" : undefined}
+                            tooltip={showTooltip ? "Hint: You can open multiple chats in separate tabs" : undefined}
                         />
                 });
             }
@@ -729,7 +731,7 @@ export default function ChatsGroup(props: Props) {
                 {state.allChats ? <></> : <LoadingSpinner />}
                 <MenuGroup items={[{
                     key: "whole-chat",
-                    element: <MenuItem title="View all chats" label="All chats" icon={<i className="fas fa-users"></i>} action="/chat" bold={true} onClick={props.onItemClicked} />
+                    element: <MenuItem title="View all chats" label="View all chats" icon={<i className="fas fa-users"></i>} action="/chat" bold={true} onClick={props.onItemClicked} />
                 }]} />
             </>;
         }

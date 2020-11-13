@@ -235,7 +235,8 @@ export default function ViewSession(props: Props) {
                         ev.preventDefault();
                         ev.stopPropagation();
                         doUnfollow();
-                    }
+                    },
+                    ariaLabel: "Unfollow this session"
                 });
             }
             else {
@@ -246,7 +247,8 @@ export default function ViewSession(props: Props) {
                         ev.preventDefault();
                         ev.stopPropagation();
                         doFollow();
-                    }
+                    },
+                    ariaLabel: "Follow this session"
                 });
             }
         }
@@ -254,7 +256,8 @@ export default function ViewSession(props: Props) {
         buttons.push({
             label: "Track",
             action: `/track/${session.trackId}`,
-            icon: <i className="fas fa-eye"></i>
+            icon: <i className="fas fa-eye"></i>,
+            ariaLabel: "View the track for this session"
         });
     }
 
@@ -265,7 +268,8 @@ export default function ViewSession(props: Props) {
             ev.preventDefault();
             ev.stopPropagation();
             setShowEventsList(!showEventsList);
-        }
+        },
+        ariaLabel: showEventsList ? "View the session content" : "View events in this session"
     });
 
     let chairStr: JSX.Element | undefined;

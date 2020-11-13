@@ -45,7 +45,7 @@ export default function Sidebar(props: Props) {
     const sideBarButton = (
         <div className="sidebar-button">
             <button
-                aria-label="Open Menu"
+                aria-label="Toggle menu"
                 onClick={props.toggleSidebar}
                 className={props.open ? " change" : ""}
                 ref={burgerButtonRef}

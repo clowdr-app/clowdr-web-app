@@ -519,7 +519,7 @@ export default function ProgramGroup(props: Props) {
                 dispatchUpdate({ action: "searchProgram", search: null });
             }
         },
-        { type: "link", label: "Show whole program", icon: "far fa-calendar", url: "/program" },
+        { type: "link", label: "View whole program", icon: "far fa-calendar", url: "/program" },
         // TODO: If admin: { type: "link", label: "Create new program event", icon: "fa-plus", url: "/chat/new" }
     ];
 
@@ -570,7 +570,7 @@ export default function ProgramGroup(props: Props) {
                 {state.sessions && state.events ? <span className="menu-group">No upcoming events in the next 2 hours.</span> : <LoadingSpinner />}
                 <MenuGroup items={[{
                     key: "whole-program",
-                    element: <MenuItem title="View whole program" label="Whole program" icon={<i className="far fa-calendar"></i>} action="/program" bold={true} onClick={props.onItemClicked} />
+                    element: <MenuItem title="View whole program" label="View whole program" icon={<i className="far fa-calendar"></i>} action="/program" bold={true} onClick={props.onItemClicked} />
                 }]} />
             </>;
         }

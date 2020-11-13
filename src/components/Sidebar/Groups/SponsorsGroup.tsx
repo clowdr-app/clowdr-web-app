@@ -384,7 +384,7 @@ export default function SponsorsGroup(props: Props) {
     const sponsorsButtons: Array<ButtonSpec> = [
         {
             type: "search",
-            label: "Search all sponsors",
+            label: "Search all sponsor booths",
             icon: "fas fa-search",
             onSearch: event => {
                 dispatchUpdate({ action: "searchSponsors", search: event.target.value });
@@ -397,7 +397,7 @@ export default function SponsorsGroup(props: Props) {
                 dispatchUpdate({ action: "searchSponsors", search: null });
             },
         },
-        // TODO: Re-enable in future? { type: "link", label: "Show all sponsors", icon: "fas fa-user-tie", url: "/sponsor" },
+        // TODO: Re-enable in future? { type: "link", label: "View all sponsors", icon: "fas fa-user-tie", url: "/sponsor" },
     ];
 
     function getSponsorMenuItems() {
@@ -411,7 +411,7 @@ export default function SponsorsGroup(props: Props) {
                 element: (
                     <MenuItem
                         title={sponsor.sponsor.name}
-                        label={sponsor.sponsor.name}
+                        label={"Go to " + sponsor.sponsor.name + " booth"}
                         icon={<i className="fas fa-circle"></i>}
                         action={`/sponsor/${sponsor.sponsor.id}`}
                         onClick={props.onItemClicked}

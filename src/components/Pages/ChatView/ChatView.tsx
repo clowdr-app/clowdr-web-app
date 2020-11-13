@@ -333,6 +333,7 @@ export default function ChatView(props: Props) {
 
                 setShowPanel("chat");
             },
+            ariaLabel: "Show chat messages"
         });
     } else {
         if (members) {
@@ -345,6 +346,7 @@ export default function ChatView(props: Props) {
                     label: `View ${otherMember.displayName}'s profile`,
                     icon: <i className="fas fa-eye"></i>,
                     action: `/profile/${otherMember.profileId}`,
+                    ariaLabel: `View ${otherMember.displayName}'s profile`
                 });
             } else {
                 actionButtons.push({
@@ -356,6 +358,7 @@ export default function ChatView(props: Props) {
 
                         setShowPanel("members");
                     },
+                    ariaLabel: `View list of${members ? ` ${members.length}` : ""} of this chat.`,
                 });
             }
         }
@@ -371,6 +374,7 @@ export default function ChatView(props: Props) {
 
                     setShowPanel("invite");
                 },
+                ariaLabel: "Invite a user to join this chat"
             });
         }
     }
@@ -386,6 +390,7 @@ export default function ChatView(props: Props) {
                         ev.stopPropagation();
                         doUnfollow();
                     },
+                    ariaLabel: "Unfollow this chat"
                 });
             } else {
                 actionButtons.push({
@@ -396,6 +401,7 @@ export default function ChatView(props: Props) {
                         ev.stopPropagation();
                         doFollow();
                     },
+                    ariaLabel: "Follow this chat"
                 });
             }
         }
@@ -410,6 +416,7 @@ export default function ChatView(props: Props) {
                         ev.stopPropagation();
                         doDisableAutoWatch();
                     },
+                    ariaLabel: "Disable auto-follow"
                 });
             } else {
                 actionButtons.push({
@@ -420,6 +427,7 @@ export default function ChatView(props: Props) {
                         ev.stopPropagation();
                         doEnableAutoWatch();
                     },
+                    ariaLabel: "Enable auto-follow"
                 });
             }
         }
@@ -451,6 +459,7 @@ export default function ChatView(props: Props) {
                         addError(`Failed to delete chat. ${e}`);
                     }
                 },
+                ariaLabel: "Delete chat"
             });
         }
     }

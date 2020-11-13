@@ -263,6 +263,7 @@ export default function ViewEvent(props: Props) {
                         ev.stopPropagation();
                         doUnfollow();
                     },
+                    ariaLabel: "Unfollow this event"
                 });
             } else {
                 buttons.push({
@@ -273,6 +274,7 @@ export default function ViewEvent(props: Props) {
                         ev.stopPropagation();
                         doFollow();
                     },
+                    ariaLabel: "Follow this event"
                 });
             }
         }
@@ -281,6 +283,7 @@ export default function ViewEvent(props: Props) {
             label: "Session",
             action: `/session/${event.sessionId}`,
             icon: <i className="fas fa-eye"></i>,
+            ariaLabel: "View the session for this event"
         });
     }
     if (session) {
@@ -288,6 +291,7 @@ export default function ViewEvent(props: Props) {
             label: "Track",
             action: `/track/${session.trackId}`,
             icon: <i className="fas fa-eye"></i>,
+            ariaLabel: "View the track for this event"
         });
     }
     if (item) {

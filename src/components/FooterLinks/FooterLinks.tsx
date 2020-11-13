@@ -17,7 +17,10 @@ export default function FooterLinks(props: Props) {
             </>;
     }
 
-    return <footer className="footer-links">
+    return <footer
+        className="footer-links"
+        aria-label="Footer links"
+    >
         {logoutButton}
         <Link className="footer-link" to="/about">About</Link>
         <span className="dot">&middot;</span>

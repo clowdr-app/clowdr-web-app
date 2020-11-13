@@ -30,6 +30,7 @@ export default function MenuItem(props: Props) {
                 <Link
                     className={`menu-item ${props.className ?? ""}`}
                     aria-label={props.label}
+                    role="menuitem"
                     to={props.action}
                     onClick={props.onClick}
                 >
@@ -38,7 +39,12 @@ export default function MenuItem(props: Props) {
             );
         } else {
             return (
-                <button className={`menu-item ${props.className ?? ""}`} aria-label={props.label} onClick={props.action}>
+                <button
+                    className={`menu-item ${props.className ?? ""}`}
+                    aria-label={props.label}
+                    role="menuitem"
+                    onClick={props.action}
+                >
                     {contents}
                 </button>
             );

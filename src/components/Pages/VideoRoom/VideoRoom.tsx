@@ -101,6 +101,7 @@ export default function ViewVideoRoom(props: Props) {
 
                     setShowInvite(false);
                 },
+                ariaLabel: "Show video room"
             });
         } else {
             actionButtons.push({
@@ -112,6 +113,7 @@ export default function ViewVideoRoom(props: Props) {
 
                     setShowInvite(true);
                 },
+                ariaLabel: "Invite a user to this room"
             });
         }
     }
@@ -245,6 +247,7 @@ export default function ViewVideoRoom(props: Props) {
                         ev.stopPropagation();
                         doUnfollow();
                     },
+                    ariaLabel: "Unfollow this room"
                 });
             } else {
                 actionButtons.push({
@@ -255,6 +258,7 @@ export default function ViewVideoRoom(props: Props) {
                         ev.stopPropagation();
                         doFollow();
                     },
+                    ariaLabel: "Follow this room"
                 });
             }
         }
@@ -278,6 +282,7 @@ export default function ViewVideoRoom(props: Props) {
                         addError(`Failed to delete room. ${e}`);
                     }
                 },
+                ariaLabel: "Delete this room"
             });
         }
     }

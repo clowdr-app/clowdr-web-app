@@ -59,3 +59,4 @@ scripts/sample-specs/demo
 existing-users-dump.json
 
 favicon*.png
+.env copy

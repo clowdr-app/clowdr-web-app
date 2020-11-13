@@ -30,7 +30,7 @@ export default function MainMenuGroup(props: Props) {
                 <MenuItem
                     icon={profileIcon}
                     title={`${mUser.displayName}`}
-                    label={`Profile (${mUser.displayName})`}
+                    label={`View or edit your profile`}
                     action="/profile"
                     onClick={props.onItemClicked}
                     className="menu-item--profile"
@@ -112,5 +112,5 @@ export default function MainMenuGroup(props: Props) {
         });
     }
 
-    return <MenuGroup items={mainMenuItems} />;
+    return <MenuGroup items={mainMenuItems} title="Quick access" />;
 }

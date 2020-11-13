@@ -144,7 +144,8 @@ export default function ViewTrack(props: Props) {
                         ev.preventDefault();
                         ev.stopPropagation();
                         doUnfollow();
-                    }
+                    },
+                    ariaLabel: "Unfollow this track"
                 });
             }
             else {
@@ -155,7 +156,8 @@ export default function ViewTrack(props: Props) {
                         ev.preventDefault();
                         ev.stopPropagation();
                         doFollow();
-                    }
+                    },
+                    ariaLabel: "Follow this track"
                 });
             }
         }
@@ -164,7 +166,8 @@ export default function ViewTrack(props: Props) {
     buttons.push({
         label: "Program",
         icon: <i className="fas fa-eye"></i>,
-        action: "/program"
+        action: "/program",
+        ariaLabel: "View the whole program"
     });
 
     useHeading({

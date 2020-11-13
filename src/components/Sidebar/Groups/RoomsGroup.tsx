@@ -468,7 +468,7 @@ export default function RoomsGroup(props: Props) {
                             element: (
                                 <MenuItem
                                     title={room.room.name}
-                                    label={room.room.name}
+                                    label={"Go to " + room.room.name + " breakout room"}
                                     icon={<i className="fas fa-video"></i>}
                                     action={`/room/${room.room.id}`}
                                     onClick={props.onItemClicked}
@@ -492,7 +492,7 @@ export default function RoomsGroup(props: Props) {
                                 element: (
                                     <MenuItem
                                         title="View all rooms"
-                                        label="All rooms"
+                                        label="View all rooms"
                                         icon={<i className="fas fa-person-booth"></i>}
                                         action="/room"
                                         bold={true}

@@ -28,7 +28,7 @@ interface Props {
 }
 
 export default function MenuExpander(props: Props) {
-    const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+    const [isSearchOpen, setIsSearchOpen] = useState<boolean | null>(null);
     const searchBoxRef = useRef<HTMLInputElement>(null);
     const searchButtonRef = useRef<HTMLButtonElement>(null);
     const [searchBoxValue, setSearchBoxValue] = useState("");
@@ -43,7 +43,7 @@ export default function MenuExpander(props: Props) {
         if (isSearchOpen) {
             searchBoxRef.current?.focus();
         }
-        else {
+        else if (isSearchOpen !== null) {
             searchButtonRef.current?.focus();
         }
     }, [isSearchOpen]);
@@ -105,9 +105,13 @@ export default function MenuExpander(props: Props) {
                                     value={searchBoxValue}
                                     onKeyDown={(ev) => onSearchBoxKeyDown(ev)}
                                 />
-                                <button onClick={() => {
-                                    closeSearch();
-                                }} className="search-close-button">
+                                <button
+                                    aria-label="Close search"
+                                    onClick={() => {
+                                        closeSearch();
+                                    }}
+                                    className="search-close-button"
+                                >
                                     <i className="fas fa-times-circle"></i>
                                 </button>
                             </div>;
@@ -131,16 +135,26 @@ export default function MenuExpander(props: Props) {
         buttonElems.push(buttonElem);
     }
 
-    return <div className="menu-expander">
-        <div className={"expander-controls"}>
-            <button className="expansion-control" onClick={toggleExpansion}>
-                {props.isOpen ? <i className="fas fa-caret-down"></i> : <i className="fas fa-caret-right"></i>}
-                <h2>{props.title}</h2>
-            </button>
-            {buttonElems.reduceRight((acc, x) => <>{acc}{x}</>, <></>)}
+    return (
+        <div
+            className="menu-expander"
+            aria-label={`${props.title}`}
+            role="menubar"
+        >
+            <div className={"expander-controls"}>
+                <button
+                    className="expansion-control"
+                    onClick={toggleExpansion}
+                    aria-label={`${props.isOpen ? "Close" : "Open"} ${props.title} submenu`}
+                >
+                    {props.isOpen ? <i className="fas fa-caret-down"></i> : <i className="fas fa-caret-right"></i>}
+                    <h2>{props.title}</h2>
+                </button>
+                {buttonElems.reduceRight((acc, x) => <>{acc}{x}</>, <></>)}
+            </div>
+            <div className={"expander-contents" + (props.isOpen ? "" : " closed")}>
+                {props.children}
+            </div>
         </div>
-        <div className={"expander-contents" + (props.isOpen ? "" : " closed")}>
-            {props.children}
-        </div>
-    </div>;
+    );
 }

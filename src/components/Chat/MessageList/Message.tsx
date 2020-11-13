@@ -234,9 +234,9 @@ export default function Message(props: {
 
     const moderationNamePrefix = "Moderation: ";
 
-    const [anchorEl, setAnchorEl] = React.useState<HTMLDivElement | null>(null);
+    const [anchorEl, setAnchorEl] = React.useState<Element | null>(null);
 
-    const handlePopoverOpen = useCallback((event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const handlePopoverOpen = useCallback((event: React.MouseEvent | React.FocusEvent) => {
         setAnchorEl(event.currentTarget);
     }, []);
 
@@ -263,7 +263,11 @@ export default function Message(props: {
             <div
                 id={`${msg.profileId}-mouse-over-popover`}
                 className="profile"
+                aria-label="Click to show options for contacting the message sender"
+                role="button"
                 aria-haspopup="true"
+                tabIndex={0}
+                title={`Message sent by ${msg.profileName}`}
                 onMouseEnter={handlePopoverOpen}
                 onMouseLeave={handlePopoverClose}
                 onClick={ev => {
@@ -275,6 +279,20 @@ export default function Message(props: {
                             setShowProfileOptions(!showProfileOptions);
                         } else {
                             addNotification("User is not known - they may have been deleted.");
+                        }
+                    }
+                }}
+                onKeyDown={ev => {
+                    if (ev.key === "Enter") {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+
+                        if (msg.profileId !== userProfile.id) {
+                            if (msg.profileId) {
+                                setShowProfileOptions(!showProfileOptions);
+                            } else {
+                                addNotification("User is not known - they may have been deleted.");
+                            }
                         }
                     }
                 }}
@@ -477,6 +495,7 @@ export default function Message(props: {
                                 <button
                                     className="new"
                                     ref={emojiButton}
+                                    aria-label="Add a reaction"
                                     onClick={ev => {
                                         getEmojiPickerOffset();
                                         toggleAddReaction(msg.sid);

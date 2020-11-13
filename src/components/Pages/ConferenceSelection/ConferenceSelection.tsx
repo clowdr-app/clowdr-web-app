@@ -92,14 +92,14 @@ export default function ConferenceSelection(props: Props) {
                     <p>Please select your conference to begin</p>
                     <form className="input-wrapper" onSubmit={submitSelection}>
                         <select
+                            aria-label="Select Conference"
                             onChange={e => setSelected(e.target.value)}
-                            value={selected ?? ""}
-                            title="Conference">
+                            value={selected ?? ""}>
                             {conferences.map((conf, i) =>
                                 <option key={i} value={conf.id}>{conf.name}</option>
                             )}
                         </select>
-                        <button className="join-button" title="Join">
+                        <button className="join-button" aria-label="Click to go to the selected conference">
                             Join
                     </button>
                     </form>

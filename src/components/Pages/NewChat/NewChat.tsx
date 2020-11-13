@@ -42,6 +42,7 @@ export default function NewChat(props: Props) {
                 label: `Go to ${invites[0].label}'s profile`,
                 action: `/profile/${invites[0].value}`,
                 icon: <i className="fas fa-eye"></i>,
+                ariaLabel: `View ${invites[0].label}'s profile`
             });
         }
     }
