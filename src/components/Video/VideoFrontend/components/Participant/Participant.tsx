@@ -16,7 +16,7 @@ interface ParticipantProps {
     hideParticipant?: boolean;
     slot?: number;
     insideGrid: boolean;
-    highlightColour?: string;
+    highlight?: boolean;
 }
 
 export default function Participant({
@@ -30,7 +30,7 @@ export default function Participant({
     hideParticipant,
     slot,
     insideGrid,
-    highlightColour,
+    highlight,
 }: ParticipantProps) {
     return (
         <ParticipantInfo
@@ -42,7 +42,7 @@ export default function Participant({
             hideParticipant={hideParticipant}
             slot={slot}
             insideGrid={insideGrid}
-            highlightColour={highlightColour}
+            highlight={highlight}
         >
             <ParticipantTracks
                 participant={participant}

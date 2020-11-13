@@ -39,6 +39,7 @@ export default function _Sponsor(props: Props) {
     const [itemBeingEdited, setItemBeingEdited] = useState<string | null>(null);
     const [editingColour, setEditingColour] = useState<boolean>(false);
     const uploadRef = useRef<HTMLInputElement>(null);
+    const [videoRoomMode, setVideoRoomMode] = useState<"presenting" | "sidebar">("sidebar");
 
     useSafeAsync(
         async () => await Sponsor.get(props.sponsorId, conference.id),
@@ -384,10 +385,15 @@ export default function _Sponsor(props: Props) {
                         {videoRoom && sponsor ? (
                             <VideoGrid
                                 room={videoRoom}
-                                sponsorView={true}
-                                highlightedProfiles={{
-                                    profiles: sponsor?.representativeProfileIds,
-                                    hexColour: sponsor?.colour,
+                                highlightedProfiles={sponsor?.representativeProfileIds}
+                                hexColour={sponsor?.colour}
+                                preferredMode={"sidebar"}
+                                onPresentingChanged={presenting => {
+                                    if (presenting && videoRoomMode !== "presenting") {
+                                        setVideoRoomMode("presenting");
+                                    } else if (!presenting && videoRoomMode === "presenting") {
+                                        setVideoRoomMode("sidebar");
+                                    }
                                 }}
                             />
                         ) : (
@@ -415,7 +421,11 @@ export default function _Sponsor(props: Props) {
     );
 
     return sponsor && content && videoRoom ? (
-        <section className={`sponsor${videoRoom === "none" ? " no-room" : ""}`}>
+        <section
+            className={`sponsor${videoRoom === "none" ? " no-room" : ""}${
+                videoRoomMode === "presenting" ? " presenting" : ""
+            }`}
+        >
             <ColourDialog
                 colour={sponsor.colour}
                 onClose={() => setEditingColour(false)}
