@@ -172,7 +172,7 @@ export default function WatchedChatsPage() {
                     ? messages.length === 0
                         ? <>No recent chat messages from followed chats.</>
                         : messages
-                            .sort((x, y) => x.time < y.time ? -1 : x.time === y.time ? 0 : 1)
+                            .sort((x, y) => x.time > y.time ? -1 : x.time === y.time ? 0 : 1)
                             .map(x => <Message key={x.sid} msg={x} />)
                     : <LoadingSpinner message="Loading chats" />}
             </div>
