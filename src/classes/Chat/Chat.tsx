@@ -131,9 +131,6 @@ export default class Chat implements IChatManager {
 
     private messageNotificationFunctionsToOff: Map<string, ChatEvents[]> = new Map();
     async setupMessageNotifications() {
-        const doEmojify = (val: any) => <>{emojify(val, { output: "unicode" })}</>;
-        const renderEmoji = (text: any) => doEmojify(text.value);
-
         const activeChats = await this.listWatchedChatsUnfiltered();
 
         const listenToChat = async (c: ChatDescriptor) => {

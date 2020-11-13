@@ -16,7 +16,7 @@ import useMaybeChat from "../../../hooks/useMaybeChat";
 import useUserProfile from "../../../hooks/useUserProfile";
 import IMessage from "../../../classes/Chat/IMessage";
 import { UserProfile } from "@clowdr-app/clowdr-db-schema";
-import { handleParseFileURLWeirdness, ReactMarkdownCustomised } from "../../../classes/Utils";
+import { doEmojify, handleParseFileURLWeirdness, ReactMarkdownCustomised } from "../../../classes/Utils";
 import AsyncButton from "../../AsyncButton/AsyncButton";
 import IMember from "../../../classes/Chat/IMember";
 import useUserRoles from "../../../hooks/useUserRoles";
@@ -172,8 +172,6 @@ export default function Message(props: {
     const emoji = useEmojiPicker();
     const emojiButton = useRef<HTMLButtonElement | null>(null);
     const [emojiButtonPosition, setEmojiButtonPosition] = useState<{ bottom: number; left: number } | null>(null);
-
-    const doEmojify = (val: any) => <>{emojify(val, { output: "unicode" })}</>;
 
     const getEmojiPickerOffset = useCallback(() => {
         if (emojiButton && emojiButton.current) {
@@ -523,7 +521,7 @@ export default function Message(props: {
                                                 }
                                             }}
                                         >
-                                            <span>{doEmojify(reaction.replaceAll("-", "_"))}</span>
+                                            <span>{doEmojify(reaction)}</span>
                                             <span>{msg.reactions[reaction].ids.length}</span>
                                         </button>
                                     </Tooltip>

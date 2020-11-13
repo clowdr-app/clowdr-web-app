@@ -55,10 +55,10 @@ export function parseYouTubeURL(youtubeURL: string): string | undefined {
     return undefined;
 }
 
-export function ReactMarkdownCustomised(props?: { children?: string; className?: string; linkColour?: string }): JSX.Element {
-    const doEmojify = (val: any) => <>{emojify(val, { output: "unicode" })}</>;
-    const renderEmoji = (text: any) => doEmojify(text.value);
+export const doEmojify = (val: any) => <>{emojify(val.replace(/-/g, "_"), { output: "unicode" })}</>;
+export const renderEmoji = (text: any) => doEmojify(text.value);
 
+export function ReactMarkdownCustomised(props?: { children?: string; className?: string; linkColour?: string }): JSX.Element {
     return (
         <ReactMarkdown
             className={props?.className}
