@@ -49,6 +49,13 @@ export default function useLocalTracks() {
         }
     }, [videoTrack]);
 
+    const removeLocalAudioTrack = useCallback(() => {
+        if (audioTrack) {
+            audioTrack.stop();
+            setAudioTrack(undefined);
+        }
+    }, [audioTrack]);
+
     const MutexRunner = useMutex();
     const getAudioAndVideoTracksMutex = new MutexRunner("getAudioAndVideoTracks");
     const getAudioAndVideoTracks = async () => {
@@ -99,6 +106,7 @@ export default function useLocalTracks() {
         getLocalAudioTrack,
         isAcquiringLocalTracks,
         removeLocalVideoTrack,
+        removeLocalAudioTrack,
         getAudioAndVideoTracks,
     };
 }

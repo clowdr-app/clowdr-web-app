@@ -9,7 +9,7 @@ export default function useLocalVideoToggle() {
         getLocalVideoTrack,
         removeLocalVideoTrack,
     } = useVideoContext();
-    const [isPublishing, setIspublishing] = useState(false);
+    const [isPublishing, setIsPublishing] = useState(false);
 
     const stopVideo = useCallback(() => {
         if (videoTrack) {
@@ -27,7 +27,7 @@ export default function useLocalVideoToggle() {
                 stopVideo();
                 LocalStorage_TwilioVideo.twilioVideoCameraEnabled = false;
             } else {
-                setIspublishing(true);
+                setIsPublishing(true);
                 try {
                     LocalStorage_TwilioVideo.twilioVideoCameraEnabled = true;
                     const track = await getLocalVideoTrack({
@@ -37,7 +37,7 @@ export default function useLocalVideoToggle() {
                 } catch (e) {
                     throw e;
                 } finally {
-                    setIspublishing(false);
+                    setIsPublishing(false);
                 }
             }
         }

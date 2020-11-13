@@ -1,11 +1,10 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useRef } from "react";
 
 import Button from "@material-ui/core/Button";
 import MicIcon from "../../../icons/MicIcon";
 import MicOffIcon from "../../../icons/MicOffIcon";
 
 import useLocalAudioToggle from "../../../hooks/useLocalAudioToggle/useLocalAudioToggle";
-import useVideoContext from "../../../hooks/useVideoContext/useVideoContext";
 import { useHasAudioInputDevices } from "../../../hooks/deviceHooks/deviceHooks";
 
 export default function ToggleAudioButton(props: {
@@ -14,22 +13,21 @@ export default function ToggleAudioButton(props: {
     setMediaError?(error: Error): void;
 }) {
     const { isEnabled: isAudioEnabled, toggleAudioEnabled } = useLocalAudioToggle();
-    const { localAudioTrack, getLocalAudioTrack } = useVideoContext();
+    const lastClickTimeRef = useRef(0);
     const hasAudioDevices = useHasAudioInputDevices();
-    const hasAudioTrack = !!localAudioTrack;
 
     const toggleAudio = useCallback(async () => {
-        if (!hasAudioTrack && hasAudioDevices) {
+        if (Date.now() - lastClickTimeRef.current > 200) {
+            lastClickTimeRef.current = Date.now();
             try {
-                await getLocalAudioTrack();
+                await toggleAudioEnabled();
             } catch (e) {
                 if (props.setMediaError) {
                     props.setMediaError(e);
                 }
             }
         }
-        toggleAudioEnabled();
-    }, [getLocalAudioTrack, hasAudioDevices, hasAudioTrack, props, toggleAudioEnabled]);
+    }, [props, toggleAudioEnabled]);
 
     return (
         <Button
@@ -39,13 +37,7 @@ export default function ToggleAudioButton(props: {
             startIcon={isAudioEnabled ? <MicIcon /> : <MicOffIcon />}
             data-cy-audio-toggle
         >
-            {!hasAudioDevices
-                ? "No audio devices"
-                : !hasAudioTrack
-                ? "Start Audio"
-                : isAudioEnabled
-                ? "Mute"
-                : "Unmute"}
+            {!hasAudioDevices ? "No audio devices" : isAudioEnabled ? "Mute" : "Unmute"}
         </Button>
     );
 }
