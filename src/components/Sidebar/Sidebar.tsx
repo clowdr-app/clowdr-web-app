@@ -29,10 +29,15 @@ export default function Sidebar(props: Props) {
     // TODO: When sidebar is occupying full window (e.g. on mobile), close it
     // when the user clicks a link.
 
-    useSafeAsync(async () => {
-        const details = await conf.details;
-        return details.find(x => x.key === "SIDEBAR_COLOUR")?.value ?? "#761313";
-    }, setBgColour, [conf, mUser], "Sidebar:setBgColour");
+    useSafeAsync(
+        async () => {
+            const details = await conf.details;
+            return details.find(x => x.key === "SIDEBAR_COLOUR")?.value ?? "#761313";
+        },
+        setBgColour,
+        [conf, mUser],
+        "Sidebar:setBgColour"
+    );
 
     useEffect(() => {
         burgerButtonRef.current?.focus();
@@ -57,9 +62,15 @@ export default function Sidebar(props: Props) {
         </div>
     );
 
+    const onItemClicked = useCallback(() => {
+        if (isBelowMediumBreakpoint() && props.toggleSidebar) {
+            props.toggleSidebar();
+        }
+    }, [props]);
+
     const sideBarHeading = (
         <h1 aria-level={1} className={conf.headerImage ? "img" : ""}>
-            <Link to="/" aria-label="Conference homepage">
+            <Link to="/" aria-label="Conference homepage" onClick={onItemClicked}>
                 {conf.headerImage ? (
                     <img src={handleParseFileURLWeirdness(conf.headerImage) ?? undefined} alt={conf.shortName} />
                 ) : (
@@ -74,12 +85,6 @@ export default function Sidebar(props: Props) {
             {sideBarHeading}
         </div>
     );
-
-    const onItemClicked = useCallback(() => {
-        if (isBelowMediumBreakpoint() && props.toggleSidebar) {
-            props.toggleSidebar();
-        }
-    }, [props]);
 
     return (
         <>
@@ -106,7 +111,7 @@ export default function Sidebar(props: Props) {
                         )}
                     </div>
 
-                    <FooterLinks doLogout={mUser ? props.doLogout : undefined} />
+                    <FooterLinks doLogout={mUser ? props.doLogout : undefined} onItemClicked={onItemClicked} />
                 </div>
             </div>
         </>

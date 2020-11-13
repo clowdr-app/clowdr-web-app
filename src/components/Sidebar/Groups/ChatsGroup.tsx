@@ -1,29 +1,30 @@
-import React, { useCallback, useEffect, useReducer } from 'react';
-import useConference from '../../../hooks/useConference';
-import useMaybeUserProfile from '../../../hooks/useMaybeUserProfile';
+import React, { useCallback, useEffect, useReducer } from "react";
+import useConference from "../../../hooks/useConference";
+import useMaybeUserProfile from "../../../hooks/useMaybeUserProfile";
 import MenuExpander, { ButtonSpec } from "../Menu/MenuExpander";
-import MenuGroup, { MenuGroupItems } from '../Menu/MenuGroup';
-import MenuItem from '../Menu/MenuItem';
-import { Conference, UserProfile, WatchedItems } from '@clowdr-app/clowdr-db-schema';
-import { makeCancelable } from '@clowdr-app/clowdr-db-schema/build/Util';
-import useMaybeChat from '../../../hooks/useMaybeChat';
-import { ChatDescriptor, MemberDescriptor } from '../../../classes/Chat';
-import assert from 'assert';
-import { ServiceEventNames } from '../../../classes/Chat/Services/Twilio/ChatService';
-import { LoadingSpinner } from '../../LoadingSpinner/LoadingSpinner';
-import useLogger from '../../../hooks/useLogger';
-import { DataDeletedEventDetails, DataUpdatedEventDetails } from '@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache';
-import useDataSubscription from '../../../hooks/useDataSubscription';
-import useSafeAsync from '../../../hooks/useSafeAsync';
-import { randomBackoff } from '../../RandomPrompts/RandomPrompts';
+import MenuGroup, { MenuGroupItems } from "../Menu/MenuGroup";
+import MenuItem from "../Menu/MenuItem";
+import { Conference, UserProfile, WatchedItems } from "@clowdr-app/clowdr-db-schema";
+import { makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
+import useMaybeChat from "../../../hooks/useMaybeChat";
+import { ChatDescriptor, MemberDescriptor } from "../../../classes/Chat";
+import assert from "assert";
+import { ServiceEventNames } from "../../../classes/Chat/Services/Twilio/ChatService";
+import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
+import useLogger from "../../../hooks/useLogger";
+import {
+    DataDeletedEventDetails,
+    DataUpdatedEventDetails,
+} from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
+import useDataSubscription from "../../../hooks/useDataSubscription";
+import useSafeAsync from "../../../hooks/useSafeAsync";
+import { randomBackoff } from "../../RandomPrompts/RandomPrompts";
 // import { addNotification } from '../../../classes/Notifications/Notifications';
 // import ReactMarkdown from 'react-markdown';
 // import { emojify } from 'react-emojione';
 // import { useLocation } from 'react-router-dom';
 
-type ChatGroupTasks
-    = "loadingActiveChats"
-    | "loadingAllChats";
+type ChatGroupTasks = "loadingActiveChats" | "loadingAllChats";
 
 export type SidebarChatDescriptor = {
     exists: true;
@@ -32,29 +33,32 @@ export type SidebarChatDescriptor = {
     isModeration: boolean;
     isModerationHub: boolean;
     unreadCount: number;
-} & ({
-    isDM: false;
-} | {
-    isDM: true;
-    member1: MemberDescriptor<boolean | undefined> & { displayName: string };
-    member2: MemberDescriptor<boolean | undefined> & { displayName: string };
-});
-
-type FilteredChatDescriptor
-    = (ChatDescriptor & { exists: true })
+} & (
     | {
-        exists: false;
-        friendlyName: string;
-        targetPath: string;
-    };
-
-type FilteredSidebarChatDescriptor
-    = SidebarChatDescriptor
+          isDM: false;
+      }
     | {
-        exists: false;
-        friendlyName: string;
-        targetPath: string;
-    };
+          isDM: true;
+          member1: MemberDescriptor<boolean | undefined> & { displayName: string };
+          member2: MemberDescriptor<boolean | undefined> & { displayName: string };
+      }
+);
+
+type FilteredChatDescriptor =
+    | (ChatDescriptor & { exists: true })
+    | {
+          exists: false;
+          friendlyName: string;
+          targetPath: string;
+      };
+
+type FilteredSidebarChatDescriptor =
+    | SidebarChatDescriptor
+    | {
+          exists: false;
+          friendlyName: string;
+          targetPath: string;
+      };
 
 export type SidebarUserDescriptor = {
     id: string;
@@ -74,8 +78,8 @@ interface ChatsGroupState {
     randomDeterminant: number;
 }
 
-type ChatsGroupUpdate
-    = { action: "updateAllChats"; chats: Array<ChatDescriptor> }
+type ChatsGroupUpdate =
+    | { action: "updateAllChats"; chats: Array<ChatDescriptor> }
     | { action: "setActiveChats"; chats: Array<SidebarChatDescriptor> }
     | { action: "updateActiveChats"; chats: Array<SidebarChatDescriptor> }
     | { action: "updateFilteredChats"; chats: Array<FilteredSidebarChatDescriptor> }
@@ -84,13 +88,15 @@ type ChatsGroupUpdate
     | { action: "searchChats"; search: string | null }
     | { action: "setIsOpen"; isOpen: boolean }
     | {
-        action: "updateChatDescriptors";
-        fActive: (x: SidebarChatDescriptor) => SidebarChatDescriptor;
-        fFiltered: (x: FilteredSidebarChatDescriptor) => FilteredSidebarChatDescriptor;
-    }
+          action: "updateChatDescriptors";
+          fActive: (x: SidebarChatDescriptor) => SidebarChatDescriptor;
+          fFiltered: (x: FilteredSidebarChatDescriptor) => FilteredSidebarChatDescriptor;
+      }
     | { action: "setWatchedChatIds"; ids: Array<string> }
-    | { action: "updateAllUsers"; update: (old: Array<SidebarUserDescriptor> | null) => Array<SidebarUserDescriptor> | null }
-    ;
+    | {
+          action: "updateAllUsers";
+          update: (old: Array<SidebarUserDescriptor> | null) => Array<SidebarUserDescriptor> | null;
+      };
 
 async function filterChats(
     allChats: Array<ChatDescriptor>,
@@ -101,41 +107,45 @@ async function filterChats(
 ): Promise<Array<FilteredChatDescriptor>> {
     if (_search && _search.length >= minSearchLength) {
         const search = _search.toLowerCase();
-        const filteredUsers = allUsers.filter(x =>
-            x.name.toLowerCase().includes(search)
-            && x.id !== currentUserProfileId
-            && !x.isBanned
+        const filteredUsers = allUsers.filter(
+            x => x.name.toLowerCase().includes(search) && x.id !== currentUserProfileId && !x.isBanned
         );
-        const filteredChats: FilteredChatDescriptor[]
-            = allChats
-                .filter(x =>
-                    x.friendlyName.toLowerCase().includes(search)
-                    || (x.isDM && filteredUsers.some(p => {
-                        return x.member1.profileId === currentUserProfileId
-                            || x.member2.profileId === currentUserProfileId;
-                    })))
-                .map(x => ({ ...x, exists: true }));
+        const filteredChats: FilteredChatDescriptor[] = allChats
+            .filter(
+                x =>
+                    x.friendlyName.toLowerCase().includes(search) ||
+                    (x.isDM &&
+                        filteredUsers.some(p => {
+                            return (
+                                x.member1.profileId === currentUserProfileId ||
+                                x.member2.profileId === currentUserProfileId
+                            );
+                        }))
+            )
+            .map(x => ({ ...x, exists: true }));
         return filteredChats.concat(
             filteredUsers
-                .filter(p =>
-                    !allChats.some(c => {
-                        return c.isDM
-                            && (c.member1.profileId === p.id
-                                || c.member2.profileId === p.id);
-                    }))
+                .filter(
+                    p =>
+                        !allChats.some(c => {
+                            return c.isDM && (c.member1.profileId === p.id || c.member2.profileId === p.id);
+                        })
+                )
                 .map(p => ({
                     exists: false,
                     friendlyName: p.name,
-                    targetPath: `/chat/new/${p.id}`
+                    targetPath: `/chat/new/${p.id}`,
                 }))
         );
-    }
-    else {
+    } else {
         return [];
     }
 }
 
-function nextSidebarState(currentState: ChatsGroupState, updates: ChatsGroupUpdate | Array<ChatsGroupUpdate>): ChatsGroupState {
+function nextSidebarState(
+    currentState: ChatsGroupState,
+    updates: ChatsGroupUpdate | Array<ChatsGroupUpdate>
+): ChatsGroupState {
     const nextState: ChatsGroupState = {
         tasks: new Set(currentState.tasks),
         isOpen: currentState.isOpen,
@@ -145,7 +155,7 @@ function nextSidebarState(currentState: ChatsGroupState, updates: ChatsGroupUpda
         filteredChats: currentState.filteredChats,
         watchedChatIds: currentState.watchedChatIds,
         allUsers: currentState.allUsers,
-        randomDeterminant: Math.random()
+        randomDeterminant: Math.random(),
     };
 
     let allChatsUpdated = false;
@@ -163,18 +173,18 @@ function nextSidebarState(currentState: ChatsGroupState, updates: ChatsGroupUpda
                 {
                     const changes = [...update.chats];
                     const updatedIds = changes.map(x => x.id);
-                    nextState.allChats = nextState.allChats?.map(x => {
-                        const idx = updatedIds.indexOf(x.id);
-                        if (idx > -1) {
-                            const y = changes[idx];
-                            updatedIds.splice(idx, 1);
-                            changes.splice(idx, 1);
-                            return y;
-                        }
-                        else {
-                            return x;
-                        }
-                    }) ?? null;
+                    nextState.allChats =
+                        nextState.allChats?.map(x => {
+                            const idx = updatedIds.indexOf(x.id);
+                            if (idx > -1) {
+                                const y = changes[idx];
+                                updatedIds.splice(idx, 1);
+                                changes.splice(idx, 1);
+                                return y;
+                            } else {
+                                return x;
+                            }
+                        }) ?? null;
                     nextState.allChats = nextState.allChats?.concat(changes) ?? changes;
                     allChatsUpdated = true;
                 }
@@ -183,18 +193,18 @@ function nextSidebarState(currentState: ChatsGroupState, updates: ChatsGroupUpda
                 {
                     const changes = [...update.chats];
                     const updatedIds = changes.map(x => x.id);
-                    nextState.activeChats = nextState.activeChats?.map(x => {
-                        const idx = updatedIds.indexOf(x.id);
-                        if (idx > -1) {
-                            const y = changes[idx];
-                            updatedIds.splice(idx, 1);
-                            changes.splice(idx, 1);
-                            return y;
-                        }
-                        else {
-                            return x;
-                        }
-                    }) ?? null;
+                    nextState.activeChats =
+                        nextState.activeChats?.map(x => {
+                            const idx = updatedIds.indexOf(x.id);
+                            if (idx > -1) {
+                                const y = changes[idx];
+                                updatedIds.splice(idx, 1);
+                                changes.splice(idx, 1);
+                                return y;
+                            } else {
+                                return x;
+                            }
+                        }) ?? null;
                     nextState.activeChats = nextState.activeChats?.concat(changes) ?? changes;
                     activeChatsUpdated = true;
                 }
@@ -237,16 +247,14 @@ function nextSidebarState(currentState: ChatsGroupState, updates: ChatsGroupUpda
 
     if (updates instanceof Array) {
         updates.forEach(doUpdate);
-    }
-    else {
+    } else {
         doUpdate(updates);
     }
 
     if (allChatsUpdated) {
         if (nextState.allChats) {
             nextState.tasks.delete("loadingAllChats");
-        }
-        else {
+        } else {
             nextState.filteredChats = [];
         }
     }
@@ -262,7 +270,7 @@ export async function upgradeChatDescriptor(conf: Conference, x: ChatDescriptor)
     if (x.isDM) {
         const [p1, p2] = await Promise.all([
             UserProfile.get(x.member1.profileId, conf.id),
-            UserProfile.get(x.member2.profileId, conf.id)
+            UserProfile.get(x.member2.profileId, conf.id),
         ]);
         assert(p1);
         assert(p2);
@@ -273,20 +281,19 @@ export async function upgradeChatDescriptor(conf: Conference, x: ChatDescriptor)
             member1: {
                 ...x.member1,
                 isOnline: await x.member1.isOnline,
-                displayName: p1.displayName
+                displayName: p1.displayName,
             },
             member2: {
                 ...x.member2,
                 isOnline: await x.member2.isOnline,
-                displayName: p2.displayName
-            }
+                displayName: p2.displayName,
+            },
         };
-    }
-    else {
+    } else {
         return {
             ...x,
             unreadCount: await x.getUnreadCount(),
-            exists: true
+            exists: true,
         };
     }
 }
@@ -303,15 +310,13 @@ export function computeChatDisplayName(chat: SidebarChatDescriptor, mUser: UserP
         if (member1.profileId !== mUser.id) {
             friendlyName = member1.displayName;
             otherOnline = member1.isOnline;
-        }
-        else {
+        } else {
             friendlyName = member2.displayName;
             otherOnline = member2.isOnline;
         }
 
-        icon = <i className={`fa${otherOnline ? 's' : 'r'} fa-circle ${otherOnline ? 'online' : ''}`}></i>;
-    }
-    else {
+        icon = <i className={`fa${otherOnline ? "s" : "r"} fa-circle ${otherOnline ? "online" : ""}`}></i>;
+    } else {
         // Group chat - use chat friendly name from Twilio
         friendlyName = chat.friendlyName;
         icon = <i className="fas fa-hashtag"></i>;
@@ -331,10 +336,7 @@ export default function ChatsGroup(props: Props) {
     const mChat = useMaybeChat();
     const logger = useLogger("ChatsGroup");
     const [state, dispatchUpdate] = useReducer(nextSidebarState, {
-        tasks: new Set([
-            "loadingChats",
-            "loadingActiveChats"
-        ] as ChatGroupTasks[]),
+        tasks: new Set(["loadingChats", "loadingActiveChats"] as ChatGroupTasks[]),
         isOpen: true,
         chatSearch: null,
         allChats: null,
@@ -342,52 +344,69 @@ export default function ChatsGroup(props: Props) {
         watchedChatIds: null,
         filteredChats: [],
         allUsers: null,
-        randomDeterminant: Math.random()
+        randomDeterminant: Math.random(),
     });
 
     logger.enable();
 
-    useSafeAsync(async () => {
-        if (mChat) {
-            const chats = await mChat.listWatchedChatsUnfiltered();
-            const chatsWithName: Array<SidebarChatDescriptor>
-                = await Promise.all(chats.map(x => upgradeChatDescriptor(conf, x)));
-            return chatsWithName;
-        }
-        return null;
-    }, (data: Array<SidebarChatDescriptor> | null) => {
-        if (data) {
-            dispatchUpdate({
-                action: "setActiveChats",
-                chats: data
-            });
-        }
-        // state.watchedChatIds is required so that active chats updates
-    }, [conf, conf.id, mChat, state.watchedChatIds], "ChatsGroup:setActiveChats");
+    useSafeAsync(
+        async () => {
+            if (mChat) {
+                const chats = await mChat.listWatchedChatsUnfiltered();
+                const chatsWithName: Array<SidebarChatDescriptor> = await Promise.all(
+                    chats.map(x => upgradeChatDescriptor(conf, x))
+                );
+                return chatsWithName;
+            }
+            return null;
+        },
+        (data: Array<SidebarChatDescriptor> | null) => {
+            if (data) {
+                dispatchUpdate({
+                    action: "setActiveChats",
+                    chats: data,
+                });
+            }
+            // state.watchedChatIds is required so that active chats updates
+        },
+        [conf, conf.id, mChat, state.watchedChatIds],
+        "ChatsGroup:setActiveChats"
+    );
 
-    useSafeAsync(async () => mUser?.watched ?? null, (data: WatchedItems | null) => {
-        if (data) {
-            dispatchUpdate({
-                action: "setWatchedChatIds",
-                ids: data.watchedChats
-            });
-        }
-    }, [mUser?.watchedId], "ChatsGroup:setWatchedChatIds");
+    useSafeAsync(
+        async () => mUser?.watched ?? null,
+        (data: WatchedItems | null) => {
+            if (data) {
+                dispatchUpdate({
+                    action: "setWatchedChatIds",
+                    ids: data.watchedChats,
+                });
+            }
+        },
+        [mUser?.watchedId],
+        "ChatsGroup:setWatchedChatIds"
+    );
 
-    useSafeAsync(async () => UserProfile.getAll(conf.id), (data) => {
-        dispatchUpdate({
-            action: "updateAllUsers",
-            update: () => data.map(x => ({
-                id: x.id,
-                name: x.displayName,
-                isBanned: x.isBanned
-            }))
-        });
-    }, [conf.id], "ChatsGroup:updateAllUsers");
+    useSafeAsync(
+        async () => UserProfile.getAll(conf.id),
+        data => {
+            dispatchUpdate({
+                action: "updateAllUsers",
+                update: () =>
+                    data.map(x => ({
+                        id: x.id,
+                        name: x.displayName,
+                        isBanned: x.isBanned,
+                    })),
+            });
+        },
+        [conf.id],
+        "ChatsGroup:updateAllUsers"
+    );
 
     // Initial fetch of all chats
     useEffect(() => {
-        let cancel: () => void = () => { };
+        let cancel: () => void = () => {};
 
         async function updateChats() {
             try {
@@ -397,11 +416,10 @@ export default function ChatsGroup(props: Props) {
                     const chats = await chatsP.promise;
                     dispatchUpdate({
                         action: "updateAllChats",
-                        chats
+                        chats,
                     });
                 }
-            }
-            catch (e) {
+            } catch (e) {
                 if (!e.isCanceled) {
                     throw e;
                 }
@@ -415,31 +433,30 @@ export default function ChatsGroup(props: Props) {
 
     // Update filtered chat results
     useEffect(() => {
-        let cancel: () => void = () => { };
+        let cancel: () => void = () => {};
 
         async function updateFiltered() {
             try {
-                const promise = makeCancelable(filterChats(
-                    state.allChats ?? [],
-                    state.allUsers ?? [],
-                    mUser?.id,
-                    state.chatSearch,
-                    props.minSearchLength
-                ));
+                const promise = makeCancelable(
+                    filterChats(
+                        state.allChats ?? [],
+                        state.allUsers ?? [],
+                        mUser?.id,
+                        state.chatSearch,
+                        props.minSearchLength
+                    )
+                );
                 cancel = promise.cancel;
                 const filteredChats = await promise.promise;
-                const filteredChatsWithNames: Array<FilteredSidebarChatDescriptor>
-                    = await Promise.all(filteredChats.map(async x =>
-                        x.exists
-                            ? await upgradeChatDescriptor(conf, x)
-                            : x));
+                const filteredChatsWithNames: Array<FilteredSidebarChatDescriptor> = await Promise.all(
+                    filteredChats.map(async x => (x.exists ? await upgradeChatDescriptor(conf, x) : x))
+                );
 
                 dispatchUpdate({
                     action: "updateFilteredChats",
-                    chats: filteredChatsWithNames
+                    chats: filteredChatsWithNames,
                 });
-            }
-            catch (e) {
+            } catch (e) {
                 if (!e.isCanceled) {
                     throw e;
                 }
@@ -461,47 +478,50 @@ export default function ChatsGroup(props: Props) {
             const chatService = mChat;
             async function attach() {
                 try {
-                    listeners.set("userUpdated", await chatService.serviceEventOn("userUpdated", {
-                        componentName: "ChatsGroup",
-                        caller: "updateChatDescriptors",
-                        function: async (u) => {
-                            if (u.updateReasons.includes("friendlyName") ||
-                                u.updateReasons.includes("online") ||
-                                u.updateReasons.includes("attributes")) {
-                                const isOnline = await u.user.isOnline;
-                                function updateDescriptor(x: SidebarChatDescriptor): SidebarChatDescriptor {
-                                    if (x.isDM) {
-                                        const m1 = { ...x.member1 };
-                                        if (m1.profileId === u.user.profileId) {
-                                            m1.isOnline = isOnline;
-                                        }
+                    listeners.set(
+                        "userUpdated",
+                        await chatService.serviceEventOn("userUpdated", {
+                            componentName: "ChatsGroup",
+                            caller: "updateChatDescriptors",
+                            function: async u => {
+                                if (
+                                    u.updateReasons.includes("friendlyName") ||
+                                    u.updateReasons.includes("online") ||
+                                    u.updateReasons.includes("attributes")
+                                ) {
+                                    const isOnline = await u.user.isOnline;
+                                    function updateDescriptor(x: SidebarChatDescriptor): SidebarChatDescriptor {
+                                        if (x.isDM) {
+                                            const m1 = { ...x.member1 };
+                                            if (m1.profileId === u.user.profileId) {
+                                                m1.isOnline = isOnline;
+                                            }
 
-                                        const m2 = { ...x.member2 };
-                                        if (m2 && m2.profileId === u.user.profileId) {
-                                            m2.isOnline = isOnline;
-                                        }
+                                            const m2 = { ...x.member2 };
+                                            if (m2 && m2.profileId === u.user.profileId) {
+                                                m2.isOnline = isOnline;
+                                            }
 
-                                        return {
-                                            ...x,
-                                            member1: m1,
-                                            member2: m2
+                                            return {
+                                                ...x,
+                                                member1: m1,
+                                                member2: m2,
+                                            };
+                                        } else {
+                                            return x;
                                         }
                                     }
-                                    else {
-                                        return x;
-                                    }
+
+                                    dispatchUpdate({
+                                        action: "updateChatDescriptors",
+                                        fActive: updateDescriptor,
+                                        fFiltered: x => (x.exists ? updateDescriptor(x) : x),
+                                    });
                                 }
-
-                                dispatchUpdate({
-                                    action: "updateChatDescriptors",
-                                    fActive: updateDescriptor,
-                                    fFiltered: (x) => x.exists ? updateDescriptor(x) : x
-                                });
-                            }
-                        }
-                    }));
-                }
-                catch (e) {
+                            },
+                        })
+                    );
+                } catch (e) {
                     if (!e.isCanceled) {
                         throw e;
                     }
@@ -531,13 +551,13 @@ export default function ChatsGroup(props: Props) {
     }, [conf, logger, mChat]);
 
     useEffect(() => {
-        let f: () => void = () => { };
+        let f: () => void = () => {};
         if (mChat) {
-            f = mChat.chatUnreadCountChangedEvent.sub((ev) => {
+            f = mChat.chatUnreadCountChangedEvent.sub(ev => {
                 dispatchUpdate({
                     action: "updateChatDescriptors",
-                    fActive: (x) => x.id === ev.chatId ? { ...x, unreadCount: ev.unreadCount } : x,
-                    fFiltered: (x) => x.exists && x.id === ev.chatId ? { ...x, unreadCount: ev.unreadCount } : x
+                    fActive: x => (x.id === ev.chatId ? { ...x, unreadCount: ev.unreadCount } : x),
+                    fFiltered: x => (x.exists && x.id === ev.chatId ? { ...x, unreadCount: ev.unreadCount } : x),
                 });
             });
         }
@@ -547,78 +567,91 @@ export default function ChatsGroup(props: Props) {
     }, [mChat]);
 
     const watchedId = mUser?.watchedId;
-    const onWatchedItemsUpdated = useCallback(function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
-        for (const object of update.objects) {
-            if (object.id === watchedId) {
-                dispatchUpdate({
-                    action: "setWatchedChatIds",
-                    ids: (object as WatchedItems).watchedChats
-                });
+    const onWatchedItemsUpdated = useCallback(
+        function _onWatchedItemsUpdated(update: DataUpdatedEventDetails<"WatchedItems">) {
+            for (const object of update.objects) {
+                if (object.id === watchedId) {
+                    dispatchUpdate({
+                        action: "setWatchedChatIds",
+                        ids: (object as WatchedItems).watchedChats,
+                    });
+                }
             }
-        }
-    }, [watchedId]);
+        },
+        [watchedId]
+    );
 
     useDataSubscription("WatchedItems", onWatchedItemsUpdated, null, state.tasks.has("loadingActiveChats"), conf);
 
-    const onTextChatUpdated = useCallback(async function _onTextChatUpdated(update: DataUpdatedEventDetails<"TextChat">) {
-        if (mChat) {
-            let newAllChats: Array<any> | null = null;
-            let newActiveChats: Array<any> | null = null;
+    const onTextChatUpdated = useCallback(
+        async function _onTextChatUpdated(update: DataUpdatedEventDetails<"TextChat">) {
+            if (mChat) {
+                let newAllChats: Array<any> | null = null;
+                let newActiveChats: Array<any> | null = null;
 
-            for (const object of update.objects) {
-                const chat = await mChat.getChat(object.id);
-                if (chat) {
-                    if (state.watchedChatIds?.includes(chat.id)) {
-                        const chatD = await upgradeChatDescriptor(conf, chat);
-                        if (!newActiveChats) {
-                            newActiveChats = [];
+                for (const object of update.objects) {
+                    const chat = await mChat.getChat(object.id);
+                    if (chat) {
+                        if (state.watchedChatIds?.includes(chat.id)) {
+                            const chatD = await upgradeChatDescriptor(conf, chat);
+                            if (!newActiveChats) {
+                                newActiveChats = [];
+                            }
+                            newActiveChats.push(chatD);
                         }
-                        newActiveChats.push(chatD);
+                        if (!newAllChats) {
+                            newAllChats = [];
+                        }
+                        newAllChats.push(chat);
                     }
-                    if (!newAllChats) {
-                        newAllChats = [];
-                    }
-                    newAllChats.push(chat);
-                }
-            }
-
-            if (newAllChats) {
-                const updates: Array<ChatsGroupUpdate> = [{
-                    action: "updateAllChats",
-                    chats: newAllChats
-                }];
-
-                if (newActiveChats) {
-                    updates.push({
-                        action: "updateActiveChats",
-                        chats: newActiveChats
-                    });
                 }
 
-                dispatchUpdate(updates);
-            }
-        }
-    }, [conf, mChat, state.watchedChatIds]);
+                if (newAllChats) {
+                    const updates: Array<ChatsGroupUpdate> = [
+                        {
+                            action: "updateAllChats",
+                            chats: newAllChats,
+                        },
+                    ];
 
-    const onTextChatDeleted = useCallback(async function _onTextChatDeleted(update: DataDeletedEventDetails<"TextChat">) {
+                    if (newActiveChats) {
+                        updates.push({
+                            action: "updateActiveChats",
+                            chats: newActiveChats,
+                        });
+                    }
+
+                    dispatchUpdate(updates);
+                }
+            }
+        },
+        [conf, mChat, state.watchedChatIds]
+    );
+
+    const onTextChatDeleted = useCallback(async function _onTextChatDeleted(
+        update: DataDeletedEventDetails<"TextChat">
+    ) {
         dispatchUpdate([
             {
                 action: "deleteFromAllChats",
-                chats: [update.objectId]
+                chats: [update.objectId],
             },
             {
                 action: "deleteFromActiveChats",
-                chats: [update.objectId]
-            }
+                chats: [update.objectId],
+            },
         ]);
-    }, []);
+    },
+    []);
 
     useDataSubscription("TextChat", onTextChatUpdated, onTextChatDeleted, !state.watchedChatIds, conf);
 
-    const onUserProfileUpdated = useCallback(async function _onUserProfileUpdated(update: DataUpdatedEventDetails<"UserProfile">) {
+    const onUserProfileUpdated = useCallback(async function _onUserProfileUpdated(
+        update: DataUpdatedEventDetails<"UserProfile">
+    ) {
         dispatchUpdate({
             action: "updateAllUsers",
-            update: (existing) => {
+            update: existing => {
                 const updated = Array.from(existing ?? []);
                 for (const object of update.objects) {
                     const idx = updated?.findIndex(x => x.id === object.id);
@@ -626,7 +659,7 @@ export default function ChatsGroup(props: Props) {
                     const item = {
                         id: profile.id,
                         name: profile.displayName,
-                        isBanned: profile.isBanned
+                        isBanned: profile.isBanned,
                     };
                     if (idx === -1) {
                         updated.push(item);
@@ -635,16 +668,20 @@ export default function ChatsGroup(props: Props) {
                     }
                 }
                 return updated;
-            }
+            },
         });
-    }, []);
+    },
+    []);
 
-    const onUserProfileDeleted = useCallback(async function _onUserProfileDeleted(update: DataDeletedEventDetails<"UserProfile">) {
+    const onUserProfileDeleted = useCallback(async function _onUserProfileDeleted(
+        update: DataDeletedEventDetails<"UserProfile">
+    ) {
         dispatchUpdate({
             action: "updateAllUsers",
-            update: (old) => old?.filter(x => x.id !== update.objectId) ?? null
+            update: old => old?.filter(x => x.id !== update.objectId) ?? null,
         });
-    }, []);
+    },
+    []);
 
     useDataSubscription("UserProfile", onUserProfileUpdated, onUserProfileDeleted, !state.allUsers, conf);
 
@@ -652,8 +689,10 @@ export default function ChatsGroup(props: Props) {
 
     const chatsButtons: Array<ButtonSpec> = [
         {
-            type: "search", label: "Search all chats", icon: "fas fa-search",
-            onSearch: (event) => {
+            type: "search",
+            label: "Search all chats",
+            icon: "fas fa-search",
+            onSearch: event => {
                 dispatchUpdate({ action: "searchChats", search: event.target.value });
                 return event.target.value;
             },
@@ -662,23 +701,23 @@ export default function ChatsGroup(props: Props) {
             },
             onSearchClose: () => {
                 dispatchUpdate({ action: "searchChats", search: null });
-            }
+            },
         },
         { type: "link", label: "View all chats", icon: "fas fa-users", url: "/chat" },
-        { type: "link", label: "Create new chat", icon: "fas fa-plus", url: "/chat/new" }
+        { type: "link", label: "Create new chat", icon: "fas fa-plus", url: "/chat/new" },
     ];
 
     if (mUser) {
         let chatEl: JSX.Element;
         const chatSearchValid = state.chatSearch && state.chatSearch.length >= props.minSearchLength;
-        if ((state.activeChats && state.activeChats.length > 0)
-            || (chatSearchValid && state.allChats && state.filteredChats.length > 0)) {
-
+        if (
+            (state.activeChats && state.activeChats.length > 0) ||
+            (chatSearchValid && state.allChats && state.filteredChats.length > 0)
+        ) {
             let chats: Array<FilteredSidebarChatDescriptor>;
             if (state.chatSearch && state.chatSearch.length >= props.minSearchLength) {
                 chats = state.filteredChats;
-            }
-            else {
+            } else {
                 // We know this can't be null, but TS can't quite figure that out
                 chats = state.activeChats as Array<SidebarChatDescriptor>;
             }
@@ -686,22 +725,21 @@ export default function ChatsGroup(props: Props) {
             const renderedChats = chats
                 .filter(x => !x.exists || (!x.isModeration && !x.isModerationHub))
                 .map(chat => {
-                    const { friendlyName, icon, unreadCount, isDM }
-                        = chat.exists
-                            ? computeChatDisplayName(chat, mUser)
-                            : {
-                                isDM: true,
-                                friendlyName: chat.friendlyName,
-                                icon: <i className="fas fa-plus" />,
-                                unreadCount: undefined
-                            };
+                    const { friendlyName, icon, unreadCount, isDM } = chat.exists
+                        ? computeChatDisplayName(chat, mUser)
+                        : {
+                              isDM: true,
+                              friendlyName: chat.friendlyName,
+                              icon: <i className="fas fa-plus" />,
+                              unreadCount: undefined,
+                          };
                     return {
                         friendlyName,
                         icon,
                         isDM,
                         unreadCount,
                         key: chat.exists ? chat.id : `new-${friendlyName}`,
-                        path: chat.exists ? `/chat/${chat.id}` : chat.targetPath
+                        path: chat.exists ? `/chat/${chat.id}` : chat.targetPath,
                     };
                 })
                 .sort((x, y) => x.friendlyName.localeCompare(y.friendlyName));
@@ -711,44 +749,64 @@ export default function ChatsGroup(props: Props) {
             for (const { key, friendlyName, icon, path, unreadCount, isDM } of renderedChats) {
                 chatMenuItems.push({
                     key,
-                    element:
+                    element: (
                         <MenuItem
                             title={friendlyName + (!!unreadCount ? ` (${unreadCount})` : "")}
-                            label={(isDM ? "Direct messages with " : "Group chat: ") + friendlyName + (unreadCount !== undefined ? ` (${unreadCount} unread messages)` : "")}
+                            label={
+                                (isDM ? "Direct messages with " : "Group chat: ") +
+                                friendlyName +
+                                (unreadCount !== undefined ? ` (${unreadCount} unread messages)` : "")
+                            }
                             icon={icon}
                             action={path}
                             bold={unreadCount ? unreadCount > 0 : false}
                             onClick={props.onItemClicked}
                             tooltip={showTooltip ? "Hint: You can open multiple chats in separate tabs" : undefined}
                         />
+                    ),
                 });
             }
 
             chatEl = <MenuGroup items={chatMenuItems} />;
-        }
-        else {
-            chatEl = <>
-                {state.allChats ? <></> : <LoadingSpinner />}
-                <MenuGroup items={[{
-                    key: "whole-chat",
-                    element: <MenuItem title="View all chats" label="View all chats" icon={<i className="fas fa-users"></i>} action="/chat" bold={true} onClick={props.onItemClicked} />
-                }]} />
-            </>;
+        } else {
+            chatEl = (
+                <>
+                    {state.allChats ? <></> : <LoadingSpinner />}
+                    <MenuGroup
+                        items={[
+                            {
+                                key: "whole-chat",
+                                element: (
+                                    <MenuItem
+                                        title="View all chats"
+                                        label="View all chats"
+                                        icon={<i className="fas fa-users"></i>}
+                                        action="/chat"
+                                        bold={true}
+                                        onClick={props.onItemClicked}
+                                    />
+                                ),
+                            },
+                        ]}
+                    />
+                </>
+            );
         }
 
-        chatsExpander
-            = <MenuExpander
+        chatsExpander = (
+            <MenuExpander
                 title="Chats"
                 isOpen={state.isOpen}
                 buttons={chatsButtons}
                 onOpenStateChange={() => dispatchUpdate({ action: "setIsOpen", isOpen: !state.isOpen })}
+                onItemClicked={props.onItemClicked}
             >
                 {chatEl}
-            </MenuExpander>;
+            </MenuExpander>
+        );
 
         return chatsExpander;
-    }
-    else {
+    } else {
         return <></>;
     }
 }

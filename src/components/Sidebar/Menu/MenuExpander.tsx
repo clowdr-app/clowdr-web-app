@@ -1,23 +1,25 @@
 import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-export type ButtonSpec = {
-    type: "link";
-    label: string;
-    icon: string;
+export type ButtonSpec =
+    | {
+          type: "link";
+          label: string;
+          icon: string;
 
-    text?: string;
-    url: string;
-} | {
-    type: "search";
-    label: string;
-    icon: string;
-    placeholder?: string;
+          text?: string;
+          url: string;
+      }
+    | {
+          type: "search";
+          label: string;
+          icon: string;
+          placeholder?: string;
 
-    onSearch?: (event: ChangeEvent<HTMLInputElement>) => string;
-    onSearchOpen?: () => void;
-    onSearchClose?: () => void;
-};
+          onSearch?: (event: ChangeEvent<HTMLInputElement>) => string;
+          onSearchOpen?: () => void;
+          onSearchClose?: () => void;
+      };
 
 interface Props {
     children: JSX.Element;
@@ -25,6 +27,7 @@ interface Props {
     buttons: Array<ButtonSpec>;
     isOpen: boolean;
     onOpenStateChange?: () => void;
+    onItemClicked?: () => void;
 }
 
 export default function MenuExpander(props: Props) {
@@ -42,8 +45,7 @@ export default function MenuExpander(props: Props) {
     useEffect(() => {
         if (isSearchOpen) {
             searchBoxRef.current?.focus();
-        }
-        else if (isSearchOpen !== null) {
+        } else if (isSearchOpen !== null) {
             searchButtonRef.current?.focus();
         }
     }, [isSearchOpen]);
@@ -71,8 +73,7 @@ export default function MenuExpander(props: Props) {
                     function changeSearch(event: ChangeEvent<HTMLInputElement>) {
                         if (searchButtonSpec.onSearch) {
                             setSearchBoxValue(searchButtonSpec.onSearch(event));
-                        }
-                        else {
+                        } else {
                             setSearchBoxValue(event.target.value);
                         }
                     }
@@ -85,50 +86,50 @@ export default function MenuExpander(props: Props) {
                         }
                     }
 
-                    buttonElem
-                        = !isSearchOpen
-                            ? <button
+                    buttonElem = !isSearchOpen ? (
+                        <button className="search" onClick={openSearch} ref={searchButtonRef} aria-label={button.label}>
+                            <i className={"fas " + button.icon}></i>
+                        </button>
+                    ) : (
+                        <div className="search-wrapper">
+                            <input
+                                ref={searchBoxRef}
                                 className="search"
-                                onClick={openSearch}
-                                ref={searchButtonRef}
-                                aria-label={button.label}>
-                                <i className={"fas " + button.icon}></i>
+                                type="text"
+                                aria-label={button.label}
+                                placeholder={button.placeholder ?? "Search..."}
+                                onChange={changeSearch}
+                                value={searchBoxValue}
+                                onKeyDown={ev => onSearchBoxKeyDown(ev)}
+                            />
+                            <button
+                                aria-label="Close search"
+                                onClick={() => {
+                                    closeSearch();
+                                }}
+                                className="search-close-button"
+                            >
+                                <i className="fas fa-times-circle"></i>
                             </button>
-                            : <div className="search-wrapper">
-                                <input
-                                    ref={searchBoxRef}
-                                    className="search"
-                                    type="text"
-                                    aria-label={button.label}
-                                    placeholder={button.placeholder ?? "Search..."}
-                                    onChange={changeSearch}
-                                    value={searchBoxValue}
-                                    onKeyDown={(ev) => onSearchBoxKeyDown(ev)}
-                                />
-                                <button
-                                    aria-label="Close search"
-                                    onClick={() => {
-                                        closeSearch();
-                                    }}
-                                    className="search-close-button"
-                                >
-                                    <i className="fas fa-times-circle"></i>
-                                </button>
-                            </div>;
-                }
-                else {
+                        </div>
+                    );
+                } else {
                     throw new Error("At most one search button per expander group.");
                 }
                 break;
             case "link":
                 if (!isSearchOpen) {
-                    buttonElem = <Link
-                        className="action-link"
-                        to={button.url}
-                        aria-label={button.label}>
-                        <i className={button.icon}></i>
-                        {button.text ? <span className="text">{button.text}</span> : <></>}
-                    </Link>;
+                    buttonElem = (
+                        <Link
+                            className="action-link"
+                            to={button.url}
+                            onClick={props.onItemClicked}
+                            aria-label={button.label}
+                        >
+                            <i className={button.icon}></i>
+                            {button.text ? <span className="text">{button.text}</span> : <></>}
+                        </Link>
+                    );
                 }
                 break;
         }
@@ -136,11 +137,7 @@ export default function MenuExpander(props: Props) {
     }
 
     return (
-        <div
-            className="menu-expander"
-            aria-label={`${props.title}`}
-            role="menubar"
-        >
+        <div className="menu-expander" aria-label={`${props.title}`} role="menubar">
             <div className={"expander-controls"}>
                 <button
                     className="expansion-control"
@@ -150,11 +147,17 @@ export default function MenuExpander(props: Props) {
                     {props.isOpen ? <i className="fas fa-caret-down"></i> : <i className="fas fa-caret-right"></i>}
                     <h2>{props.title}</h2>
                 </button>
-                {buttonElems.reduceRight((acc, x) => <>{acc}{x}</>, <></>)}
+                {buttonElems.reduceRight(
+                    (acc, x) => (
+                        <>
+                            {acc}
+                            {x}
+                        </>
+                    ),
+                    <></>
+                )}
             </div>
-            <div className={"expander-contents" + (props.isOpen ? "" : " closed")}>
-                {props.children}
-            </div>
+            <div className={"expander-contents" + (props.isOpen ? "" : " closed")}>{props.children}</div>
         </div>
     );
 }

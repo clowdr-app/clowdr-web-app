@@ -452,6 +452,7 @@ export default function SponsorsGroup(props: Props) {
                 isOpen={state.isOpen}
                 buttons={sponsorsButtons}
                 onOpenStateChange={() => dispatchUpdate({ action: "setIsOpen", isOpen: !state.isOpen })}
+                onItemClicked={props.onItemClicked}
             >
                 {sponsorsEl}
             </MenuExpander>

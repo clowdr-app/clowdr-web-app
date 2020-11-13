@@ -512,6 +512,7 @@ export default function RoomsGroup(props: Props) {
                 isOpen={state.isOpen}
                 buttons={roomsButtons}
                 onOpenStateChange={() => dispatchUpdate({ action: "setIsOpen", isOpen: !state.isOpen })}
+                onItemClicked={props.onItemClicked}
             >
                 {roomsEl}
             </MenuExpander>
