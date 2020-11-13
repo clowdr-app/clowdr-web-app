@@ -1,3 +1,4 @@
+import { Tooltip } from "@material-ui/core";
 import React from "react";
 import { Link } from "react-router-dom";
 
@@ -10,6 +11,7 @@ interface Props {
     children?: React.ReactNode | React.ReactNodeArray;
     className?: string;
     onClick?: () => void;
+    tooltip?: string;
 }
 
 export default function MenuItem(props: Props) {
@@ -22,22 +24,35 @@ export default function MenuItem(props: Props) {
             {props.children ? <div className="child-content">{props.children}</div> : <></>}
         </>
     );
-    if (typeof props.action === "string") {
+    const linkEl = () => {
+        if (typeof props.action === "string") {
+            return (
+                <Link
+                    className={`menu-item ${props.className ?? ""}`}
+                    aria-label={props.label}
+                    to={props.action}
+                    onClick={props.onClick}
+                >
+                    {contents}
+                </Link>
+            );
+        } else {
+            return (
+                <button className={`menu-item ${props.className ?? ""}`} aria-label={props.label} onClick={props.action}>
+                    {contents}
+                </button>
+            );
+        }
+    };
+
+    if (props.tooltip) {
         return (
-            <Link
-                className={`menu-item ${props.className ?? ""}`}
-                aria-label={props.label}
-                to={props.action}
-                onClick={props.onClick}
-            >
-                {contents}
-            </Link>
+            <Tooltip title={props.tooltip}>
+                {linkEl()}
+            </Tooltip>
         );
-    } else {
-        return (
-            <button className={`menu-item ${props.className ?? ""}`} aria-label={props.label} onClick={props.action}>
-                {contents}
-            </button>
-        );
+    }
+    else {
+        return linkEl();
     }
 }

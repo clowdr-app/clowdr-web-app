@@ -8,6 +8,7 @@ import useDataSubscription from "../../hooks/useDataSubscription";
 import TrackMarker from "../Pages/Program/All/TrackMarker";
 import useMaybeUserProfile from "../../hooks/useMaybeUserProfile";
 import { generateTimeText } from "../../classes/Utils";
+import { Tooltip } from "@material-ui/core";
 
 export type ProgramSessionWithStartEnd = {
     session: ProgramSession;
@@ -76,6 +77,7 @@ interface ItemRenderData {
     additionalClasses: string;
     url: string;
     sortValue: number;
+    startTime: Date;
 
     item: {
         type: "event";
@@ -218,6 +220,7 @@ export default function ProgramList(props: Props) {
                         const result: ItemRenderData = {
                             title: session.title,
                             url: `/session/${session.id}`,
+                            startTime: sessionWSE.earliestStart,
                             track: { id: track.id, name: track.shortName, colour: track.colour },
                             isWatched: !!props.watchedSessions?.includes(session.id),
                             item: { type: "session", data: session },
@@ -231,6 +234,7 @@ export default function ProgramList(props: Props) {
                         const result: ItemRenderData = {
                             title: (await event.item).title,
                             url: `/event/${event.id}`,
+                            startTime: event.startTime,
                             track: { id: track.id, name: track.shortName, colour: track.colour },
                             isWatched: !!props.watchedEvents?.includes(event.id),
                             item: { type: "event", data: event },
@@ -344,27 +348,33 @@ export default function ProgramList(props: Props) {
         for (const item of group.items) {
             const table = item.item.type;
             const id = item.item.data.id;
+            const startTime = item.startTime;
             itemElems.push(
-                <li key={item.item.data.id} className={item.additionalClasses + (item.isWatched ? " watched" : "")}>
-                    <Link to={item.url}>
-                        <h3>{item.title}</h3>
-                    </Link>
-                    {item.isWatched
-                        ? <button className="watch" onClick={(ev) => {
-                            ev.preventDefault();
-                            ev.stopPropagation();
-                            doToggleFollow(table, id);
-                        }}><i className="fas fa-star"></i></button>
-                        : <button className="watch" onClick={(ev) => {
-                            ev.preventDefault();
-                            ev.stopPropagation();
-                            doToggleFollow(table, id);
-                        }}><i className="far fa-star"></i></button>}
-                    <Link className="track" to={`/track/${item.track.id}`}>
-                        <TrackMarker track={item.track.colour} small={true} />
-                        <span>{item.track.name}</span>
-                    </Link>
-                </li>);
+                <Tooltip title={`Starts at ${startTime.toLocaleTimeString(undefined, {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                })} your time`}>
+                    <li key={item.item.data.id} className={item.additionalClasses + (item.isWatched ? " watched" : "")}>
+                        <Link to={item.url}>
+                            <h3>{item.title}</h3>
+                        </Link>
+                        {item.isWatched
+                            ? <button className="watch" onClick={(ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                doToggleFollow(table, id);
+                            }}><i className="fas fa-star"></i></button>
+                            : <button className="watch" onClick={(ev) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
+                                doToggleFollow(table, id);
+                            }}><i className="far fa-star"></i></button>}
+                        <Link className="track" to={`/track/${item.track.id}`}>
+                            <TrackMarker track={item.track.colour} small={true} />
+                            <span>{item.track.name}</span>
+                        </Link>
+                    </li>
+                </Tooltip>);
         }
 
         const groupElem = <div className="group">

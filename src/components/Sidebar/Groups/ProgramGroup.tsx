@@ -507,6 +507,7 @@ export default function ProgramGroup(props: Props) {
     const programButtons: Array<ButtonSpec> = [
         {
             type: "search", label: "Search for a title", icon: "fas fa-search",
+            placeholder: "Search (titles only)...",
             onSearch: (event) => {
                 dispatchUpdate({ action: "searchProgram", search: event.target.value });
                 return event.target.value;

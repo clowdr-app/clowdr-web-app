@@ -23,6 +23,7 @@ import Video from "../../classes/Video/Video";
 import { addError } from "../../classes/Notifications/Notifications";
 import { handleParseFileURLWeirdness } from "../../classes/Utils";
 import AppBlocker from "../AppBlocker/AppBlocker";
+import RandomPrompts from "../RandomPrompts/RandomPrompts";
 
 type AppTasks
     = "beginLoadConference"
@@ -547,14 +548,18 @@ export default function App() {
                 <UserRolesContext.Provider value={appState.userRoles}>
                     <UserProfileContext.Provider value={appState.profile}>
                         <AppBlocker>
-                            <ChatContext.Provider value={chatReady ? Chat.instance() : null}>
-                                <VideoContext.Provider value={videoReady ? Video.instance() : null}>
-                                    <EmojiContext.Provider value={{ element: emojiPickerElement }}>
-                                        {sidebar}
-                                        {page}
-                                    </EmojiContext.Provider>
-                                </VideoContext.Provider>
-                            </ChatContext.Provider>
+                            <>
+                                <RandomPrompts />
+
+                                <ChatContext.Provider value={chatReady ? Chat.instance() : null}>
+                                    <VideoContext.Provider value={videoReady ? Video.instance() : null}>
+                                        <EmojiContext.Provider value={{ element: emojiPickerElement }}>
+                                            {sidebar}
+                                            {page}
+                                        </EmojiContext.Provider>
+                                    </VideoContext.Provider>
+                                </ChatContext.Provider>
+                            </>
                         </AppBlocker>
                     </UserProfileContext.Provider>
                 </UserRolesContext.Provider>

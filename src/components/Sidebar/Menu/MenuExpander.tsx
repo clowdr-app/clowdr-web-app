@@ -12,6 +12,7 @@ export type ButtonSpec = {
     type: "search";
     label: string;
     icon: string;
+    placeholder?: string;
 
     onSearch?: (event: ChangeEvent<HTMLInputElement>) => string;
     onSearchOpen?: () => void;
@@ -99,7 +100,7 @@ export default function MenuExpander(props: Props) {
                                     className="search"
                                     type="text"
                                     aria-label={button.label}
-                                    placeholder="Search..."
+                                    placeholder={button.placeholder ?? "Search..."}
                                     onChange={changeSearch}
                                     value={searchBoxValue}
                                     onKeyDown={(ev) => onSearchBoxKeyDown(ev)}

@@ -15,6 +15,7 @@ import useLogger from '../../../hooks/useLogger';
 import { DataDeletedEventDetails, DataUpdatedEventDetails } from '@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache';
 import useDataSubscription from '../../../hooks/useDataSubscription';
 import useSafeAsync from '../../../hooks/useSafeAsync';
+import { randomBackoff } from '../../RandomPrompts/RandomPrompts';
 // import { addNotification } from '../../../classes/Notifications/Notifications';
 // import ReactMarkdown from 'react-markdown';
 // import { emojify } from 'react-emojione';
@@ -70,6 +71,7 @@ interface ChatsGroupState {
     watchedChatIds: Array<string> | null;
     filteredChats: Array<FilteredSidebarChatDescriptor>;
     allUsers: Array<SidebarUserDescriptor> | null;
+    randomDeterminant: number;
 }
 
 type ChatsGroupUpdate
@@ -142,7 +144,8 @@ function nextSidebarState(currentState: ChatsGroupState, updates: ChatsGroupUpda
         activeChats: currentState.activeChats,
         filteredChats: currentState.filteredChats,
         watchedChatIds: currentState.watchedChatIds,
-        allUsers: currentState.allUsers
+        allUsers: currentState.allUsers,
+        randomDeterminant: Math.random()
     };
 
     let allChatsUpdated = false;
@@ -338,7 +341,8 @@ export default function ChatsGroup(props: Props) {
         activeChats: null,
         watchedChatIds: null,
         filteredChats: [],
-        allUsers: null
+        allUsers: null,
+        randomDeterminant: Math.random()
     });
 
     logger.enable();
@@ -701,8 +705,8 @@ export default function ChatsGroup(props: Props) {
                 .sort((x, y) => x.friendlyName.localeCompare(y.friendlyName));
 
             const chatMenuItems: MenuGroupItems = [];
+            const showTooltip = randomBackoff(mUser.createdAt, state.randomDeterminant, 6);
             for (const { key, friendlyName, icon, path, unreadCount } of renderedChats) {
-
                 chatMenuItems.push({
                     key,
                     element:
@@ -712,7 +716,9 @@ export default function ChatsGroup(props: Props) {
                             icon={icon}
                             action={path}
                             bold={unreadCount ? unreadCount > 0 : false}
-                            onClick={props.onItemClicked} />
+                            onClick={props.onItemClicked}
+                            tooltip={showTooltip ? "You can open multiple chats in separate tabs" : undefined}
+                        />
                 });
             }
 
