@@ -22,7 +22,6 @@ import IMember from "../../../classes/Chat/IMember";
 import useUserRoles from "../../../hooks/useUserRoles";
 import useEmojiPicker from "../../../hooks/useEmojiPicker";
 import ReactDOM from "react-dom";
-import { emojify } from "react-emojione";
 import BioPopover from "../../Profile/BioPopover/BioPopover";
 
 export type RenderedMessage = {
@@ -540,7 +539,7 @@ export default function Message(props: {
                                                 }
                                             }}
                                         >
-                                            <span>{doEmojify(reaction)}</span>
+                                            <span>{doEmojify(reaction.replace(/-/g, "_"))}</span>
                                             <span>{msg.reactions[reaction].ids.length}</span>
                                         </button>
                                     </Tooltip>
