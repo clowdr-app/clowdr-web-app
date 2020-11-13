@@ -126,7 +126,7 @@ export default class Channel implements IChannel {
     async setLastReadIndex(value: number | null): Promise<void> {
         const channel = await this.upgrade();
 
-        if (!value) {
+        if (value === null) {
             await channel.setNoMessagesConsumed();
         }
         else {
