@@ -64,13 +64,13 @@ export default function AllAttendees() {
     );
 
     useSafeAsync(
-        async () => await _Role.userProfileIdsOfRoles(conference.id, ["admin"]),
+        async () => isAdmin ? await _Role.userProfileIdsOfRoles(conference.id, ["admin"]) : [],
         setAdmins,
         [conference.id],
         "AllAttendees:getAdmins"
     );
     useSafeAsync(
-        async () => await _Role.userProfileIdsOfRoles(conference.id, ["manager"]),
+        async () => isAdmin ? await _Role.userProfileIdsOfRoles(conference.id, ["manager"]) : [],
         setManagers,
         [conference.id],
         "AllAttendees:getManagers"
