@@ -5,11 +5,11 @@ export default function Legal() {
     return <ReactMarkdownCustomised>
         {`## Who are we
 
-Clowdr is not currently a legal entity, it's just an [open source project](https://github.com/clowdr-app).
-Your information is managed and processed by our platform on behalf of
-your conference, with permission given to the Clowdr development team to
-access information necessary to make the conference happen. You can find
-the list of our dev team on our [About page](/about).
+Clowdr is Community Interest Limited Liability Company incorporated in the UK
+(company number 12984216). Your information is managed and processed by our
+platform on behalf of your conference, with permission given to the Clowdr
+development team to access information necessary to make the conference happen.
+You can find the list of our dev team on our [About page](/about).
 
 ## Privacy
 
