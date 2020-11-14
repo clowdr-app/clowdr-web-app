@@ -13,6 +13,8 @@ import Column, { Item as ColumnItem } from "../../Columns/Column/Column";
 import ConfirmButton from "../../ConfirmButton/ConfirmButton";
 import "./AllAttendees.scss";
 import FlairChip from "../../Profile/FlairChip/FlairChip";
+import { ActionButton } from "../../../contexts/HeadingContext";
+import { generateAndDownloadCSV } from "../../../classes/Utils";
 
 interface AttendeeRenderData {
     profile: UserProfile;
@@ -30,7 +32,25 @@ export default function AllAttendees() {
     const [admins, setAdmins] = useState<string[] | undefined>();
     const [managers, setManagers] = useState<string[] | undefined>();
 
-    useHeading(`All attendees${isAdmin && userProfiles ? ` (${userProfiles.length})` : ""}`);
+    const actionButtons: Array<ActionButton> = [];
+    if (isAdmin && userProfiles) {
+        actionButtons.push({
+            label: "Download CSV",
+            ariaLabel: "Download CSV file for all attendees",
+            icon: <i className="fas fa-file-download"></i>,
+            action: () => {
+                generateAndDownloadCSV(userProfiles.map(x => ({
+                    displayName: x.displayName,
+                    realName: x.realName
+                })));
+            }
+        });
+    }
+
+    useHeading({
+        title: `All attendees${isAdmin && userProfiles ? ` (${userProfiles.length})` : ""}`,
+        buttons: actionButtons
+    });
 
     // Compute list items from user profiles
     useSafeAsync(

@@ -1,5 +1,6 @@
 import { Tooltip } from "@material-ui/core";
 import React, { useState } from "react";
+import { generateAndDownloadCSV } from "../../../../../classes/Utils";
 import AsyncButton from "../../../../AsyncButton/AsyncButton";
 import "./EditorTable.scss";
 
@@ -288,6 +289,22 @@ export default function EditorTable<I, F extends FilterTypes<I>>(props: TableEdi
 
     return (
         <>
+            <div className="editor-table-controls">
+                <button
+                    onClick={(ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+
+                        const data: Array<any> = [];
+                        for (const itemKey of itemKeys) {
+                            data.push(props.data[itemKey]);
+                        }
+                        generateAndDownloadCSV(data);
+                    }}
+                >
+                    <i className="fas fa-file-download"></i> Download CSV
+                </button>
+            </div>
             <table className="editor-table">
                 <thead>
                     <tr>{headings}</tr>

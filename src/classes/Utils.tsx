@@ -2,6 +2,7 @@ import React from "react";
 import { Twemoji } from "react-emoji-render";
 import ReactPlayer from "react-player";
 import ReactMarkdown from "react-markdown";
+import { jsonToCSV } from "react-papaparse";
 
 export function daysIntoYear(date: Date) {
     return (
@@ -112,4 +113,16 @@ export function ReactMarkdownCustomised(props?: {
             source={props?.children}
         />
     );
+}
+
+export function generateAndDownloadCSV(data: any) {
+    const csvStr = jsonToCSV(data);
+
+    const file = new Blob(
+        [csvStr],
+        { type: 'text/plain' }
+    );
+
+    const fileURL = URL.createObjectURL(file);
+    window.open(fileURL, "_blank");
 }
