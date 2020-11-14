@@ -1,6 +1,20 @@
 @import "../../../styles/util.scss";
 
 .exhibits-page {
+    .react-tabs__tab-list {
+        margin-top: 2em;
+        text-align: center;
+
+        .react-tabs__tab {
+            font-size: 120%;
+            border-radius: 5px 5px 0 0;
+
+            &.react-tabs__tab--selected {
+                background-color: #f0f0f0 !important;
+            }
+        }
+    }
+
     .exhibits {
         display              : grid;
         grid-template-columns: minmax(0, 1fr);

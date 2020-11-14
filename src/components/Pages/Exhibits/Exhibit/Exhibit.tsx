@@ -10,13 +10,13 @@ import ExhibitAuthorsList from "./ExhibitAuthorsList/ExhibitAuthorsList";
 import "./Exhibit.scss";
 
 interface ExhibitProps {
+    track: ProgramTrack;
     programItem: ProgramItem;
 }
 
 export default function Exhibit(props: ExhibitProps) {
     const conference = useConference();
     const [attachments, setAttachments] = useState<ProgramItemAttachment[] | undefined>();
-    const [track, setTrack] = useState<ProgramTrack | undefined>();
     const [singleEvent, setSingleEvent] = useState<ProgramSessionEvent | "none" | "multiple" | null>(null);
 
     // Fetch initial ProgramItemAttachments
@@ -37,11 +37,6 @@ export default function Exhibit(props: ExhibitProps) {
                 return "multiple";
             }
         }, setSingleEvent, [], "Exhibit:setSingleEvent");
-
-    useSafeAsync(
-        async () => await props.programItem.track,
-        setTrack,
-        [props.programItem.id], "Exhibit:setTrack");
 
     // Subscribe to ProgramItemAttachment updates
     const onProgramItemAttachmentUpdated = useCallback(function _onProgramItemAttachmentUpdated(ev: DataUpdatedEventDetails<"ProgramItemAttachment">) {
@@ -66,7 +61,7 @@ export default function Exhibit(props: ExhibitProps) {
 
     return <article className="exhibit" aria-labelledby={`exhibit-${props.programItem.id}__title`}>
         <Link to={`/item/${props.programItem.id}`} className="exhibit__title">
-            <i className="fas fa-circle" style={{ color: track?.colour }}></i>
+            <i className="fas fa-circle" style={{ color: props.track.colour }}></i>
             <h2 id={`exhibit-${props.programItem.id}__title`}>
                 {props.programItem.title}
             </h2>
