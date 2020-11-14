@@ -5,7 +5,7 @@ import {
 } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import React, { useCallback, useEffect, useState } from "react";
 import { ReactMarkdownCustomised } from "../../../../classes/Utils";
-import { HeadingState } from "../../../../contexts/HeadingContext";
+import { ActionButton, HeadingState } from "../../../../contexts/HeadingContext";
 import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import useHeading from "../../../../hooks/useHeading";
@@ -157,7 +157,19 @@ export default function ViewItem(props: Props) {
     useDataSubscription("ProgramItemAttachment", onAttachmentUpdated, onAttachmentDeleted, !attachments, conference);
     useDataSubscription("ContentFeed", onContentFeedUpdated, onContentFeedDeleted, !feed, conference);
 
-    useHeading(props.heading ?? item?.title ?? "Program Item");
+    const buttons: Array<ActionButton> = [];
+    if (item) {
+        buttons.push({
+            label: "Track",
+            action: `/track/${item.trackId}`,
+            icon: <i className="fas fa-eye"></i>,
+            ariaLabel: "View the track for this item"
+        });
+    }
+    useHeading(props.heading ?? {
+        title: item?.title ?? "Program Item",
+        buttons
+    });
 
     let attachmentEls: Array<JSX.Element> = [];
 
