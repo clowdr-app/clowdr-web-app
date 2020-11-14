@@ -614,6 +614,7 @@ export default function AdminRegistration() {
                         if (newRegistration) {
                             const email = newRegistration.email;
                             assert(email);
+                            newRegistration.name = newRegistration.name?.trim();
                             setRegs(oldRegs => {
                                 const newRegs = { ...oldRegs };
                                 newRegs[email] = newRegistration as RegistrationSpec;
