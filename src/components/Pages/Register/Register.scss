@@ -14,6 +14,10 @@ $main-width : mm(150);
 
     p {
         margin: 1em 0;
+
+        &.no-bottom-margin {
+            margin-bottom: 0;
+        }
     }
 
     .sign-in {

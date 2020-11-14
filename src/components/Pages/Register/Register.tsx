@@ -172,7 +172,7 @@ export default function Register(props: Props) {
                             Full name required.
                         </p>
                     )}
-                    {<p>If you have previously used Clowdr with the email address above, please enter your existing password.</p>}
+                    {<p className="no-bottom-margin">If you have previously used Clowdr with the email address above, please enter your existing password below.</p>}
                     <label htmlFor="password">Choose a password</label>
                     <input
                         name="password"
