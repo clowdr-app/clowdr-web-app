@@ -1,4 +1,4 @@
-import { UserProfile, WatchedItems, TextChat } from "@clowdr-app/clowdr-db-schema";
+import { UserProfile, WatchedItems, TextChat, Sponsor } from "@clowdr-app/clowdr-db-schema";
 import {
     DataDeletedEventDetails,
     DataUpdatedEventDetails,
@@ -78,6 +78,7 @@ export default function ChatView(props: Props) {
     const { isAdmin, isManager } = useUserRoles();
     const [sendingInvites, setSendingInvites] = useState<boolean>(false);
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
+    const [sponsor, setSponsor] = useState<Sponsor | null>(null);
 
     // Fetch all user profiles
     useSafeAsync(
@@ -94,6 +95,26 @@ export default function ChatView(props: Props) {
         setAllUsers,
         [],
         "ChatView:setAllUsers"
+    );
+
+    // Fetch a related sponsor
+    useSafeAsync(
+        async () => {
+            if (mChat && props.chatId) {
+                const textChat = await TextChat.get(props.chatId, conf.id);
+                const videoRooms = await textChat?.videoRooms;
+                if (videoRooms && videoRooms.length > 0) {
+                    const sponsors = await Sponsor.getAllByVideoRoom(videoRooms[0].id, conf.id);
+                    if (sponsors.length > 0) {
+                        return sponsors[0];
+                    }
+                }
+            }
+            return null;
+        },
+        setSponsor,
+        [mChat, props.chatId],
+        "ChatView:setSponsor"
     );
 
     // Fetch chat info
@@ -333,7 +354,7 @@ export default function ChatView(props: Props) {
 
                 setShowPanel("chat");
             },
-            ariaLabel: "Show chat messages"
+            ariaLabel: "Show chat messages",
         });
     } else {
         if (members) {
@@ -346,7 +367,7 @@ export default function ChatView(props: Props) {
                     label: `View ${otherMember.displayName}'s profile`,
                     icon: <i className="fas fa-eye"></i>,
                     action: `/profile/${otherMember.profileId}`,
-                    ariaLabel: `View ${otherMember.displayName}'s profile`
+                    ariaLabel: `View ${otherMember.displayName}'s profile`,
                 });
             } else {
                 actionButtons.push({
@@ -374,7 +395,7 @@ export default function ChatView(props: Props) {
 
                     setShowPanel("invite");
                 },
-                ariaLabel: "Invite a user to join this chat"
+                ariaLabel: "Invite a user to join this chat",
             });
         }
     }
@@ -390,7 +411,7 @@ export default function ChatView(props: Props) {
                         ev.stopPropagation();
                         doUnfollow();
                     },
-                    ariaLabel: "Unfollow this chat"
+                    ariaLabel: "Unfollow this chat",
                 });
             } else {
                 actionButtons.push({
@@ -401,7 +422,7 @@ export default function ChatView(props: Props) {
                         ev.stopPropagation();
                         doFollow();
                     },
-                    ariaLabel: "Follow this chat"
+                    ariaLabel: "Follow this chat",
                 });
             }
         }
@@ -416,7 +437,7 @@ export default function ChatView(props: Props) {
                         ev.stopPropagation();
                         doDisableAutoWatch();
                     },
-                    ariaLabel: "Disable auto-follow"
+                    ariaLabel: "Disable auto-follow",
                 });
             } else {
                 actionButtons.push({
@@ -427,7 +448,7 @@ export default function ChatView(props: Props) {
                         ev.stopPropagation();
                         doEnableAutoWatch();
                     },
-                    ariaLabel: "Enable auto-follow"
+                    ariaLabel: "Enable auto-follow",
                 });
             }
         }
@@ -459,30 +480,50 @@ export default function ChatView(props: Props) {
                         addError(`Failed to delete chat. ${e}`);
                     }
                 },
-                ariaLabel: "Delete chat"
+                ariaLabel: "Delete chat",
             });
         }
     }
 
+    if (sponsor) {
+        actionButtons.push({
+            action: () => history.push(`/sponsor/${sponsor.id}`),
+            ariaLabel: "Go to sponsor",
+            icon: <i className="fas fa-person-booth" />,
+            label: "Go to sponsor",
+        });
+    }
+
     const [memberOnline, setMemberOnline] = useState<boolean | undefined>();
 
-    useSafeAsync(async () => {
-        const onlineP = chatInfo?.dmInfo && chatInfo?.dmInfo.isDM
-            ? chatInfo.dmInfo.member1.profileId === mUser.id
-                ? chatInfo.dmInfo.member2.isOnline
-                : chatInfo.dmInfo.member1.isOnline
-            : undefined;
-        const online = await onlineP;
-        return online;
-    }, setMemberOnline, [chatInfo?.dmInfo], "ChatView:setMemberOnline");
+    useSafeAsync(
+        async () => {
+            const onlineP =
+                chatInfo?.dmInfo && chatInfo?.dmInfo.isDM
+                    ? chatInfo.dmInfo.member1.profileId === mUser.id
+                        ? chatInfo.dmInfo.member2.isOnline
+                        : chatInfo.dmInfo.member1.isOnline
+                    : undefined;
+            const online = await onlineP;
+            return online;
+        },
+        setMemberOnline,
+        [chatInfo?.dmInfo],
+        "ChatView:setMemberOnline"
+    );
 
     useHeading({
         title: chatInfo ? chatInfo.name : "Chat",
-        icon: memberOnline !== undefined
-            ? memberOnline
-                ? <i className="fas fa-circle online"></i>
-                : <i className="far fa-circle"></i>
-            : undefined,
+        icon:
+            memberOnline !== undefined ? (
+                memberOnline ? (
+                    <i className="fas fa-circle online"></i>
+                ) : (
+                    <i className="far fa-circle"></i>
+                )
+            ) : (
+                undefined
+            ),
         buttons: actionButtons,
     });
 
@@ -501,7 +542,7 @@ export default function ChatView(props: Props) {
                     displayName: (await UserProfile.get(mem.profileId, conf.id))?.displayName ?? "<Unknown>",
                 };
                 setMembers(oldMembers => (oldMembers ? [...oldMembers, newMember] : [newMember]));
-            }
+            },
         });
 
         const leftFunctionToOff = mChat?.channelEventOn(props.chatId, "memberLeft", {
@@ -509,7 +550,7 @@ export default function ChatView(props: Props) {
             caller: "setMembers",
             function: async mem => {
                 setMembers(oldMembers => (oldMembers ? oldMembers.filter(x => x.profileId !== mem.profileId) : null));
-            }
+            },
         });
 
         const updateFunctionToOff = mChat?.serviceEventOn("userUpdated", {
@@ -521,13 +562,13 @@ export default function ChatView(props: Props) {
                     setMembers(oldMembers =>
                         oldMembers
                             ? oldMembers.map(x =>
-                                x.profileId === event.user.profileId
-                                    ? {
-                                        ...x,
-                                        isOnline,
-                                    }
-                                    : x
-                            )
+                                  x.profileId === event.user.profileId
+                                      ? {
+                                            ...x,
+                                            isOnline,
+                                        }
+                                      : x
+                              )
                             : null
                     );
                     setChatInfo(oldInfo => {
@@ -556,7 +597,7 @@ export default function ChatView(props: Props) {
                         return oldInfo;
                     });
                 }
-            }
+            },
         });
 
         return () => {

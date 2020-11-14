@@ -5,7 +5,7 @@ import VideoGrid from "../../Video/VideoGrid/VideoGrid";
 import "./VideoRoom.scss";
 import SplitterLayout from "react-splitter-layout";
 import "react-splitter-layout/lib/index.css";
-import { TextChat, UserProfile, VideoRoom, WatchedItems } from "@clowdr-app/clowdr-db-schema";
+import { Sponsor, TextChat, UserProfile, VideoRoom, WatchedItems } from "@clowdr-app/clowdr-db-schema";
 import useConference from "../../../hooks/useConference";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import { LoadingSpinner } from "../../LoadingSpinner/LoadingSpinner";
@@ -41,6 +41,7 @@ export default function ViewVideoRoom(props: Props) {
     const [size, setSize] = useState(30);
     const [room, setRoom] = useState<VideoRoom | null>(null);
     const [chat, setChat] = useState<TextChat | "not present" | null>(null);
+    const [sponsor, setSponsor] = useState<Sponsor | null>(null);
     const [showInvite, setShowInvite] = useState<boolean>(false);
     const [allUsers, setAllUsers] = useState<Array<UserOption> | null>(null);
     const [invites, setInvites] = useState<Array<UserOption> | null>(null);
@@ -74,6 +75,20 @@ export default function ViewVideoRoom(props: Props) {
     );
     useSafeAsync(
         async () => {
+            if (room) {
+                const sponsors = await Sponsor.getAllByVideoRoom(room.id, conference.id);
+                if (sponsors.length > 0) {
+                    return sponsors[0];
+                }
+            }
+            return null;
+        },
+        setSponsor,
+        [room],
+        "VideoRoom:setSponsor"
+    );
+    useSafeAsync(
+        async () => {
             const profiles = await UserProfile.getAll(conference.id);
             return profiles
                 .filter(x => !x.isBanned)
@@ -101,7 +116,7 @@ export default function ViewVideoRoom(props: Props) {
 
                     setShowInvite(false);
                 },
-                ariaLabel: "Show video room"
+                ariaLabel: "Show video room",
             });
         } else {
             actionButtons.push({
@@ -113,7 +128,7 @@ export default function ViewVideoRoom(props: Props) {
 
                     setShowInvite(true);
                 },
-                ariaLabel: "Invite a user to this room"
+                ariaLabel: "Invite a user to this room",
             });
         }
     }
@@ -247,7 +262,7 @@ export default function ViewVideoRoom(props: Props) {
                         ev.stopPropagation();
                         doUnfollow();
                     },
-                    ariaLabel: "Unfollow this room"
+                    ariaLabel: "Unfollow this room",
                 });
             } else {
                 actionButtons.push({
@@ -258,7 +273,7 @@ export default function ViewVideoRoom(props: Props) {
                         ev.stopPropagation();
                         doFollow();
                     },
-                    ariaLabel: "Follow this room"
+                    ariaLabel: "Follow this room",
                 });
             }
         }
@@ -282,7 +297,16 @@ export default function ViewVideoRoom(props: Props) {
                         addError(`Failed to delete room. ${e}`);
                     }
                 },
-                ariaLabel: "Delete this room"
+                ariaLabel: "Delete this room",
+            });
+        }
+
+        if (sponsor) {
+            actionButtons.push({
+                action: () => history.push(`/sponsor/${sponsor.id}`),
+                ariaLabel: "Go to sponsor",
+                icon: <i className="fas fa-person-booth" />,
+                label: "Go to sponsor",
             });
         }
     }

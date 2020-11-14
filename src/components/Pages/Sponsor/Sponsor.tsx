@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import Parse from "parse";
-import { Sponsor, SponsorContent, VideoRoom } from "@clowdr-app/clowdr-db-schema";
+import { Sponsor, SponsorContent, TextChat, VideoRoom } from "@clowdr-app/clowdr-db-schema";
 import useHeading from "../../../hooks/useHeading";
 import useSafeAsync from "../../../hooks/useSafeAsync";
 import useConference from "../../../hooks/useConference";
@@ -23,6 +23,10 @@ import SplitterLayout from "react-splitter-layout";
 import ChatFrame from "../../Chat/ChatFrame/ChatFrame";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 import ColourDialog from "./ColourDialog/ColourDialog";
+import { ActionButton } from "../../../contexts/HeadingContext";
+import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
+import useUserProfile from "../../../hooks/useUserProfile";
+import Chat from "../../../classes/Chat/Chat";
 
 interface Props {
     sponsorId: string;
@@ -30,12 +34,14 @@ interface Props {
 
 export default function _Sponsor(props: Props) {
     const conference = useConference();
+    const currentUserProfile = useUserProfile();
     const mUser = useMaybeUserProfile();
     const { isAdmin } = useUserRoles();
     const [size, setSize] = useState(30);
     const [sponsor, setSponsor] = useState<Sponsor | null>(null);
     const [content, setContent] = useState<SponsorContent[] | null>(null);
     const [videoRoom, setVideoRoom] = useState<VideoRoom | "none" | null>(null);
+    const [chat, setChat] = useState<TextChat | null>(null);
     const [itemBeingEdited, setItemBeingEdited] = useState<string | null>(null);
     const [editingColour, setEditingColour] = useState<boolean>(false);
     const uploadRef = useRef<HTMLInputElement>(null);
@@ -53,6 +59,13 @@ export default function _Sponsor(props: Props) {
         setVideoRoom,
         [sponsor?.videoRoomId, conference.id, sponsor],
         "Sponsor:setVideoRoom"
+    );
+
+    useSafeAsync(
+        async () => (videoRoom && videoRoom !== "none" ? await videoRoom.textChat : null),
+        setChat,
+        [videoRoom],
+        "Sponsor:setChat"
     );
 
     useSafeAsync(
@@ -184,8 +197,123 @@ export default function _Sponsor(props: Props) {
         }
     }
 
+    const actionButtons: Array<ActionButton> = [];
+    const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
+    const [changingFollow, setChangingFollow] = useState<CancelablePromise<void> | null>(null);
+    const doFollow = useCallback(
+        async function _doFollow() {
+            try {
+                const p = makeCancelable(
+                    (async () => {
+                        const watched = await currentUserProfile.watched;
+                        let doSave = false;
+                        if (videoRoom && videoRoom !== "none" && !watched.watchedRooms.includes(videoRoom.id)) {
+                            watched.watchedRooms.push(videoRoom.id);
+                            doSave = true;
+                        }
+                        if (chat && !watched.watchedChats.includes(chat.id)) {
+                            watched.watchedChats.push(chat.id);
+                            doSave = true;
+                        }
+                        if (doSave) {
+                            await watched.save();
+                        }
+                    })()
+                );
+                setChangingFollow(p);
+                await p.promise;
+                setChangingFollow(null);
+            } catch (e) {
+                if (!e.isCanceled) {
+                    setChangingFollow(null);
+                    throw e;
+                }
+            }
+        },
+        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [videoRoom, chat, currentUserProfile.watchedId]
+    );
+
+    const doUnfollow = useCallback(
+        async function _doFollow() {
+            try {
+                const p = makeCancelable(
+                    (async () => {
+                        const watched = await currentUserProfile.watched;
+                        let doSave = false;
+                        if (videoRoom && videoRoom !== "none" && watched.watchedRooms.includes(videoRoom.id)) {
+                            watched.watchedRooms = watched.watchedRooms.filter(x => x !== videoRoom.id);
+                            doSave = true;
+                        }
+                        if (chat && watched.watchedChats.includes(chat.id)) {
+                            watched.watchedChats = watched.watchedChats.filter(x => x !== chat.id);
+                            doSave = true;
+                        }
+                        if (doSave) {
+                            await watched.save();
+                        }
+                    })()
+                );
+                setChangingFollow(p);
+                await p.promise;
+                setChangingFollow(null);
+            } catch (e) {
+                if (!e.isCanceled) {
+                    setChangingFollow(null);
+                    throw e;
+                }
+            }
+        },
+        // ESLint/React are too stupid to know that `watchedId` is what drives `watched`
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [videoRoom, chat, currentUserProfile.watchedId]
+    );
+
+    useSafeAsync(
+        async () => {
+            if (sponsor?.videoRoomId) {
+                const watched = await currentUserProfile.watched;
+                return watched.watchedRooms.includes(sponsor.videoRoomId);
+            }
+            return false;
+        },
+        setIsFollowing,
+        [currentUserProfile.watched, sponsor?.videoRoomId],
+        "Sponsor:setIsFollowing"
+    );
+
+    if (videoRoom && videoRoom !== "none") {
+        if (isFollowing !== null) {
+            if (isFollowing) {
+                actionButtons.push({
+                    label: changingFollow ? "Changing" : "Unfollow sponsor",
+                    icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
+                    action: ev => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        doUnfollow();
+                    },
+                    ariaLabel: "Unfollow this sponsor",
+                });
+            } else {
+                actionButtons.push({
+                    label: changingFollow ? "Changing" : "Follow sponsor",
+                    icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
+                    action: ev => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        doFollow();
+                    },
+                    ariaLabel: "Follow this sponsor",
+                });
+            }
+        }
+    }
+
     useHeading({
         title: sponsor?.name ?? "Sponsor",
+        buttons: actionButtons,
         iconOnly: !!sponsor?.logo,
         icon: (
             <div className="logo-container">
