@@ -120,7 +120,7 @@ export default function AdminRegistration() {
             ? <></>
             : (
                 <Tooltip title="Send the first registration email to any users that have not yet been sent one.">
-                    <button disabled={isSending} onClick={() => sendRegistrationEmails(true)}>
+                    <button disabled={isSending || selectedKeys.length > 0} onClick={() => sendRegistrationEmails(true)}>
                         Send initial registration emails
                     </button>
                 </Tooltip>
@@ -140,7 +140,7 @@ export default function AdminRegistration() {
                 )
                 : (
                     <Tooltip title="Send a repeat registration email to all users that have not yet registered. Includes users that have not yet received any registration email.">
-                        <button disabled={isSending} onClick={() => sendRegistrationEmails(false)}>
+                        <button disabled={isSending || selectedKeys.length > 0} onClick={() => sendRegistrationEmails(false)}>
                             Send repeat registration emails
                         </button>
                     </Tooltip>
