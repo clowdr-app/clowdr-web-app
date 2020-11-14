@@ -58,23 +58,23 @@ up.
 ## Standalone front-end setup (for development/testing)
 
 1. Make sure
-      [MongoDB](https://docs.mongodb.com/manual/administration/install-community/)
-      and [MongoDB Database
-      Tools](https://www.mongodb.com/try/download/database-tools) (both) are
-      installed on your system.
-    * Mongo is the database used by Parse. We create a local datastore called
+   [MongoDB](https://docs.mongodb.com/manual/administration/install-community/)
+   and [MongoDB Database
+   Tools](https://www.mongodb.com/try/download/database-tools) (both) are
+   installed on your system.
+    - Mongo is the database used by Parse. We create a local datastore called
       `clowdr` by default which is populated with the test data.
-    * You will need
+    - You will need
       [MongoDB](https://docs.mongodb.com/manual/administration/install-community/)
       installed to run the database.
-    * You will also need the [MongoDB Database
+    - You will also need the [MongoDB Database
       Tools](https://www.mongodb.com/try/download/database-tools) which are a
       separate download that includes the `mongodbrestore` utility.
 1. Run `npm install -g parse-server parse-dashboard mongodb-runner`.
-    * `parse-server`: The backend framework
-    * `parse-dashboard`: Service utility to view Parse Server configuration and
+    - `parse-server`: The backend framework
+    - `parse-dashboard`: Service utility to view Parse Server configuration and
       data
-    * `mongodb-runner`: Provides easier access to `mongodb` commands
+    - `mongodb-runner`: Provides easier access to `mongodb` commands
 1. Clone [clowdr-web-app](https://github.com/clowdr-app/clowdr-web-app) - our
    Parse-based backend and React frontend
 1. Clone [clowdr-backend](https://github.com/clowdr-app/clowdr-backend) - our
@@ -82,51 +82,57 @@ up.
 1. Within `clowdr-web-app`, run `npm install`
 1. Within `clowdr-web-app/backend/cloud`, run `npm install`
 1. Within `clowdr-backend`, run `npm install`
-1. Start the parse server. 
+1. Start the parse server.
 
-   Run this command from within `clowdr-web-app`:
-   ```
-   parse-server \
-      --port 4000 \
-      --appId XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
-      --clientKey XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
-      --masterKey XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
-      --javascriptKey XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
-      --restAPIKey XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
-      --databaseURI mongodb://localhost/clowdr \
-      --liveQuery "{ \"classNames\": [\"AttachmentType\",\"Conference\",\"ConferenceConfiguration\",\"ContentFeed\",\"Flair\",\"PrivilegedConferenceDetails\",\"ProgramPerson\",\"ProgramItem\",\"ProgramItemAttachment\",\"ProgramSession\",\"ProgramSessionEvent\",\"ProgramTrack\",\"Sponsor\",\"SponsorContent\",\"TextChat\",\"TextChatMessage\",\"UserProfile\",\"VideoRoom\",\"YouTubeFeed\",\"ZoomRoom\",\"WatchedItems\"] }" \
-      --startLiveQueryServer \
-      --allowCustomObjectId \
-      --cloud ./backend/cloud/main.js
-   ```
-    * **Don't worry**: The "XXX..." are supposed to be like that and you **don't
+    Run this command from within `clowdr-web-app`:
+
+    ```
+    parse-server \
+       --port 4000 \
+       --appId XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
+       --clientKey XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
+       --masterKey XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
+       --javascriptKey XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
+       --restAPIKey XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
+       --databaseURI mongodb://localhost/clowdr \
+       --liveQuery "{ \"classNames\": [\"AttachmentType\",\"Conference\",\"ConferenceConfiguration\",\"ContentFeed\",\"Flair\",\"PrivilegedConferenceDetails\",\"ProgramPerson\",\"ProgramItem\",\"ProgramItemAttachment\",\"ProgramSession\",\"ProgramSessionEvent\",\"ProgramTrack\",\"Sponsor\",\"SponsorContent\",\"TextChat\",\"TextChatMessage\",\"UserProfile\",\"VideoRoom\",\"YouTubeFeed\",\"ZoomRoom\",\"WatchedItems\"] }" \
+       --startLiveQueryServer \
+       --allowCustomObjectId \
+       --cloud ./backend/cloud/main.js
+    ```
+
+    - **Don't worry**: The "XXX..." are supposed to be like that and you **don't
       need to replace them for testing**.
-    * This is our main backend. It runs the Parse REST API and our additional
+    - This is our main backend. It runs the Parse REST API and our additional
       API functions, from the scripts in `clowdr-web-app/backend/cloud/`.
-    * The option `allowCustomObjectId` is necessary for the test data setup. *Do
-      not use it in production.*
-    * You can also append the option `--verbose` to debug failing requests. This
+    - The option `allowCustomObjectId` is necessary for the test data setup. _Do
+      not use it in production._
+    - You can also append the option `--verbose` to debug failing requests. This
       is particularly useful for debugging `Object not found` and permission
       related issues.
+
 1. Run parse dashboard.
 
-   Run this command (in any folder):
-   ```
-   parse-dashboard \
-      --port 4001 \
-      --dev \
-      --appId XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
-      --masterKey XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
-      --serverURL http://localhost:4000/parse \
-      --appName clowdr
-   ```
-    * **Don't worry**: The "XXX..." are supposed to be like that and you **don't
+    Run this command (in any folder):
+
+    ```
+    parse-dashboard \
+       --port 4001 \
+       --dev \
+       --appId XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
+       --masterKey XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
+       --serverURL http://localhost:4000/parse \
+       --appName clowdr
+    ```
+
+    - **Don't worry**: The "XXX..." are supposed to be like that and you **don't
       need to replace them for testing**.
+
 1. Open `http://localhost:4001` in a browser. You should see the Parse
    Dashboard.
 1. You can now close (/stop) the dashboard, but leave the Parse Server running.
 1. Create an environment configuration file:
-    1. Make a copy `.env.dev` within `clowdr-web-app` 
+    1. Make a copy `.env.dev` within `clowdr-web-app`
     1. Rename the copy to `.env`
     1. That's it, no further customisation is required for local development.
 1. Ensure `mongo`, `mongodump` and `mongorestore` are on your PATH.
@@ -139,7 +145,7 @@ up.
 
 For this step you will need to enter the CLOWDR interface using:
 
-    EMAIL:    clowdr@sys.admin 
+    EMAIL:    clowdr@sys.admin
     PASSWORD: admin
 
 Navigate to Administration > Conference Configuration. You will need to add
@@ -157,7 +163,7 @@ Clowdr uses Twilio as the text and video chat service.
 1. Set these configuration values accordingly.
 
 | Config Value              | Description                                                                             |
-|---------------------------|-----------------------------------------------------------------------------------------|
+| ------------------------- | --------------------------------------------------------------------------------------- |
 | `TWILIO_ACCOUNT_SID`      | Visible on the account dashboard.                                                       |
 | `TWILIO_API_KEY`          | The SID of the new API key you created.                                                 |
 | `TWILIO_API_SECRET`       | The secret for the API key you created.                                                 |
@@ -178,7 +184,7 @@ Clowdr uses Sendgrid to deliver emails to conference participants.
 1. Fill in the appropriate configuration values.
 
 | Config Value       | Description                   |
-|--------------------|-------------------------------|
+| ------------------ | ----------------------------- |
 | `SENDGRID_API_KEY` | Your sendgrid API key.        |
 | `SENDGRID_SENDER`  | Your verified sender address. |
 
@@ -231,3 +237,11 @@ Pull requests are welcome. For major changes, please open an issue first to
 discuss what you would like to change.
 
 Join us on the Slack [CLOWDR](clowdr.slack.com) workspace!
+
+# Licences
+
+## Twemoji
+
+Copyright 2020 Twitter, Inc and other contributors
+Code licensed under the MIT License: http://opensource.org/licenses/MIT
+Graphics licensed under CC-BY 4.0: https://creativecommons.org/licenses/by/4.0/
