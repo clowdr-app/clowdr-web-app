@@ -62,7 +62,7 @@ export default function ProfileItems(props: Props) {
                             itemsData.length ? (
                                 itemsData.map(item => <Item key={item.item.id} item={item} clickable={true} />)
                             ) : (
-                                <p>You are not listed as an author for any items.</p>
+                                <p>You are not listed as an author for any items. (This may be because your user profile has not yet been linked to your author information in the program data. Please contact the conference organisers if you think this is the case.)</p>
                             )
                         ) : (
                             <LoadingSpinner />

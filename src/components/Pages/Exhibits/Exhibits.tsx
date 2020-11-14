@@ -17,7 +17,17 @@ export default function Exhibits() {
 
     // Fetch initial ProgramItems
     useSafeAsync(
-        async () => (await ProgramItem.getAll(conference.id)).filter(programItem => programItem.exhibit),
+        async () => (await ProgramItem.getAll(conference.id))
+            .filter(programItem => programItem.exhibit)
+            .sort((x, y) => {
+                if (x.trackId === y.trackId) {
+                    return x.title.localeCompare(y.title);
+                }
+                else {
+                    // Poor-man's sorting
+                    return x.trackId.localeCompare(y.trackId);
+                }
+            }),
         setProgramItems, [conference.id], "Exhibits:setProgramItems");
 
     // Subscribe to ProgramItem updates
@@ -51,7 +61,7 @@ export default function Exhibits() {
     return <section aria-labelledby="page-title" tabIndex={0} className="exhibits-page">
         <div className="exhibits">
             {programItems
-                ? programItems.sort((a, b) => a.title > b.title ? 1 : -1).map(programItem => <div className="exhibits__exhibit" key={programItem.id}><Exhibit programItem={programItem} /></div>)
+                ? programItems.map(programItem => <div className="exhibits__exhibit" key={programItem.id}><Exhibit programItem={programItem} /></div>)
                 : <LoadingSpinner message="Loading exhibits" /> }
         </div>
     </section>
