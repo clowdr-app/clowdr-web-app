@@ -31,6 +31,7 @@ export default function ViewEvent(props: Props) {
     const [event, setEvent] = useState<ProgramSessionEvent | null>(null);
     const [item, setItem] = useState<ProgramItem | null>(null);
     const [session, setSession] = useState<ProgramSession | null>(null);
+    const [eventsOfSession, setEventsOfSession] = useState<ProgramSessionEvent[]>();
     const [sessionFeed, setSessionFeed] = useState<ContentFeed | null>(null);
     const [eventFeed, setEventFeed] = useState<ContentFeed | "not present" | null>(null);
 
@@ -46,6 +47,7 @@ export default function ViewEvent(props: Props) {
     );
     useSafeAsync(async () => (await event?.item) ?? null, setItem, [event], "ViewEvent:setItem");
     useSafeAsync(async () => (await event?.session) ?? null, setSession, [event], "ViewEvent:setSession");
+    useSafeAsync(async () => await session?.events, setEventsOfSession, [session], "ViewEvent:setEventsInSession");
     useSafeAsync(async () => (await session?.feed) ?? null, setSessionFeed, [session], "ViewEvent:setSessionFeed");
     useSafeAsync(
         async () => (event ? (await event.feed) ?? "not present" : null),
@@ -311,11 +313,15 @@ export default function ViewEvent(props: Props) {
             {session ? <>&nbsp;&middot;&nbsp;{session.title}</> : <></>}
         </>
     ) : (
-        undefined
-    );
+            undefined
+        );
+
+    const earliestStart = eventsOfSession?.reduce((r, e) => r.getTime() < e.startTime.getTime() ? r : e.startTime, new Date(32503680000000));
+    const latestEnd = eventsOfSession?.reduce((r, e) => r.getTime() > e.endTime.getTime() ? r : e.endTime, new Date(0));
+
     const renderNow = Date.now();
     const eventIsLive = !!event && event.startTime.getTime() < renderNow && event.endTime.getTime() > renderNow;
-    const sessionIsLive = false; // TODO: Check session live time for SPLASH: !!session && session.startTime.getTime() < renderNow && session.endTime.getTime() > renderNow;
+    const sessionIsLive = earliestStart && latestEnd && earliestStart.getTime() < renderNow && latestEnd.getTime() > renderNow;
     return (
         <div className="program-event">
             {sessionIsLive || (sessionFeed && sessionFeed.youtubeId) ? (
@@ -331,15 +337,15 @@ export default function ViewEvent(props: Props) {
                                 }
                             />
                         ) : (
-                            <>This event is part of an ongoing live session. Please join the session to participate.</>
-                        )}
+                                <>This event is part of an ongoing live session. Please join the session to participate.</>
+                            )}
                     </div>
                 ) : (
-                    <LoadingSpinner message="Loading session feed" />
-                )
+                        <LoadingSpinner message="Loading session feed" />
+                    )
             ) : (
-                <></>
-            )}
+                    <></>
+                )}
             {/* TODO: Re-enable this ever?
          {eventFeed
             ? (eventFeed !== "not present"
@@ -368,8 +374,8 @@ export default function ViewEvent(props: Props) {
                     }}
                 />
             ) : (
-                <LoadingSpinner />
-            )}
+                    <LoadingSpinner />
+                )}
         </div>
     );
 }

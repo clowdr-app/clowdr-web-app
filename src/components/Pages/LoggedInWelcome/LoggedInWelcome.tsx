@@ -1,9 +1,7 @@
 import { PrivilegedConferenceDetails } from "@clowdr-app/clowdr-db-schema";
 import { DataUpdatedEventDetails } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import React, { useCallback, useState } from "react";
-import ReactMarkdown from 'react-markdown';
-import ReactPlayer from "react-player";
-import { parseYouTubeURL, ReactMarkdownCustomised } from "../../../classes/Utils";
+import { ReactMarkdownCustomised } from "../../../classes/Utils";
 import useConference from "../../../hooks/useConference";
 import useDataSubscription from "../../../hooks/useDataSubscription";
 import useHeading from "../../../hooks/useHeading";
