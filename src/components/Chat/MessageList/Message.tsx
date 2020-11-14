@@ -20,9 +20,10 @@ import { handleParseFileURLWeirdness, ReactMarkdownCustomised } from "../../../c
 import AsyncButton from "../../AsyncButton/AsyncButton";
 import IMember from "../../../classes/Chat/IMember";
 import useUserRoles from "../../../hooks/useUserRoles";
-import useEmojiPicker from "../../../hooks/useEmojiPicker";
-import ReactDOM from "react-dom";
 import BioPopover from "../../Profile/BioPopover/BioPopover";
+import { usePopper } from "react-popper";
+import clsx from "clsx";
+import OutsideClickHandler from "react-outside-click-handler";
 
 export type RenderedMessage = {
     chatSid: string;
@@ -168,24 +169,6 @@ export default function Message(props: {
     const [deleting, setDeleting] = useState<boolean>(false);
     const [showProfileOptions, setShowProfileOptions] = useState<boolean>(false);
 
-    const emoji = useEmojiPicker();
-    const emojiButton = useRef<HTMLButtonElement | null>(null);
-    const [emojiButtonPosition, setEmojiButtonPosition] = useState<{ bottom: number; left: number } | null>(null);
-
-    const getEmojiPickerOffset = useCallback(() => {
-        if (emojiButton && emojiButton.current) {
-            var rect = emojiButton.current.getBoundingClientRect();
-            var win = emojiButton.current.ownerDocument.defaultView;
-
-            setEmojiButtonPosition({
-                bottom: win ? win.innerHeight - rect.top : 0,
-                left: rect.left + (win?.scrollX ?? 0) + 20,
-            });
-        } else {
-            setEmojiButtonPosition(null);
-        }
-    }, []);
-
     const toggleAddReaction = useCallback(
         (msgSid: string) => {
             if (pickEmojiForMsgSid) {
@@ -328,6 +311,13 @@ export default function Message(props: {
             </>
         );
     }, [profileEl, profilePopoverEl]);
+
+    const [referenceElement, setReferenceElement] = useState<HTMLDivElement | null>(null);
+    const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(null);
+    const { styles, attributes } = usePopper(referenceElement, popperElement, {
+        placement: "right-end",
+        strategy: "fixed",
+    });
 
     const contentEl = useMemo(() => {
         return (
@@ -473,48 +463,50 @@ export default function Message(props: {
                     </div>
                 ) : (
                     <div className="reactions">
-                        <div className="add-reaction">
-                            {pickEmojiForMsgSid === msg.sid && emoji?.element ? (
-                                ReactDOM.createPortal(
-                                    <EmojiPicker
-                                        style={{
-                                            zIndex: 999,
-                                            position: "absolute",
-                                            bottom: `${emojiButtonPosition?.bottom ?? 0}px`,
-                                            left: `${emojiButtonPosition?.left ?? 0}px`,
-                                        }}
-                                        showPreview={false}
-                                        useButton={false}
-                                        title="Pick a reaction"
-                                        set="twitter"
-                                        onSelect={async ev => {
-                                            setPickEmojiForMsgSid(null);
-                                            const emojiId = ev.colons ?? ev.id;
-                                            assert(emojiId);
-                                            try {
-                                                assert((await mChat?.addReaction(msg.chatSid, msg.sid, emojiId))?.ok);
-                                            } catch (e) {
-                                                console.error(e);
-                                                addError("Sorry, we could not add your reaction.");
-                                            }
-                                        }}
-                                    />,
-                                    emoji.element
-                                )
-                            ) : (
-                                <></>
-                            )}
-                            <button
-                                className="new"
-                                ref={emojiButton}
-                                aria-label="Add a reaction"
-                                onClick={ev => {
-                                    getEmojiPickerOffset();
-                                    toggleAddReaction(msg.sid);
+                        <div className="add-reaction" ref={setReferenceElement}>
+                            <OutsideClickHandler
+                                onOutsideClick={() => {
+                                    setPickEmojiForMsgSid(null);
                                 }}
                             >
-                                <i className="fas fa-smile-beam"></i>+
-                            </button>
+                                <button
+                                    className={clsx("new", { active: pickEmojiForMsgSid === msg.sid })}
+                                    aria-label="Add a reaction"
+                                    onClick={ev => {
+                                        toggleAddReaction(msg.sid);
+                                    }}
+                                >
+                                    <i className="fas fa-smile-beam"></i>+
+                                </button>
+                                {pickEmojiForMsgSid === msg.sid && (
+                                    <div
+                                        ref={setPopperElement}
+                                        className="emoji-picker-container"
+                                        style={{ ...styles.popper, zIndex: 999 }}
+                                        {...attributes.popper}
+                                    >
+                                        <EmojiPicker
+                                            showPreview={false}
+                                            useButton={false}
+                                            title="Pick a reaction"
+                                            set="twitter"
+                                            onSelect={async ev => {
+                                                setPickEmojiForMsgSid(null);
+                                                const emojiId = ev.colons ?? ev.id;
+                                                assert(emojiId);
+                                                try {
+                                                    assert(
+                                                        (await mChat?.addReaction(msg.chatSid, msg.sid, emojiId))?.ok
+                                                    );
+                                                } catch (e) {
+                                                    console.error(e);
+                                                    addError("Sorry, we could not add your reaction.");
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                            </OutsideClickHandler>
                         </div>
                         {Object.keys(msg.reactions).map(reaction => {
                             return (
@@ -563,12 +555,10 @@ export default function Message(props: {
             </div>
         );
     }, [
+        attributes.popper,
         deleting,
         doDelete,
         doReport,
-        emoji,
-        emojiButtonPosition,
-        getEmojiPickerOffset,
         isAdmin,
         isManager,
         mChat,
@@ -589,6 +579,7 @@ export default function Message(props: {
         showDeleteConfirm,
         showProfileOptions,
         showReportConfirm,
+        styles.popper,
         toggleAddReaction,
         userProfile.id,
     ]);

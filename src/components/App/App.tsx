@@ -9,7 +9,6 @@ import UserProfileContext from "../../contexts/UserProfileContext";
 import ChatContext from "../../contexts/ChatContext";
 import VideoContext from "../../contexts/VideoContext";
 import UserRolesContext from "../../contexts/UserRolesContext";
-import EmojiContext from "../../contexts/EmojiContext";
 import useLogger from "../../hooks/useLogger";
 import Caches from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache";
 import { Conference, UserProfile, _Role, _User } from "@clowdr-app/clowdr-db-schema";
@@ -567,8 +566,6 @@ export default function App() {
             appClassNames.push(sidebarOpen ? "sidebar-open" : "sidebar-closed");
         }
 
-        const emojiPickerElement = document.getElementById("emoji-picker");
-
         // TODO: Wrap this in an error boundary to handle null cache/conference/user and unexpected errors
 
         const appClassName = appClassNames.reduce((x, y) => `${x} ${y}`);
@@ -584,10 +581,8 @@ export default function App() {
 
                                     <ChatContext.Provider value={chatReady ? Chat.instance() : null}>
                                         <VideoContext.Provider value={videoReady ? Video.instance() : null}>
-                                            <EmojiContext.Provider value={{ element: emojiPickerElement }}>
-                                                {sidebar}
-                                                {page}
-                                            </EmojiContext.Provider>
+                                            {sidebar}
+                                            {page}
                                         </VideoContext.Provider>
                                     </ChatContext.Provider>
                                 </>
