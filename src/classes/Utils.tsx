@@ -1,18 +1,23 @@
 import React from "react";
-import { emojify } from "react-emojione";
+import { Twemoji } from "react-emoji-render";
 import ReactPlayer from "react-player";
 import ReactMarkdown from "react-markdown";
 
 export function daysIntoYear(date: Date) {
-    return (Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(date.getFullYear(), 0, 0)) / 24 / 60 / 60 / 1000;
+    return (
+        (Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(date.getFullYear(), 0, 0)) /
+        24 /
+        60 /
+        60 /
+        1000
+    );
 }
 
 export function handleParseFileURLWeirdness(parseFileFieldValue: any): string | null {
     if (parseFileFieldValue) {
         if ("url" in parseFileFieldValue) {
             return parseFileFieldValue.url();
-        }
-        else {
+        } else {
             return parseFileFieldValue._url;
         }
     }
@@ -55,16 +60,27 @@ export function parseYouTubeURL(youtubeURL: string): string | undefined {
     return undefined;
 }
 
-export const doEmojify = (val: any) => <>{emojify(val, { output: "unicode" })}</>;
-export const renderEmoji = (text: any) => doEmojify(text.value);
+function emojify(text: string): JSX.Element {
+    try {
+        const emojified = <Twemoji text={text} />;
+        return emojified;
+    } catch (e) {
+        console.error(`Could not emojify ${text}`);
+    }
+    return <>{text}</>;
+}
 
-export function ReactMarkdownCustomised(props?: { children?: string; className?: string; linkColour?: string }): JSX.Element {
+export function ReactMarkdownCustomised(props?: {
+    children?: string;
+    className?: string;
+    linkColour?: string;
+}): JSX.Element {
     return (
         <ReactMarkdown
             className={props?.className}
             linkTarget="_blank"
             renderers={{
-                text: renderEmoji,
+                text: ({ value }) => emojify(value),
                 image: ({ src, alt }) => {
                     const youtubeVideoId = parseYouTubeURL(src);
                     if (youtubeVideoId) {
@@ -80,8 +96,7 @@ export function ReactMarkdownCustomised(props?: { children?: string; className?:
                                 url={`https://www.youtube.com/watch?v=${youtubeVideoId}`}
                             />
                         );
-                    }
-                    else {
+                    } else {
                         return <img src={src} alt={alt} />;
                     }
                 },
@@ -91,7 +106,7 @@ export function ReactMarkdownCustomised(props?: { children?: string; className?:
                             {children}
                         </a>
                     );
-                }
+                },
             }}
             escapeHtml={true}
             source={props?.children}

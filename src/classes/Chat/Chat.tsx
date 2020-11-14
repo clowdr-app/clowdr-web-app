@@ -11,7 +11,6 @@ import { ChannelEventArgs, ChannelEventNames, MemberUpdatedEventArgs } from "./S
 import TwilioChatService, { ServiceEventArgs, ServiceEventNames } from "./Services/Twilio/ChatService";
 import { StaticBaseImpl } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Interface/Base";
 import { removeNull } from "@clowdr-app/clowdr-db-schema/build/Util";
-import { emojify } from "react-emojione";
 import { addNotification } from "../Notifications/Notifications";
 import { SimpleEventDispatcher } from "strongly-typed-events";
 import { ReactMarkdownCustomised } from "../Utils";
@@ -25,42 +24,47 @@ export type ChatDescriptor = {
     createdAt: Date;
     getLastReadIndex: () => Promise<number | null>;
     getUnreadCount: () => Promise<number>;
-} & ({
-    isPrivate: boolean;
-    isDM: false;
-    isModeration: false;
-    isModerationHub: false;
-} | {
-    isPrivate: true;
-    isDM: true;
-    isModeration: false;
-    isModerationHub: false;
+} & (
+    | {
+          isPrivate: boolean;
+          isDM: false;
+          isModeration: false;
+          isModerationHub: false;
+      }
+    | {
+          isPrivate: true;
+          isDM: true;
+          isModeration: false;
+          isModerationHub: false;
 
-    member1: MemberDescriptor<Promise<boolean | undefined>>;
-    member2: MemberDescriptor<Promise<boolean | undefined>>;
-} | {
-    isPrivate: true;
-    isDM: false;
-    isModeration: true;
-    isModerationHub: false;
+          member1: MemberDescriptor<Promise<boolean | undefined>>;
+          member2: MemberDescriptor<Promise<boolean | undefined>>;
+      }
+    | {
+          isPrivate: true;
+          isDM: false;
+          isModeration: true;
+          isModerationHub: false;
 
-    isActive: boolean;
-    relatedModerationKey?: string;
-} | {
-    isPrivate: true;
-    isDM: false;
-    isModeration: false;
-    isModerationHub: true;
-});
+          isActive: boolean;
+          relatedModerationKey?: string;
+      }
+    | {
+          isPrivate: true;
+          isDM: false;
+          isModeration: false;
+          isModerationHub: true;
+      }
+);
 
 export type MemberDescriptor<isOnlineT extends Promise<boolean | undefined> | boolean | undefined> = {
     profileId: string;
     isOnline: isOnlineT;
 };
 
-type ChatEvents
-    = { event: "messageAdded"; f: string | null }
-    | { event: "memberUpdated", f: (arg: MemberUpdatedEventArgs) => Promise<void> };
+type ChatEvents =
+    | { event: "messageAdded"; f: string | null }
+    | { event: "memberUpdated"; f: (arg: MemberUpdatedEventArgs) => Promise<void> };
 
 export default class Chat implements IChatManager {
     private static chat: Chat | null = null;
@@ -78,11 +82,7 @@ export default class Chat implements IChatManager {
         unreadCount: number;
     }> = new SimpleEventDispatcher();
 
-    constructor(
-        private conference: Conference,
-        private profile: UserProfile,
-        private sessionToken: string
-    ) {
+    constructor(private conference: Conference, private profile: UserProfile, private sessionToken: string) {
         // TODO: Remove this line in production
         this.logger.enable();
     }
@@ -107,8 +107,7 @@ export default class Chat implements IChatManager {
                 try {
                     this.twilioService = new TwilioChatService(this);
                     await this.twilioService.setup(this.conference, this.profile, this.sessionToken);
-                }
-                catch (e) {
+                } catch (e) {
                     reject(e);
                 }
 
@@ -134,17 +133,21 @@ export default class Chat implements IChatManager {
         const activeChats = await this.listWatchedChatsUnfiltered();
 
         const listenToChat = async (c: ChatDescriptor) => {
-            const member = await (await this.twilioService?.getChannel(c.id))?.getMember({ profileId: this.profile.id });
+            const member = await (await this.twilioService?.getChannel(c.id))?.getMember({
+                profileId: this.profile.id,
+            });
             let memUpdatedF;
             if (member && typeof member !== "string") {
                 memUpdatedF = async (arg: MemberUpdatedEventArgs) => {
-                    if (arg.updateReasons.includes("lastConsumedMessageIndex") ||
-                        arg.updateReasons.includes("lastConsumptionTimestamp")) {
+                    if (
+                        arg.updateReasons.includes("lastConsumedMessageIndex") ||
+                        arg.updateReasons.includes("lastConsumptionTimestamp")
+                    ) {
                         setTimeout(async () => {
                             const unreadCount = await c.getUnreadCount();
                             this.chatUnreadCountChangedEvent.dispatch({
                                 chatId: c.id,
-                                unreadCount
+                                unreadCount,
                             });
                         }, 1000);
                     }
@@ -155,65 +158,69 @@ export default class Chat implements IChatManager {
             const msgAddedF = await this.channelEventOn(c.id, "messageAdded", {
                 componentName: "ChatsGroup",
                 caller: "addNotification",
-                function: async (msg) => {
-                    if (msg.author !== this.profile.id
-                        && !window.location.pathname.includes(`/chat/${c.id}`)
-                        && !window.location.pathname.includes(`/moderation/${c.id}`)
-                        && (!c.isModerationHub || !window.location.pathname.includes("/moderation/hub"))
+                function: async msg => {
+                    if (
+                        msg.author !== this.profile.id &&
+                        !window.location.pathname.includes(`/chat/${c.id}`) &&
+                        !window.location.pathname.includes(`/moderation/${c.id}`) &&
+                        (!c.isModerationHub || !window.location.pathname.includes("/moderation/hub"))
                     ) {
                         const isAnnouncement = c.friendlyName === "Announcements";
-                        const title
-                            = isAnnouncement
-                                ? ""
-                                : `**${c.isDM
-                                    ? (await UserProfile.get(c.member1.profileId === this.profile.id ? c.member2.profileId : c.member1.profileId, this.conference.id))?.displayName
-                                    : c.friendlyName}**\n\n`;
+                        const title = isAnnouncement
+                            ? ""
+                            : `**${
+                                  c.isDM
+                                      ? (
+                                            await UserProfile.get(
+                                                c.member1.profileId === this.profile.id
+                                                    ? c.member2.profileId
+                                                    : c.member1.profileId,
+                                                this.conference.id
+                                            )
+                                        )?.displayName
+                                      : c.friendlyName
+                              }**\n\n`;
                         const body = `${title}${msg.body}`;
                         addNotification(
-                            <ReactMarkdownCustomised>
-                                {body}
-                            </ReactMarkdownCustomised>,
+                            <ReactMarkdownCustomised>{body}</ReactMarkdownCustomised>,
                             isAnnouncement
                                 ? undefined
                                 : c.isModerationHub
-                                    ? (msg.attributes?.moderationChat
-                                        ? {
-                                            url: `/moderation/${msg.attributes.moderationChat}`,
-                                            text: "Go to moderation channel"
-                                        }
-                                        : {
-                                            url: `/moderation/hub`,
-                                            text: "Go to moderation hub"
-                                        }
-                                    )
-                                    : c.isModeration
-                                        ? {
-                                            url: `/moderation/${c.id}`,
-                                            text: "Go to moderation channel"
-                                        }
-                                        : {
-                                            url: `/chat/${c.id}`,
-                                            text: "Go to chat"
-                                        },
+                                ? msg.attributes?.moderationChat
+                                    ? {
+                                          url: `/moderation/${msg.attributes.moderationChat}`,
+                                          text: "Go to moderation channel",
+                                      }
+                                    : {
+                                          url: `/moderation/hub`,
+                                          text: "Go to moderation hub",
+                                      }
+                                : c.isModeration
+                                ? {
+                                      url: `/moderation/${c.id}`,
+                                      text: "Go to moderation channel",
+                                  }
+                                : {
+                                      url: `/chat/${c.id}`,
+                                      text: "Go to chat",
+                                  },
                             10000
                         );
 
                         const unreadCount = await c.getUnreadCount();
                         this.chatUnreadCountChangedEvent.dispatch({
                             chatId: c.id,
-                            unreadCount
+                            unreadCount,
                         });
                     }
-                }
+                },
             });
 
-            const results: ChatEvents[] = [
-                { event: "messageAdded", f: msgAddedF }
-            ];
+            const results: ChatEvents[] = [{ event: "messageAdded", f: msgAddedF }];
             if (memUpdatedF) {
                 results.push({
                     event: "memberUpdated",
-                    f: memUpdatedF
+                    f: memUpdatedF,
                 });
             }
             return results;
@@ -223,12 +230,14 @@ export default class Chat implements IChatManager {
         this.messageNotificationFunctionsToOff = new Map(p as any);
 
         // TODO: Deal with the unsubscribe
-        (await WatchedItems.onDataUpdated(this.conference.id)).subscribe(async (ev) => {
+        (await WatchedItems.onDataUpdated(this.conference.id)).subscribe(async ev => {
             const objs = ev.objects as WatchedItems[];
             for (const obj of objs) {
                 const watchedChats = obj.watchedChats;
                 const newlyActive = watchedChats.filter(x => !this.messageNotificationFunctionsToOff.has(x));
-                const previouslyActive = Array.from(this.messageNotificationFunctionsToOff.keys()).filter(x => !watchedChats.includes(x));
+                const previouslyActive = Array.from(this.messageNotificationFunctionsToOff.keys()).filter(
+                    x => !watchedChats.includes(x)
+                );
                 if (this.twilioService) {
                     for (const chatId of newlyActive) {
                         const c = await this.getChat(chatId);
@@ -251,9 +260,10 @@ export default class Chat implements IChatManager {
                 if (f.f) {
                     await this.channelEventOff(chatId, f.event as ChannelEventNames, f.f);
                 }
-            }
-            else if (f.event === "memberUpdated") {
-                const member = await (await this.twilioService?.getChannel(chatId))?.getMember({ profileId: this.profile.id });
+            } else if (f.event === "memberUpdated") {
+                const member = await (await this.twilioService?.getChannel(chatId))?.getMember({
+                    profileId: this.profile.id,
+                });
                 if (member && typeof member !== "string") {
                     member.offUpdated(f.f);
                 }
@@ -262,7 +272,11 @@ export default class Chat implements IChatManager {
     }
 
     async teardownMessageNotifications() {
-        await Promise.all(Array.from(this.messageNotificationFunctionsToOff.keys()).map(async (key) => this.teardownMessageNotificationsForChat(key)));
+        await Promise.all(
+            Array.from(this.messageNotificationFunctionsToOff.keys()).map(async key =>
+                this.teardownMessageNotificationsForChat(key)
+            )
+        );
     }
 
     private async teardown(): Promise<void> {
@@ -277,8 +291,7 @@ export default class Chat implements IChatManager {
                         try {
                             await this.twilioService.teardown();
                             this.twilioService = null;
-                        }
-                        catch (e) {
+                        } catch (e) {
                             this.logger.error("Failed to tear down Twilio chat service", e);
                         }
                     }
@@ -287,24 +300,24 @@ export default class Chat implements IChatManager {
                         try {
                             await this.mirrorService.teardown();
                             this.mirrorService = null;
-                        }
-                        catch (e) {
+                        } catch (e) {
                             this.logger.error("Failed to tear down Parse Mirror chat service", e);
                         }
                     }
 
                     this.logger.info("Tore down chat client.");
                     this.initialisePromise = null;
-                }
+                };
 
-                this.teardownPromise = this.initialisePromise.then(async () => {
-                    await doTeardown();
-                }).catch(async (err) => {
-                    this.logger.warn("Ignoring chat initialisation error as we're teraing down anyway.", err);
-                    await doTeardown();
-                });
-            }
-            else {
+                this.teardownPromise = this.initialisePromise
+                    .then(async () => {
+                        await doTeardown();
+                    })
+                    .catch(async err => {
+                        this.logger.warn("Ignoring chat initialisation error as we're teraing down anyway.", err);
+                        await doTeardown();
+                    });
+            } else {
                 return Promise.resolve();
             }
         }
@@ -314,7 +327,10 @@ export default class Chat implements IChatManager {
 
     public async convertToDescriptor(chan: IChannel): Promise<ChatDescriptor | null> {
         try {
-            const configs = await ConferenceConfiguration.getByKey("TWILIO_ANNOUNCEMENTS_CHANNEL_SID", this.conference.id);
+            const configs = await ConferenceConfiguration.getByKey(
+                "TWILIO_ANNOUNCEMENTS_CHANNEL_SID",
+                this.conference.id
+            );
             let isAnnouncements = false;
             if (configs.length > 0) {
                 isAnnouncements = configs[0].value === chan.sid;
@@ -336,10 +352,9 @@ export default class Chat implements IChatManager {
                     isModeration: false,
                     isModerationHub: true,
                     isDM: false,
-                    isPrivate: true
+                    isPrivate: true,
                 };
-            }
-            else if (isMod) {
+            } else if (isMod) {
                 return {
                     id: chan.id,
                     friendlyName: chan.getName(),
@@ -351,13 +366,12 @@ export default class Chat implements IChatManager {
                     isAnnouncements,
                     isModeration: isMod,
                     isModerationHub: false,
-                    isActive: !await chan.getIsModerationCompleted(),
+                    isActive: !(await chan.getIsModerationCompleted()),
                     relatedModerationKey: await chan.getRelatedModerationKey(),
                     isDM: false,
-                    isPrivate: true
+                    isPrivate: true,
                 };
-            }
-            else {
+            } else {
                 const isDM = await chan.getIsDM();
                 const isPrivate = await chan.getIsPrivate();
                 if (isDM) {
@@ -375,10 +389,9 @@ export default class Chat implements IChatManager {
                         isModerationHub: false,
                         isDM: true,
                         member1: isDM.member1,
-                        member2: isDM.member2
+                        member2: isDM.member2,
                     };
-                }
-                else {
+                } else {
                     return {
                         id: chan.id,
                         friendlyName: chan.getName(),
@@ -391,20 +404,23 @@ export default class Chat implements IChatManager {
                         isModeration: false,
                         isModerationHub: false,
                         isDM: false,
-                        isPrivate
+                        isPrivate,
                     };
                 }
             }
-        }
-        catch {
+        } catch {
             return null;
         }
     }
 
-    public async createChat(members: Array<string>, isPrivate: boolean, title: string): Promise<ChatDescriptor | undefined> {
+    public async createChat(
+        members: Array<string>,
+        isPrivate: boolean,
+        title: string
+    ): Promise<ChatDescriptor | undefined> {
         assert(this.twilioService);
         const channel = await this.twilioService.createChannel(members, isPrivate, title);
-        return await this.convertToDescriptor(channel) ?? undefined;
+        return (await this.convertToDescriptor(channel)) ?? undefined;
     }
 
     public async deleteChat(chatId: string): Promise<void> {
@@ -412,16 +428,23 @@ export default class Chat implements IChatManager {
             assert(this.twilioService);
             const channel = await this.twilioService.getChannel(chatId);
             await channel.delete();
-        }
-        catch (e) {
+        } catch (e) {
             console.error("Failed to delete chat", e);
         }
     }
 
-    public async createModerationChat(specificModerators: Array<string>, relatedModerationKey?: string, initialMessage?: string): Promise<ChatDescriptor | undefined> {
+    public async createModerationChat(
+        specificModerators: Array<string>,
+        relatedModerationKey?: string,
+        initialMessage?: string
+    ): Promise<ChatDescriptor | undefined> {
         assert(this.twilioService);
-        const channel = await this.twilioService.createModerationChannel(specificModerators, relatedModerationKey, initialMessage);
-        return await this.convertToDescriptor(channel) ?? undefined;
+        const channel = await this.twilioService.createModerationChannel(
+            specificModerators,
+            relatedModerationKey,
+            initialMessage
+        );
+        return (await this.convertToDescriptor(channel)) ?? undefined;
     }
 
     public async markModerationChatCompleted(chatId: string): Promise<void> {
@@ -434,10 +457,10 @@ export default class Chat implements IChatManager {
         try {
             assert(this.twilioService);
             const channels = await this.twilioService.allChannels();
-            return (removeNull(await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []))
-                .filter(x => !x.isModeration && !x.isModerationHub));
-        }
-        catch {
+            return removeNull(await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? [])).filter(
+                x => !x.isModeration && !x.isModerationHub
+            );
+        } catch {
             return [];
         }
     }
@@ -446,10 +469,10 @@ export default class Chat implements IChatManager {
         try {
             assert(this.twilioService);
             const channels = await this.twilioService.allChannels();
-            return removeNull(await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []))
-                .filter(x => x.isModeration);
-        }
-        catch {
+            return removeNull(await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? [])).filter(
+                x => x.isModeration
+            );
+        } catch {
             return [];
         }
     }
@@ -457,10 +480,10 @@ export default class Chat implements IChatManager {
     public async listWatchedChats(): Promise<Array<ChatDescriptor>> {
         try {
             const channels = await this.twilioService?.activeChannels();
-            return removeNull(await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []))
-                .filter(x => !x.isModeration && !x.isModerationHub);
-        }
-        catch {
+            return removeNull(await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? [])).filter(
+                x => !x.isModeration && !x.isModerationHub
+            );
+        } catch {
             return [];
         }
     }
@@ -469,10 +492,10 @@ export default class Chat implements IChatManager {
         try {
             assert(this.twilioService);
             const channels = await this.twilioService.activeChannels();
-            return removeNull(await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []))
-                .filter(x => x.isModeration);
-        }
-        catch {
+            return removeNull(await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? [])).filter(
+                x => x.isModeration
+            );
+        } catch {
             return [];
         }
     }
@@ -481,8 +504,7 @@ export default class Chat implements IChatManager {
         try {
             const channels = await this.twilioService?.activeChannels();
             return removeNull(await Promise.all(channels?.map(x => this.convertToDescriptor(x)) ?? []));
-        }
-        catch {
+        } catch {
             return [];
         }
     }
@@ -490,11 +512,15 @@ export default class Chat implements IChatManager {
     public async getModerationHubChat(): Promise<ChatDescriptor | null> {
         try {
             assert(this.twilioService);
-            const tc = await StaticBaseImpl.getByField("TextChat", "mode", "moderation_hub", this.conference.id) as TextChat;
+            const tc = (await StaticBaseImpl.getByField(
+                "TextChat",
+                "mode",
+                "moderation_hub",
+                this.conference.id
+            )) as TextChat;
             assert(tc);
             return this.convertToDescriptor(await this.twilioService.convertTextChatToChannel(tc));
-        }
-        catch {
+        } catch {
             return null;
         }
     }
@@ -502,11 +528,15 @@ export default class Chat implements IChatManager {
     public async getModerationHubChatId(): Promise<string | null> {
         try {
             assert(this.twilioService);
-            const tc = await StaticBaseImpl.getByField("TextChat", "mode", "moderation_hub", this.conference.id) as TextChat;
+            const tc = (await StaticBaseImpl.getByField(
+                "TextChat",
+                "mode",
+                "moderation_hub",
+                this.conference.id
+            )) as TextChat;
             assert(tc);
             return tc.id;
-        }
-        catch {
+        } catch {
             return null;
         }
     }
@@ -516,19 +546,21 @@ export default class Chat implements IChatManager {
             assert(this.twilioService);
             const channel = await this.twilioService.getChannel(chatId);
             const members = await channel.members();
-            return removeNull(await Promise.all(members.map(async member => {
-                try {
-                    return {
-                        profileId: member.profileId,
-                        isOnline: member.getOnlineStatus()
-                    }
-                }
-                catch {
-                    return null;
-                }
-            })));
-        }
-        catch {
+            return removeNull(
+                await Promise.all(
+                    members.map(async member => {
+                        try {
+                            return {
+                                profileId: member.profileId,
+                                isOnline: member.getOnlineStatus(),
+                            };
+                        } catch {
+                            return null;
+                        }
+                    })
+                )
+            );
+        } catch {
             return [];
         }
     }
@@ -538,8 +570,7 @@ export default class Chat implements IChatManager {
             assert(this.twilioService);
             const channel = await this.twilioService.getChannel(chatId);
             return channel.membersCount();
-        }
-        catch {
+        } catch {
             return -1;
         }
     }
@@ -550,8 +581,7 @@ export default class Chat implements IChatManager {
             assert(this.twilioService);
             const channel = await this.twilioService.getChannel(chatId);
             return this.convertToDescriptor(channel);
-        }
-        catch {
+        } catch {
             return null;
         }
     }
@@ -560,8 +590,7 @@ export default class Chat implements IChatManager {
             assert(this.twilioService);
             const channel = await this.twilioService.getChannel(chatId);
             return channel.getMessage(messageSid, messageIdx);
-        }
-        catch {
+        } catch {
             return null;
         }
     }
@@ -570,8 +599,7 @@ export default class Chat implements IChatManager {
             assert(this.twilioService);
             const channel = await this.twilioService.getChannel(chatId);
             return channel.getMessages(limit);
-        }
-        catch {
+        } catch {
             return null;
         }
     }
@@ -601,7 +629,7 @@ export default class Chat implements IChatManager {
         await channel.setLastReadIndex(value);
         this.chatUnreadCountChangedEvent.dispatch({
             chatId,
-            unreadCount: expectedUnreadCount
+            unreadCount: expectedUnreadCount,
         });
     }
     async getUnreadMessageCount(chatId: string): Promise<number> {
@@ -617,8 +645,7 @@ export default class Chat implements IChatManager {
         try {
             assert(this.twilioService);
             return await this.twilioService.getIsUserOnline(profileId);
-        }
-        catch {
+        } catch {
             return undefined;
         }
     }
@@ -647,17 +674,19 @@ export default class Chat implements IChatManager {
     async channelEventOn<K extends ChannelEventNames>(
         chatId: string,
         event: K,
-        listener: ((arg: ChannelEventArgs<K>) => void) | {
-            componentName: string,
-            caller: string,
-            function: (arg: ChannelEventArgs<K>) => Promise<void>
-        }): Promise<string | null> {
+        listener:
+            | ((arg: ChannelEventArgs<K>) => void)
+            | {
+                  componentName: string;
+                  caller: string;
+                  function: (arg: ChannelEventArgs<K>) => Promise<void>;
+              }
+    ): Promise<string | null> {
         try {
             assert(this.twilioService);
             const channel = await this.twilioService.getChannel(chatId);
             return channel.on(event, listener);
-        }
-        catch {
+        } catch {
             return null;
         }
     }
@@ -667,26 +696,25 @@ export default class Chat implements IChatManager {
             assert(this.twilioService);
             const channel = await this.twilioService.getChannel(chatId);
             channel.off(event, listener);
-        }
-        catch {
-        }
+        } catch {}
     }
 
     // TODO: Something, perhaps the App component, should subscribe to the error events
 
     async serviceEventOn<K extends ServiceEventNames>(
         event: K,
-        listener: ((arg: ServiceEventArgs<K>) => void) | {
-            componentName: string,
-            caller: string,
-            function: (arg: ServiceEventArgs<K>) => Promise<void>
-        }
+        listener:
+            | ((arg: ServiceEventArgs<K>) => void)
+            | {
+                  componentName: string;
+                  caller: string;
+                  function: (arg: ServiceEventArgs<K>) => Promise<void>;
+              }
     ): Promise<string | null> {
         try {
             assert(this.twilioService);
             return this.twilioService.on(event, listener);
-        }
-        catch {
+        } catch {
             return null;
         }
     }
@@ -695,9 +723,7 @@ export default class Chat implements IChatManager {
         try {
             assert(this.twilioService);
             this.twilioService.off(event, listener);
-        }
-        catch {
-        }
+        } catch {}
     }
 
     public static async setup(conference: Conference, user: UserProfile, sessionToken: string): Promise<boolean> {
@@ -728,8 +754,7 @@ export default class Chat implements IChatManager {
     public static async teardown() {
         try {
             await Chat.chat?.teardown();
-        }
-        finally {
+        } finally {
             Chat.chat = null;
             // @ts-ignore
             if (window.clowdr && window.clowdr.chat) {
