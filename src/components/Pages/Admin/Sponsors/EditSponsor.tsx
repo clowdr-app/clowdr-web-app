@@ -35,7 +35,6 @@ interface Props {
 
 export default function EditSponsor(props: Props) {
     const { register, handleSubmit, errors, control, formState, reset } = useForm<FormData>();
-    useHeading("Sponsors");
 
     async function uploadFile(file: File): Promise<Parse.File | undefined> {
         if (file) {
