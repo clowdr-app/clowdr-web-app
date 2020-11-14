@@ -15,18 +15,14 @@
     }
 
     .link-authors-form-wrapper {
-        position: relative;
         width   : 100%;
 
         .link-authors-form {
             display    : flex;
-            max-width  : 100%;
             width      : 100%;
             column-gap : 0.3em;
             align-items: center;
 
-            // Necessitated by Firefox layout bug (min-width not respected)
-            position: absolute;
             top     : 0;
             left    : 0;
 

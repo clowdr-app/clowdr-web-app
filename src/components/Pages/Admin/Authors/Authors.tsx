@@ -183,25 +183,6 @@ ${nonUniqueAuthors.size} non-unique authors found.`);
 
     const contents = (
         <>
-            <h2>Linked program authors</h2>
-            <table className="authors-to-attendees">
-                <thead>
-                    <tr>
-                        <th>Program Author</th>
-                        <th>Linked Attendee</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {authorRows && authorRows.length > 0 ? (
-                        authorRows
-                    ) : (
-                            <tr>
-                                <td colSpan={3}>No author has been linked to an attendee.</td>
-                            </tr>
-                        )}
-                </tbody>
-            </table>
-
             <h2>Automatically link authors to attendees</h2>
             <div className="auto-link-authors-form-wrapper">
                 <form className="auto-link-authors-form" onSubmit={handleSubmit(onSubmitAutoLink)}>
@@ -220,7 +201,7 @@ ${nonUniqueAuthors.size} non-unique authors found.`);
                 <form className="link-authors-form" onSubmit={handleSubmit(onSubmit)}>
                     <label htmlFor="programPerson" hidden>
                         Program author
-                    </label>
+                </label>
                     <select name="programPerson" ref={register({ required: true })} disabled={formState.isSubmitting}>
                         {authors
                             ?.filter(author => !author.profileId)
@@ -234,7 +215,7 @@ ${nonUniqueAuthors.size} non-unique authors found.`);
 
                     <label htmlFor="userProfile" hidden>
                         Linked attendee
-                    </label>
+                </label>
                     <select name="userProfile" ref={register({ required: true })} disabled={formState.isSubmitting}>
                         {profiles
                             ?.sort((a, b) => a.displayName.localeCompare(b.displayName))
@@ -255,6 +236,25 @@ ${nonUniqueAuthors.size} non-unique authors found.`);
                     </div>
                 </form>
             </div>
+
+            <h2>Linked program authors</h2>
+            <table className="authors-to-attendees">
+                <thead>
+                    <tr>
+                        <th>Program Author</th>
+                        <th>Linked Attendee</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {authorRows && authorRows.length > 0 ? (
+                        authorRows
+                    ) : (
+                            <tr>
+                                <td colSpan={3}>No author has been linked to an attendee.</td>
+                            </tr>
+                        )}
+                </tbody>
+            </table>
         </>
     );
 
