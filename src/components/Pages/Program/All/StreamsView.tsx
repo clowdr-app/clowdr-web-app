@@ -40,7 +40,7 @@ export default function StreamsView(props: Props) {
                                 : 1)
                 };
                 return sResult;
-            }).filter(x => x.eventsOfSession.length > 0 && x.feed && x.feed.youtubeId);
+            }).filter(x => x.eventsOfSession.length > 0 && x.feed && (x.feed.youtubeId || x.feed.zoomRoomId));
 
             return sessionsWithTimes.sort((x, y) => {
                 return x.earliestStart < y.earliestStart ? -1
@@ -58,6 +58,7 @@ export default function StreamsView(props: Props) {
             sessions: Array<SortedSessionData>;
         }
     } = {};
+    const zoomToYoutubeMapping = new Map<string, string>();
     for (const session of sortedSessions) {
         let group;
         if (session.feed) {
@@ -69,6 +70,12 @@ export default function StreamsView(props: Props) {
                     }
                 }
                 group = groups[session.feed.youtubeId];
+
+                if (session.feed.zoomRoomId) {
+                    if (!zoomToYoutubeMapping.has(session.feed.zoomRoomId)) {
+                        zoomToYoutubeMapping.set(session.feed.zoomRoomId, session.feed.youtubeId);
+                    }
+                }
             }
             else if (session.feed.zoomRoomId) {
                 if (!groups[session.feed.zoomRoomId]) {
@@ -93,6 +100,23 @@ export default function StreamsView(props: Props) {
 
         if (group) {
             group.sessions.push(session);
+        }
+    }
+
+    for (const groupKey in groups) {
+        if (groupKey in groups) {
+            const mapping = zoomToYoutubeMapping.get(groupKey);
+            if (mapping) {
+                const zoomSessions = groups[groupKey];
+                delete groups[groupKey];
+                const youtubeSessions = groups[mapping];
+                youtubeSessions.sessions = youtubeSessions.sessions.concat(zoomSessions.sessions);
+                youtubeSessions.sessions = youtubeSessions.sessions.sort((x, y) => {
+                    return x.earliestStart < y.earliestStart ? -1
+                        : x.earliestStart === y.earliestStart ? 0
+                            : 1;
+                });
+            }
         }
     }
 
