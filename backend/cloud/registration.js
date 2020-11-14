@@ -11,6 +11,24 @@ const { isUserInRoles, getRoleByName } = require("./role");
 const sgMail = require("@sendgrid/mail");
 const Config = require("./config.js");
 
+// Duplicated becvause otherwise dependency loop...
+/**
+ * @param {Parse.User} user
+ * @param {string} confId
+ * @returns {Promise<Parse.Object | null>}
+ */
+async function getProfileOfUser(user, confId) {
+    const q = new Parse.Query("UserProfile");
+    q.equalTo("conference", new Parse.Object("Conference", { id: confId }));
+    q.equalTo("user", user);
+    try {
+        return await q.first({ useMasterKey: true });
+    }
+    catch {
+        return null;
+    }
+}
+
 // **** Registration **** //
 
 async function getRegistrationById(id) {
@@ -74,7 +92,10 @@ async function createRegistration(data) {
     existingU.equalTo("email", data.email);
     const existingUsers = await existingU.find({ useMasterKey: true });
     if (existingUsers.length > 0) {
-        return true;
+        const existingProfile = await getProfileOfUser(existingUsers[0], data.conference.id);
+        if (existingProfile) {
+            return true;
+        }
     }
 
     const newObject = new Parse.Object("Registration", data);
@@ -383,7 +404,7 @@ Parse.Cloud.define("registration-save-many", async (req) => {
                     }
                 }
                 catch (e) {
-                    return { index: idx, result: false, email: spec.email };
+                    return { index: idx, result: false, email: spec.email, reason: e.toString() };
                 }
             }));
 
