@@ -172,7 +172,7 @@ export default function Register(props: Props) {
                             Full name required.
                         </p>
                     )}
-                    {/* TODO: Enable this message for future conferences: <p>If you have previously used Clowdr with the email address above, please enter your existing password.</p> */}
+                    {<p>If you have previously used Clowdr with the email address above, please enter your existing password.</p>}
                     <label htmlFor="password">Choose a password</label>
                     <input
                         name="password"
