@@ -3,16 +3,17 @@ import useConference from "../../../../hooks/useConference";
 import useHeading from "../../../../hooks/useHeading";
 import useSafeAsync from "../../../../hooks/useSafeAsync";
 import AsyncButton from "../../../AsyncButton/AsyncButton";
-import { ProgramPerson } from "@clowdr-app/clowdr-db-schema";
+import { ProgramPerson, UserProfile } from "@clowdr-app/clowdr-db-schema";
 import "./Authors.scss";
 import { useForm } from "react-hook-form";
-import { addError } from "../../../../classes/Notifications/Notifications";
+import { addError, addNotification } from "../../../../classes/Notifications/Notifications";
 import {
     DataUpdatedEventDetails,
     DataDeletedEventDetails,
 } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import useUserProfiles from "../../../../hooks/useUserProfiles";
+import { fr } from "date-fns/esm/locale";
 
 interface FormData {
     programPerson: string;
@@ -69,8 +70,8 @@ export default function Authors() {
                 </a>
             </div>
         ) : (
-            "Linked attendee is missing"
-        );
+                "Linked attendee is missing"
+            );
     }
 
     async function onSubmit(data: FormData) {
@@ -86,6 +87,69 @@ export default function Authors() {
             reset();
         } catch (e) {
             addError(`Failed to link author to attendee. Error ${e}`, 20000);
+        }
+    }
+
+    async function onSubmitAutoLink(data: FormData) {
+        if (authors && profiles) {
+            const unlinkedAuthors
+                = authors
+                    .filter(author => !author.profileId)
+                    .sort((a, b) => a.name.localeCompare(b.name));
+
+            const uniqueAuthors = new Map<string, ProgramPerson>();
+            const nonUniqueAuthors = new Set<string>();
+            for (const author of unlinkedAuthors) {
+                const nameForComparison = author.name.toLowerCase();
+                if (!nonUniqueAuthors.has(nameForComparison)) {
+                    if (uniqueAuthors.has(nameForComparison)) {
+                        uniqueAuthors.delete(nameForComparison);
+                        nonUniqueAuthors.add(nameForComparison);
+                    }
+                    else {
+                        uniqueAuthors.set(nameForComparison, author);
+                    }
+                }
+            }
+
+            addNotification(`${uniqueAuthors.size} unique authors found.
+
+${nonUniqueAuthors.size} non-unique authors found.`);
+
+            const authorProfileMapping = new Map<string, {
+                author: ProgramPerson,
+                profile: UserProfile
+            }>();
+            for (const author of uniqueAuthors.values()) {
+                const authorNameForComparison = author.name.toLowerCase();
+                const possibleProfiles = profiles.filter(p => p.realName.toLowerCase() === authorNameForComparison);
+                if (possibleProfiles.length === 1) {
+                    authorProfileMapping.set(author.id, { author, profile: possibleProfiles[0] });
+                }
+            }
+            addNotification(`Able to map ${authorProfileMapping.size} authors to profiles.`);
+            addNotification(`Auto-linking profiles - ***DO NOT CLOSE YOUR TAB*** - please wait...`);
+
+            const { savedCount, failedCount } = await new Promise(resolve => setTimeout(async () => {
+                let _savedCount = 0;
+                let _failedCount = 0;
+
+                for (const newLink of authorProfileMapping.values()) {
+                    try {
+                        newLink.author.profileId = newLink.profile.id;
+                        await newLink.author.save();
+                        _savedCount++;
+                    }
+                    catch (e) {
+                        addError(`Failed to link ${newLink.author.name} to ${newLink.profile.realName}: ${e}`, 30000);
+                        _failedCount++;
+                    }
+                }
+
+                resolve({ savedCount: _savedCount, failedCount: _failedCount });
+            }, 10));
+
+            addNotification(`Linking complete. Linked ${savedCount} authors to profiles. ${failedCount} failed.`);
         }
     }
 
@@ -131,12 +195,25 @@ export default function Authors() {
                     {authorRows && authorRows.length > 0 ? (
                         authorRows
                     ) : (
-                        <tr>
-                            <td colSpan={3}>No author has been linked to an attendee.</td>
-                        </tr>
-                    )}
+                            <tr>
+                                <td colSpan={3}>No author has been linked to an attendee.</td>
+                            </tr>
+                        )}
                 </tbody>
             </table>
+
+            <h2>Automatically link authors to attendees</h2>
+            <div className="auto-link-authors-form-wrapper">
+                <form className="auto-link-authors-form" onSubmit={handleSubmit(onSubmitAutoLink)}>
+                    <p>This will automatically link authors to attendees where there is a unique mapping based on <b>exactly matching</b> names.</p>
+                    <AsyncButton
+                        action={handleSubmit(onSubmitAutoLink)}
+                        disabled={!authors || !profiles}
+                    >
+                        <i className="fas fa-link"></i>
+                    </AsyncButton>
+                </form>
+            </div>
 
             <h2>Link a program author to an attendee</h2>
             <div className="link-authors-form-wrapper">
@@ -173,7 +250,7 @@ export default function Authors() {
                             action={handleSubmit(onSubmit)}
                             disabled={!!(errors.programPerson || errors.userProfile)}
                         >
-                            <i className="fas fa-plus"></i>
+                            <i className="fas fa-link"></i>
                         </AsyncButton>
                     </div>
                 </form>
