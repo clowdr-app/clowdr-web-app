@@ -13,6 +13,7 @@ import Editor from "../Controls/Editor/Editor";
 import "./Registration.scss";
 import Select from "react-select";
 import { CSVReader } from 'react-papaparse'
+import useHeading from "../../../../hooks/useHeading";
 
 type RegistrationSpec = {
     id?: string;
@@ -57,6 +58,8 @@ export default function AdminRegistration() {
     const [rolesFilter, setRolesFilter] = useState<RoleNames[]>([]);
 
     const [isSaving, setIsSaving] = useState<boolean>(false);
+
+    useHeading("Admin: Registrations");
 
     useSafeAsync(
         async () => {

@@ -21,7 +21,8 @@ interface FormData {
 }
 
 export default function Authors() {
-    useHeading("Authors");
+    useHeading("Admin: Authors");
+
     const conference = useConference();
     const [authors, setAuthors] = useState<ProgramPerson[] | null>(null);
     const profiles = useUserProfiles();

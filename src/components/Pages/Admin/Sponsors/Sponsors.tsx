@@ -11,10 +11,13 @@ import {
 } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
 import { Link } from "react-router-dom";
+import useHeading from "../../../../hooks/useHeading";
 
 export default function Sponsors() {
     const conference = useConference();
     const [sponsors, setSponsors] = useState<Sponsor[] | null>(null);
+
+    useHeading("Admin: Sponsors");
 
     useSafeAsync(
         async () => (await Sponsor.getAll(conference.id)) ?? null,

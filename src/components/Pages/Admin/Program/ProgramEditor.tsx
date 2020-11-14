@@ -85,7 +85,7 @@ function InnerProgramEditor(props: {
 
     const uploadInProgress = uploadProgress !== null && uploadProgress !== false;
 
-    useHeading("Program Editor");
+    useHeading("Admin: Program");
 
     const itemsKeys = Object.keys(programSpec.items);
     const sessionsKeys = Object.keys(programSpec.sessions);
