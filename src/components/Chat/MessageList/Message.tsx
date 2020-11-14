@@ -8,7 +8,7 @@ import { Conference, Flair, TextChat } from "@clowdr-app/clowdr-db-schema";
 import { addError, addNotification } from "../../../classes/Notifications/Notifications";
 
 import "emoji-mart/css/emoji-mart.css";
-import { Picker as EmojiPicker } from "emoji-mart";
+import { Emoji, Picker as EmojiPicker } from "emoji-mart";
 import { Tooltip } from "@material-ui/core";
 import { Link, useHistory } from "react-router-dom";
 import assert from "assert";
@@ -16,7 +16,7 @@ import useMaybeChat from "../../../hooks/useMaybeChat";
 import useUserProfile from "../../../hooks/useUserProfile";
 import IMessage from "../../../classes/Chat/IMessage";
 import { UserProfile } from "@clowdr-app/clowdr-db-schema";
-import { doEmojify, handleParseFileURLWeirdness, ReactMarkdownCustomised } from "../../../classes/Utils";
+import { handleParseFileURLWeirdness, ReactMarkdownCustomised } from "../../../classes/Utils";
 import AsyncButton from "../../AsyncButton/AsyncButton";
 import IMember from "../../../classes/Chat/IMember";
 import useUserRoles from "../../../hooks/useUserRoles";
@@ -186,13 +186,16 @@ export default function Message(props: {
         }
     }, []);
 
-    const toggleAddReaction = useCallback((msgSid: string) => {
-        if (pickEmojiForMsgSid) {
-            setPickEmojiForMsgSid(null);
-        } else {
-            setPickEmojiForMsgSid(msgSid);
-        }
-    }, [pickEmojiForMsgSid]);
+    const toggleAddReaction = useCallback(
+        (msgSid: string) => {
+            if (pickEmojiForMsgSid) {
+                setPickEmojiForMsgSid(null);
+            } else {
+                setPickEmojiForMsgSid(msgSid);
+            }
+        },
+        [pickEmojiForMsgSid]
+    );
 
     const doReport = useCallback(async () => {
         if (!mChat) {
@@ -254,7 +257,9 @@ export default function Message(props: {
                 anchorEl={anchorEl}
                 onClose={handlePopoverClose}
             />
-        ) : <></>;
+        ) : (
+            <></>
+        );
     }, [anchorEl, bioPopoverOpen, handlePopoverClose, msg.profile, msg.profileId]);
 
     const profileEl = useMemo(() => {
@@ -299,12 +304,21 @@ export default function Message(props: {
                 {msg.profilePhotoUrl ? (
                     <img src={msg.profilePhotoUrl} alt={`${msg.profileName}'s avatar`} />
                 ) : (
-                        <img src={defaultProfilePic} alt="default avatar" />
-                    )}
+                    <img src={defaultProfilePic} alt="default avatar" />
+                )}
                 {msg.profileFlair ? <FlairChip flair={msg.profileFlair} small /> : <></>}
             </div>
         );
-    }, [handlePopoverClose, handlePopoverOpen, msg.profileFlair, msg.profileId, msg.profileName, msg.profilePhotoUrl, showProfileOptions, userProfile.id]);
+    }, [
+        handlePopoverClose,
+        handlePopoverOpen,
+        msg.profileFlair,
+        msg.profileId,
+        msg.profileName,
+        msg.profilePhotoUrl,
+        showProfileOptions,
+        userProfile.id,
+    ]);
 
     const profileEls = useMemo(() => {
         return (
@@ -326,8 +340,8 @@ export default function Message(props: {
                             </Link>
                         </div>
                     ) : (
-                            ""
-                        )}
+                        ""
+                    )}
                     <div className="name">
                         {msg.chatName ? (msg.isDM ? `DM: ` : `#${msg.chatName} / `) : ""}
                         {msg.profileName ?? "<Unknown>"}
@@ -353,14 +367,12 @@ export default function Message(props: {
                             </button>
                         </div>
                     ) : (
-                            <ReactMarkdownCustomised className="body">
-                                {msg.body}
-                            </ReactMarkdownCustomised>
-                        )}
+                        <ReactMarkdownCustomised className="body">{msg.body}</ReactMarkdownCustomised>
+                    )}
                     {!showDeleteConfirm ? (
                         <div className="report">
-                            {!props.hideReportButton && msg.profileId !== userProfile.id ?
-                                (showReportConfirm || reporting ? (
+                            {!props.hideReportButton && msg.profileId !== userProfile.id ? (
+                                showReportConfirm || reporting ? (
                                     <>
                                         {!reporting ? <span>Report?</span> : <></>}
                                         <AsyncButton
@@ -382,75 +394,75 @@ export default function Message(props: {
                                                 No
                                             </button>
                                         ) : (
-                                                <></>
-                                            )}
+                                            <></>
+                                        )}
                                     </>
                                 ) : (
-                                        <button
-                                            title="Report this message"
-                                            onClick={ev => {
-                                                ev.preventDefault();
-                                                ev.stopPropagation();
-                                                setShowReportConfirm(true);
-                                            }}
-                                        >
-                                            <i className="far fa-flag"></i>
-                                            <i className="fas fa-flag"></i>
-                                        </button>
-                                    )
+                                    <button
+                                        title="Report this message"
+                                        onClick={ev => {
+                                            ev.preventDefault();
+                                            ev.stopPropagation();
+                                            setShowReportConfirm(true);
+                                        }}
+                                    >
+                                        <i className="far fa-flag"></i>
+                                        <i className="fas fa-flag"></i>
+                                    </button>
                                 )
-                                : <></>
-                            }
+                            ) : (
+                                <></>
+                            )}
                         </div>
                     ) : (
-                            <></>
-                        )}
+                        <></>
+                    )}
                     {(isAdmin || isManager || msg.profileId === userProfile.id) &&
-                        !props.hideDeleteButton &&
-                        !showReportConfirm ? (
-                            <div className="delete">
-                                {showDeleteConfirm || deleting ? (
-                                    <>
-                                        {!deleting ? <span>Delete?</span> : <></>}
-                                        <AsyncButton
-                                            children={deleting ? "Deleting" : "Yes"}
-                                            className="yes"
-                                            setIsRunning={setDeleting}
-                                            action={doDelete}
-                                        />
-                                        {!deleting ? (
-                                            <button
-                                                title="No, do not delete this message"
-                                                className="no"
-                                                onClick={ev => {
-                                                    ev.preventDefault();
-                                                    ev.stopPropagation();
-                                                    setShowDeleteConfirm(false);
-                                                }}
-                                            >
-                                                No
-                                            </button>
-                                        ) : (
-                                                <></>
-                                            )}
-                                    </>
-                                ) : (
+                    !props.hideDeleteButton &&
+                    !showReportConfirm ? (
+                        <div className="delete">
+                            {showDeleteConfirm || deleting ? (
+                                <>
+                                    {!deleting ? <span>Delete?</span> : <></>}
+                                    <AsyncButton
+                                        children={deleting ? "Deleting" : "Yes"}
+                                        className="yes"
+                                        setIsRunning={setDeleting}
+                                        action={doDelete}
+                                    />
+                                    {!deleting ? (
                                         <button
-                                            title="Delete this message"
+                                            title="No, do not delete this message"
+                                            className="no"
                                             onClick={ev => {
                                                 ev.preventDefault();
                                                 ev.stopPropagation();
-                                                setShowDeleteConfirm(true);
+                                                setShowDeleteConfirm(false);
                                             }}
                                         >
-                                            <i className="far fa-trash-alt"></i>
-                                            <i className="fas fa-trash-alt"></i>
+                                            No
                                         </button>
+                                    ) : (
+                                        <></>
                                     )}
-                            </div>
-                        ) : (
-                            <></>
-                        )}
+                                </>
+                            ) : (
+                                <button
+                                    title="Delete this message"
+                                    onClick={ev => {
+                                        ev.preventDefault();
+                                        ev.stopPropagation();
+                                        setShowDeleteConfirm(true);
+                                    }}
+                                >
+                                    <i className="far fa-trash-alt"></i>
+                                    <i className="fas fa-trash-alt"></i>
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <></>
+                    )}
                 </div>
                 {msg.moderation ? (
                     <div className="moderation">
@@ -460,96 +472,125 @@ export default function Message(props: {
                         </Link>
                     </div>
                 ) : (
-                        <div className="reactions">
-                            <div className="add-reaction">
-                                {pickEmojiForMsgSid === msg.sid && emoji?.element ? (
-                                    ReactDOM.createPortal(
-                                        <EmojiPicker
-                                            style={{
-                                                zIndex: 999,
-                                                position: "absolute",
-                                                bottom: `${emojiButtonPosition?.bottom ?? 0}px`,
-                                                left: `${emojiButtonPosition?.left ?? 0}px`,
-                                            }}
-                                            showPreview={false}
-                                            useButton={false}
-                                            title="Pick a reaction"
-                                            onSelect={async ev => {
-                                                setPickEmojiForMsgSid(null);
-                                                const emojiId = ev.colons ?? ev.id;
-                                                assert(emojiId);
+                    <div className="reactions">
+                        <div className="add-reaction">
+                            {pickEmojiForMsgSid === msg.sid && emoji?.element ? (
+                                ReactDOM.createPortal(
+                                    <EmojiPicker
+                                        style={{
+                                            zIndex: 999,
+                                            position: "absolute",
+                                            bottom: `${emojiButtonPosition?.bottom ?? 0}px`,
+                                            left: `${emojiButtonPosition?.left ?? 0}px`,
+                                        }}
+                                        showPreview={false}
+                                        useButton={false}
+                                        title="Pick a reaction"
+                                        onSelect={async ev => {
+                                            setPickEmojiForMsgSid(null);
+                                            const emojiId = ev.colons ?? ev.id;
+                                            assert(emojiId);
+                                            try {
+                                                assert((await mChat?.addReaction(msg.chatSid, msg.sid, emojiId))?.ok);
+                                            } catch (e) {
+                                                console.error(e);
+                                                addError("Sorry, we could not add your reaction.");
+                                            }
+                                        }}
+                                    />,
+                                    emoji.element
+                                )
+                            ) : (
+                                <></>
+                            )}
+                            <button
+                                className="new"
+                                ref={emojiButton}
+                                aria-label="Add a reaction"
+                                onClick={ev => {
+                                    getEmojiPickerOffset();
+                                    toggleAddReaction(msg.sid);
+                                }}
+                            >
+                                <i className="fas fa-smile-beam"></i>+
+                            </button>
+                        </div>
+                        {Object.keys(msg.reactions).map(reaction => {
+                            return (
+                                <Tooltip
+                                    key={reaction}
+                                    title={msg.reactions[reaction].names
+                                        .reduce((acc, x) => `${acc}, ${x}`, "")
+                                        .substr(2)}
+                                    placement="top"
+                                >
+                                    <button
+                                        onClick={async ev => {
+                                            ev.preventDefault();
+                                            ev.stopPropagation();
+                                            setPickEmojiForMsgSid(null);
+                                            if (msg.reactions[reaction].ids.includes(userProfile.id)) {
                                                 try {
-                                                    assert((await mChat?.addReaction(msg.chatSid, msg.sid, emojiId))?.ok);
+                                                    assert(
+                                                        (await mChat?.removeReaction(msg.chatSid, msg.sid, reaction))
+                                                            ?.ok
+                                                    );
+                                                } catch (e) {
+                                                    console.error(e);
+                                                    addError("Sorry, we could not remove your reaction.");
+                                                }
+                                            } else {
+                                                try {
+                                                    assert(
+                                                        (await mChat?.addReaction(msg.chatSid, msg.sid, reaction))?.ok
+                                                    );
                                                 } catch (e) {
                                                     console.error(e);
                                                     addError("Sorry, we could not add your reaction.");
                                                 }
-                                            }}
-                                        />,
-                                        emoji.element
-                                    )
-                                ) : (
-                                        <></>
-                                    )}
-                                <button
-                                    className="new"
-                                    ref={emojiButton}
-                                    aria-label="Add a reaction"
-                                    onClick={ev => {
-                                        getEmojiPickerOffset();
-                                        toggleAddReaction(msg.sid);
-                                    }}
-                                >
-                                    <i className="fas fa-smile-beam"></i>+
-                            </button>
-                            </div>
-                            {Object.keys(msg.reactions).map(reaction => {
-                                return (
-                                    <Tooltip
-                                        key={reaction}
-                                        title={msg.reactions[reaction].names
-                                            .reduce((acc, x) => `${acc}, ${x}`, "")
-                                            .substr(2)}
-                                        placement="top"
+                                            }
+                                        }}
                                     >
-                                        <button
-                                            onClick={async ev => {
-                                                ev.preventDefault();
-                                                ev.stopPropagation();
-                                                setPickEmojiForMsgSid(null);
-                                                if (msg.reactions[reaction].ids.includes(userProfile.id)) {
-                                                    try {
-                                                        assert(
-                                                            (await mChat?.removeReaction(msg.chatSid, msg.sid, reaction))
-                                                                ?.ok
-                                                        );
-                                                    } catch (e) {
-                                                        console.error(e);
-                                                        addError("Sorry, we could not remove your reaction.");
-                                                    }
-                                                } else {
-                                                    try {
-                                                        assert(
-                                                            (await mChat?.addReaction(msg.chatSid, msg.sid, reaction))?.ok
-                                                        );
-                                                    } catch (e) {
-                                                        console.error(e);
-                                                        addError("Sorry, we could not add your reaction.");
-                                                    }
-                                                }
-                                            }}
-                                        >
-                                            <span>{doEmojify(reaction.replace(/-/g, "_"))}</span>
-                                            <span>{msg.reactions[reaction].ids.length}</span>
-                                        </button>
-                                    </Tooltip>
-                                );
-                            })}
-                        </div>
-                    )}
+                                        <Emoji set={"apple"} emoji={reaction} size={18} />
+                                        <span>{msg.reactions[reaction].ids.length}</span>
+                                    </button>
+                                </Tooltip>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         );
-    }, [deleting, doDelete, doReport, emoji, emojiButtonPosition, getEmojiPickerOffset, isAdmin, isManager, mChat, msg.body, msg.chatName, msg.chatSid, msg.isDM, msg.moderation, msg.profileId, msg.profileName, msg.reactions, msg.sid, msg.timeStr, pickEmojiForMsgSid, props.hideDeleteButton, props.hideReportButton, reporting, showDeleteConfirm, showProfileOptions, showReportConfirm, toggleAddReaction, userProfile.id]);
+    }, [
+        deleting,
+        doDelete,
+        doReport,
+        emoji,
+        emojiButtonPosition,
+        getEmojiPickerOffset,
+        isAdmin,
+        isManager,
+        mChat,
+        msg.body,
+        msg.chatName,
+        msg.chatSid,
+        msg.isDM,
+        msg.moderation,
+        msg.profileId,
+        msg.profileName,
+        msg.reactions,
+        msg.sid,
+        msg.timeStr,
+        pickEmojiForMsgSid,
+        props.hideDeleteButton,
+        props.hideReportButton,
+        reporting,
+        showDeleteConfirm,
+        showProfileOptions,
+        showReportConfirm,
+        toggleAddReaction,
+        userProfile.id,
+    ]);
 
     return (
         <div className={`chat-message${showReportConfirm || showDeleteConfirm ? " highlight" : ""}`} key={msg.index}>

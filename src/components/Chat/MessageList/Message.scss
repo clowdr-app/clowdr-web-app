@@ -51,7 +51,8 @@
             .view-profile-options {
                 grid-area: body;
 
-                .button, button {
+                .button,
+                button {
                     margin: 0.3em 0.5em 0.4em 0;
                 }
             }
@@ -119,11 +120,11 @@
             }
 
             .delete {
-                grid-area      : delete;
+                grid-area: delete;
             }
 
             .report {
-                grid-area      : report;
+                grid-area: report;
             }
 
             .delete,
@@ -197,6 +198,10 @@
             justify-content: flex-start;
             z-index        : 3;
 
+            .emoji-mart-emoji {
+                line-height: normal;
+            }
+
             &>button,
             .add-reaction>button {
                 font-size      : 80%;
@@ -207,10 +212,14 @@
                 margin         : 2px;
                 text-align     : center;
                 border-radius  : 1000px;
-                background     : none;
+                background     : #eee;
+                border         : 0 none;
+                border         : #eee 1px solid;
 
                 &:hover {
-                    color: $gray-1;
+                    border          : $gray-3 1px solid;
+                    background-color: white;
+                    color           : inherit;
                 }
 
                 span {
