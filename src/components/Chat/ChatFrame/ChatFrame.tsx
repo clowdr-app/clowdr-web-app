@@ -5,7 +5,7 @@ import useSafeAsync from "../../../hooks/useSafeAsync";
 import useUserRoles from "../../../hooks/useUserRoles";
 import MessageList from "../MessageList/MessageList";
 import "./ChatFrame.scss";
-import { Picker as EmojiPicker } from 'emoji-mart';
+import { Picker as EmojiPicker } from "emoji-mart";
 import { ChatDescriptor } from "../../../classes/Chat";
 import ReactDOM from "react-dom";
 import useEmojiPicker from "../../../hooks/useEmojiPicker";
@@ -27,7 +27,7 @@ export default function ChatFrame(props: Props) {
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [tc, setTC] = useState<ChatDescriptor | null>(null);
     const emojiButton = useRef<HTMLButtonElement | null>(null);
-    const [emojiButtonPosition, setEmojiButtonPosition] = useState<{ bottom: number, right: number } | null>(null);
+    const [emojiButtonPosition, setEmojiButtonPosition] = useState<{ bottom: number; right: number } | null>(null);
 
     useSafeAsync(async () => mChat?.getChat(props.chatId) ?? null, setTC, [mChat, props.chatId], "ChatFrame:getChat");
 
@@ -43,7 +43,7 @@ export default function ChatFrame(props: Props) {
         } else {
             setEmojiButtonPosition(null);
         }
-    }
+    };
 
     async function sendMessage(ev: React.KeyboardEvent<HTMLTextAreaElement>) {
         if (ev.key === "Enter" && !ev.shiftKey) {
@@ -58,13 +58,16 @@ export default function ChatFrame(props: Props) {
                         setNewMsgEnabled(false);
                         await mChat.sendMessage(props.chatId, msg);
                         setNewMsgText("");
-                    }
-                    catch (e) {
-                        if (e.toString().toLowerCase().includes("unauthorized")) {
+                    } catch (e) {
+                        if (
+                            e
+                                .toString()
+                                .toLowerCase()
+                                .includes("unauthorized")
+                        ) {
                             // TODO: Hide composition box
                             logger.error("Permission denied.");
-                        }
-                        else {
+                        } else {
                             // TODO: Show error to user
                             logger.error(e);
                         }
@@ -72,8 +75,7 @@ export default function ChatFrame(props: Props) {
 
                     msgBoxRef.current?.focus();
                     setNewMsgEnabled(true);
-                }
-                else {
+                } else {
                     // TODO: Show error to user about not sending blank messages
                     setNewMsgEnabled(false);
                     setNewMsgText("");
@@ -95,60 +97,74 @@ export default function ChatFrame(props: Props) {
     //       all without changing the page url, then you might get an Access Forbidden error from
     //       Twilio because the chat will try to load before User B has joined it.
 
-    const messagesEl = useMemo(() => <MessageList chatId={props.chatId} hideMessageReportButtons={props.hideMessageReportButtons} />, [props.chatId, props.hideMessageReportButtons]);
-    const chatEl = <div className="chat-frame">
-        {messagesEl}
-        {!tc?.isAnnouncements || isAdmin
-            ? <div className="compose-message">
-                <textarea
-                    autoFocus={true}
-                    ref={msgBoxRef}
-                    name="message" id="message"
-                    placeholder="Type a message [Enter to send, Shift+Enter for newline]"
-                    onKeyUp={(ev) => sendMessage(ev)}
-                    value={newMsgText}
-                    onChange={(ev) => setNewMsgText(ev.target.value)}
-                    disabled={!newMsgEnabled}>
-                </textarea>
-                <div className="add-emoji">
-                    {showEmojiPicker && emoji?.element
-                        ? ReactDOM.createPortal(
-                            <EmojiPicker
-                                style={{
-                                    zIndex: 999,
-                                    position: 'absolute',
-                                    bottom: `${emojiButtonPosition?.bottom ?? 0}px`,
-                                    right: `${emojiButtonPosition?.right ?? 0}px`
-                                }}
-                                showPreview={false}
-                                useButton={false}
-                                title="Pick a reaction"
-                                onSelect={async (ev) => {
-                                    setShowEmojiPicker(false);
-                                    const emojiId = (ev as any).native;
-                                    setNewMsgText(newMsgText + emojiId);
-                                }}
-                            />, emoji.element)
-                        : <></>
-                    }
-                    <button
-                        onClick={(ev) => {
-                            getEmojiPickerOffset();
-                            setShowEmojiPicker(!showEmojiPicker);
-                        }}
-                        ref={emojiButton}>
-                        <i className="fas fa-smile-beam"></i>+
-            </button>
+    const messagesEl = useMemo(
+        () => <MessageList chatId={props.chatId} hideMessageReportButtons={props.hideMessageReportButtons} />,
+        [props.chatId, props.hideMessageReportButtons]
+    );
+    const chatEl = (
+        <div className="chat-frame">
+            {messagesEl}
+            {!tc?.isAnnouncements || isAdmin ? (
+                <div className="compose-message">
+                    <textarea
+                        autoFocus={true}
+                        ref={msgBoxRef}
+                        name="message"
+                        id="message"
+                        placeholder="Type a message [Enter to send, Shift+Enter for newline]"
+                        onKeyUp={ev => sendMessage(ev)}
+                        value={newMsgText}
+                        onChange={ev => setNewMsgText(ev.target.value)}
+                        disabled={!newMsgEnabled}
+                    ></textarea>
+                    <div className="add-emoji">
+                        {showEmojiPicker && emoji?.element ? (
+                            ReactDOM.createPortal(
+                                <EmojiPicker
+                                    style={{
+                                        zIndex: 999,
+                                        position: "absolute",
+                                        bottom: `${emojiButtonPosition?.bottom ?? 0}px`,
+                                        right: `${emojiButtonPosition?.right ?? 0}px`,
+                                    }}
+                                    showPreview={false}
+                                    useButton={false}
+                                    set="twitter"
+                                    title="Pick a reaction"
+                                    onSelect={async ev => {
+                                        setShowEmojiPicker(false);
+                                        const emojiId = (ev as any).native;
+                                        setNewMsgText(newMsgText + emojiId);
+                                    }}
+                                />,
+                                emoji.element
+                            )
+                        ) : (
+                            <></>
+                        )}
+                        <button
+                            onClick={ev => {
+                                getEmojiPickerOffset();
+                                setShowEmojiPicker(!showEmojiPicker);
+                            }}
+                            ref={emojiButton}
+                        >
+                            <i className="fas fa-smile-beam"></i>+
+                        </button>
+                    </div>
                 </div>
-            </div>
-            : <></>
-        }
-    </div>;
+            ) : (
+                <></>
+            )}
+        </div>
+    );
 
-    return props.showChatName
-        ? <div className="named-chat-wrapper">
+    return props.showChatName ? (
+        <div className="named-chat-wrapper">
             {tc && <div className="chat-name">{tc.friendlyName}</div>}
             {chatEl}
         </div>
-        : chatEl;
+    ) : (
+        chatEl
+    );
 }

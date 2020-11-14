@@ -486,6 +486,7 @@ export default function Message(props: {
                                         showPreview={false}
                                         useButton={false}
                                         title="Pick a reaction"
+                                        set="twitter"
                                         onSelect={async ev => {
                                             setPickEmojiForMsgSid(null);
                                             const emojiId = ev.colons ?? ev.id;
@@ -551,7 +552,7 @@ export default function Message(props: {
                                             }
                                         }}
                                     >
-                                        <Emoji set={"apple"} emoji={reaction} size={18} />
+                                        <Emoji set={"twitter"} emoji={reaction} size={18} />
                                         <span>{msg.reactions[reaction].ids.length}</span>
                                     </button>
                                 </Tooltip>
