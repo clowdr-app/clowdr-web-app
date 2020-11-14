@@ -80,22 +80,25 @@ export default function EditorTable<I, F extends FilterTypes<I>>(props: TableEdi
         });
 
     const headings: Array<JSX.Element> = [
-        <th key="<<select>>">
+        <th key="<<select>>" className="select-heading">
             {!props.addRow?.beingAdded
-                ? <input
-                    className="select-row-box"
-                    type="checkbox"
-                    checked={itemKeys.every(key => props.selectedKeys.includes(key))}
-                    onChange={(ev) => {
-                        ev.stopPropagation();
-                        if (ev.target.checked) {
-                            props.select(itemKeys);
-                        }
-                        else {
-                            props.select([]);
-                        }
-                    }}
-                />
+                ? <>
+                    <span>({itemKeys.length})</span>
+                    <input
+                        className="select-row-box"
+                        type="checkbox"
+                        checked={itemKeys.every(key => props.selectedKeys.includes(key))}
+                        onChange={(ev) => {
+                            ev.stopPropagation();
+                            if (ev.target.checked) {
+                                props.select(itemKeys);
+                            }
+                            else {
+                                props.select([]);
+                            }
+                        }}
+                    />
+                </>
                 : <></>
             }
         </th>
@@ -284,13 +287,15 @@ export default function EditorTable<I, F extends FilterTypes<I>>(props: TableEdi
     }
 
     return (
-        <table className="editor-table">
-            <thead>
-                <tr>{headings}</tr>
-            </thead>
-            <tbody>
-                {rows}
-            </tbody>
-        </table>
+        <>
+            <table className="editor-table">
+                <thead>
+                    <tr>{headings}</tr>
+                </thead>
+                <tbody>
+                    {rows}
+                </tbody>
+            </table>
+        </>
     );
 }

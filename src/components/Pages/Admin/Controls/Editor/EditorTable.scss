@@ -1,7 +1,7 @@
 @import "../../../../../styles/util.scss";
 
 .editor-table {
-    min-width: 100%;
+    min-width : 100%;
     max-height: 100%;
 
     .start-add-item-button,
@@ -41,17 +41,26 @@
         }
     }
 
-    .select-row-box {
-        margin: 0 0.4em;
+    .select-heading {
+        min-width : 7em;
+        font-size : 80%;
+        text-align: center;
+
+        span {
+            display      : inline-block;
+            margin-bottom: 0.5em;
+        }
     }
 
-    th, td {
+    th,
+    td {
         &>input {
             width: 100%;
         }
     }
 
     tbody {
+
         tr,
         td {
             cursor: pointer;
@@ -62,6 +71,7 @@
         }
 
         td {
+
             &:first-child,
             &:last-child {
                 width: 1em;

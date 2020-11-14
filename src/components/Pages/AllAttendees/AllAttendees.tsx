@@ -20,7 +20,6 @@ interface AttendeeRenderData {
 }
 
 export default function AllAttendees() {
-    useHeading("All attendees");
 
     const profile = useUserProfile();
     const userProfiles = useUserProfiles();
@@ -30,6 +29,8 @@ export default function AllAttendees() {
 
     const [admins, setAdmins] = useState<string[] | undefined>();
     const [managers, setManagers] = useState<string[] | undefined>();
+
+    useHeading(`All attendees${isAdmin && userProfiles ? ` (${userProfiles.length})` : ""}`);
 
     // Compute list items from user profiles
     useSafeAsync(
