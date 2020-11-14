@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import "./Register.scss";
 import { makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
 import { Conference } from "@clowdr-app/clowdr-db-schema";
+import { Tooltip } from "@material-ui/core";
 
 interface Props {
     conferenceId: string;
@@ -222,7 +223,17 @@ export default function Register(props: Props) {
                         supported at this time. Most features will also work in Firefox and Chrome mobile.
                     </p>
                     <div className="submit-container">
-                        <input type="submit" value="Register" disabled={formState.isSubmitting || !formState.isValid} />
+                        <Tooltip
+                            title={
+                                !formState.isValid || !formState.isDirty ? "There are some problems with the form." : ""
+                            }
+                        >
+                            <input
+                                type="submit"
+                                value="Register"
+                                disabled={formState.isSubmitting || !formState.isValid}
+                            />
+                        </Tooltip>
                     </div>
                 </form>
             </>
