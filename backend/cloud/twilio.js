@@ -38,7 +38,7 @@ async function getTwilioChatService(confId, config) {
         return undefined;
     }
 
-    return client ? client.chat.services(config.TWILIO_CHAT_SERVICE_SID) : undefined;
+    return client.chat.services(config.TWILIO_CHAT_SERVICE_SID);
 }
 
 module.exports = {

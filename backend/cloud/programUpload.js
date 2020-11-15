@@ -4,6 +4,7 @@
 const { validateRequest } = require("./utils");
 const { isUserInRoles, configureDefaultProgramACLs } = require("./role");
 const { getProfileOfUser } = require("./user");
+const { logRequestError } = require("./errors");
 
 const { createContentFeed } = require("./contentFeed");
 const {
@@ -57,6 +58,7 @@ Parse.Cloud.define("import-program", async request => {
             return true;
         }
     } catch (e) {
+        await logRequestError(request, 0, "import-program", e);
         console.error("Could not import program: " + e);
     }
     return false;
@@ -94,6 +96,7 @@ Parse.Cloud.define("import-program-progress", async request => {
             return false;
         }
     } catch (e) {
+        await logRequestError(request, 0, "import-program-progress", e);
         console.error("Could not import program: " + e);
     }
     return false;
@@ -470,6 +473,7 @@ Parse.Cloud.job("import-program-job", async request => {
 
         message("100");
     } catch (e) {
+        await logRequestError(request, 0, "import-program-job", e);
         console.error("ERROR: " + e.stack, e);
         message(e);
         throw e;
@@ -490,6 +494,7 @@ Parse.Cloud.job("import-program-job", async request => {
 //         }
 //     }
 //     catch (e) {
+//         await logRequestError(request, 0, "clear-conference", e);
 //         console.error("Could not clear conference: " + e);
 //     }
 //     return false;

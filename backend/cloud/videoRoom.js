@@ -7,6 +7,7 @@ const { getProfileOfUser, getUserProfileById } = require("./user");
 const { getConfig } = require("./config");
 const { createTextChat } = require("./textChat");
 const Twilio = require("twilio");
+const { logRequestError } = require("./errors");
 
 // Video rooms are created in Twilio only when they are first needed.
 // So they are created when a user requests an access token for a room -
@@ -80,12 +81,14 @@ Parse.Cloud.beforeDelete("VideoRoom", async (request) => {
             }
             catch (e) {
                 if (!(e.toString().includes("resource") && e.toString().includes("not found"))) {
+                    await logRequestError(request, 0, "beforeDelete:VideoRoom:mark-completed", e);
                     throw e;
                 }
             }
         }
     }
     catch (e) {
+        await logRequestError(request, 0, "beforeDelete:VideoRoom", e);
         console.error(`Error deleting video room! ${e}`);
     }
 });

@@ -10,6 +10,7 @@ const { validateRequest } = require("./utils");
 const { isUserInRoles, getRoleByName } = require("./role");
 const sgMail = require("@sendgrid/mail");
 const Config = require("./config.js");
+const { logError } = require("./errors");
 
 // Duplicated becvause otherwise dependency loop...
 /**
@@ -243,10 +244,12 @@ async function sendRegistrationEmails(data) {
                     return { to: message.to, success: true };
                 } catch (reason) {
                     console.error(`Failed to record that a registration invitation was sent to ${email}.`, reason)
+                    await logError(registration.get("conference").id, undefined, 0, "sendRegistrationEmails:then:catch", reason);
                     return { to: message.to, success: false, reason }
                 }
             })
-            .catch(error => {
+            .catch(async error => {
+                await logError(undefined, undefined, 0, "sendRegistrationEmails:catch", error);
                 return { to: message.to, success: false, reason: error };
             }));
     }
@@ -404,6 +407,7 @@ Parse.Cloud.define("registration-save-many", async (req) => {
                     }
                 }
                 catch (e) {
+                    await logError(conference.id, undefined, 0, "registration-save-many:create-registration", e);
                     return { index: idx, result: false, email: spec.email, reason: e.toString() };
                 }
             }));
@@ -416,6 +420,7 @@ Parse.Cloud.define("registration-save-many", async (req) => {
                     await existingReg.destroy({ useMasterKey: true });
                 }
                 catch (e) {
+                    await logError(conference.id, undefined, 0, "registration-save-many:delete-registration", e);
                     console.error(`Failed to delete registration for: ${deletedEmail} in conference ${confId}`);
                 }
             }));

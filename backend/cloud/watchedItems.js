@@ -4,6 +4,7 @@
 const { validateRequest } = require("./utils");
 const { isUserInRoles, generateRoleDBName } = require("./role");
 const assert = require("assert");
+const { logRequestError } = require("./errors");
 
 //const { getAutoWatchTextChats } = require("./user");
 // Dunno why but Live Query just doesn't respond with correct data when using this
@@ -89,6 +90,7 @@ Parse.Cloud.job("migrate-watchedItems-isBanned-addToUserProfile", async (request
         message("Finished migration: adding watched items to existing user profiles.");
     }
     catch (e) {
+        await logRequestError(request, 0, "migrate-watchedItems-isBanned-addToUserProfile", e);
         console.error("Error (error):" + e);
         console.log("Error (log):" + e);
         message("Error:" + e);
@@ -150,6 +152,7 @@ Parse.Cloud.job("clean-watched-items", async (request) => {
         }
     }
     catch (e) {
+        await logRequestError(request, 0, "clean-watched-items", e);
         console.error("ERROR: " + e.stack, e);
         message(e);
         throw e;

@@ -4,6 +4,7 @@
 const { validateRequest } = require("./utils");
 const { isUserInRoles, configureDefaultProgramACLs } = require("./role");
 const { getProfileOfUser } = require("./user");
+const { logRequestError } = require("./errors");
 
 // TODO: Before save: Give authors write access to their program items/events
 
@@ -80,7 +81,16 @@ Parse.Cloud.beforeDelete("ProgramTrack", async request => {
             }
         }
     } catch (e) {
+        await logRequestError(request, 0, "beforeDelete:ProgramTrack", e);
+
         console.error(`Error deleting program track! ${e}`);
+        const reqObject = request.object;
+        if (reqObject) {
+            const conference = reqObject.get("conference");
+            if (conference) {
+                // logError(
+            }
+        }
     }
 });
 
@@ -119,6 +129,8 @@ Parse.Cloud.beforeDelete("ProgramSession", async request => {
             }
         }
     } catch (e) {
+        await logRequestError(request, 0, "beforeDelete:ProgramSession", e);
+
         console.error(`Error deleting program session! ${e}`);
     }
 });
@@ -158,6 +170,8 @@ Parse.Cloud.beforeDelete("ProgramSessionEvent", async request => {
             }
         }
     } catch (e) {
+        await logRequestError(request, 0, "beforeDelete:ProgramSessionEvent", e);
+
         console.error(`Error deleting program session event! ${e}`);
     }
 });
@@ -190,6 +204,8 @@ Parse.Cloud.beforeDelete("ProgramItem", async request => {
             .equalTo("programItem", item)
             .map(attachment => attachment.destroy({ useMasterKey: true }), { useMasterKey: true });
     } catch (e) {
+        await logRequestError(request, 0, "beforeDelete:ProgramItem", e);
+
         console.error(`Error deleting program item! ${e}`);
     }
 });
@@ -277,8 +293,14 @@ async function handleCreateAttachmentType(req) {
             const spec = params;
             spec.conference = new Parse.Object("Conference", { id: confId });
             spec.fileTypes = spec.fileTypes || [];
-            const result = await createAttachmentType(spec);
-            return result.id;
+            try {
+                const result = await createAttachmentType(spec);
+                return result.id;
+            }
+            catch (e) {
+                await logRequestError(req, 0, "handleCreateAttachmentType", e);
+                throw e;
+            }
         } else {
             throw new Error("Permission denied");
         }
@@ -358,8 +380,14 @@ async function handleCreateTrack(req) {
             if (spec.feed) {
                 spec.feed = new Parse.Object("ContentFeed", { id: spec.feed });
             }
-            const result = await createProgramTrack(spec);
-            return result.id;
+            try {
+                const result = await createProgramTrack(spec);
+                return result.id;
+            }
+            catch (e) {
+                await logRequestError(req, 0, "handleCreateTrack", e);
+                throw e;
+            }
         } else {
             throw new Error("Permission denied");
         }
@@ -448,8 +476,14 @@ async function handleCreatePerson(req) {
             if (spec.profile) {
                 spec.profile = new Parse.Object("UserProfile", { id: spec.profile });
             }
-            const result = await createProgramPerson(spec);
-            return result.id;
+            try {
+                const result = await createProgramPerson(spec);
+                return result.id;
+            }
+            catch (e) {
+                await logRequestError(req, 0, "handleCreatePerson", e);
+                throw e;
+            }
         } else {
             throw new Error("Permission denied");
         }
@@ -505,6 +539,7 @@ async function programPersonSetProfile(data) {
 
         return true;
     } catch (e) {
+        await logRequestError(data.conference, data.profile.get("user"), 0, "programPersonSetProfile", e);
         console.error("Error while associating profile with program person.", e);
     }
     return false;
@@ -533,8 +568,14 @@ async function handlePersonSetProfile(req) {
                 spec.programPerson = new Parse.Object("ProgramPerson", { id: spec.programPerson });
             }
 
-            const result = await programPersonSetProfile(spec);
-            return result;
+            try {
+                const result = await programPersonSetProfile(spec);
+                return result;
+            }
+            catch (e) {
+                await logRequestError(req, 0, "handlePersonSetProfile", e);
+                throw e;
+            }
         } else {
             throw new Error("Permission denied");
         }
@@ -648,8 +689,14 @@ async function handleCreateItem(req) {
             if (!spec.authors) {
                 spec.authors = [];
             }
-            const result = await createProgramItem(spec);
-            return result.id;
+            try {
+                const result = await createProgramItem(spec);
+                return result.id;
+            }
+            catch (e) {
+                await logRequestError(req, 0, "handleCreateItem", e);
+                throw e;
+            }
         } else {
             throw new Error("Permission denied");
         }
@@ -768,8 +815,14 @@ async function handleCreateItemAttachment(req) {
             spec.attachmentType = new Parse.Object("AttachmentType", { id: spec.attachmentType });
             spec.programItem = programItem;
             // TODO: Handle `file` (`Parse.File`)
-            const result = await createProgramItemAttachment(spec);
-            return result.id;
+            try {
+                const result = await createProgramItemAttachment(spec);
+                return result.id;
+            }
+            catch (e) {
+                await logRequestError(req, 0, "handleCreateItemAttachment", e);
+                throw e;
+            }
         } else {
             throw new Error("Permission denied");
         }
@@ -780,7 +833,13 @@ async function handleCreateItemAttachment(req) {
 Parse.Cloud.define("itemAttachment-create", handleCreateItemAttachment);
 
 Parse.Cloud.beforeSave("ProgramItemAttachment", async req => {
-    await updateProgramItemAttachmentACLs(req.object);
+    try {
+        await updateProgramItemAttachmentACLs(req.object);
+    }
+    catch (e) {
+        await logRequestError(req, 0, "beforeSave:ProgramItemAttachment", e);
+        throw e;
+    }
 });
 
 // **** Program Session **** //
@@ -871,8 +930,14 @@ async function handleCreateSession(req) {
             spec.conference = new Parse.Object("Conference", { id: confId });
             spec.feed = new Parse.Object("ContentFeed", { id: spec.feed });
             spec.track = new Parse.Object("ProgramTrack", { id: spec.track });
-            const result = await createProgramSession(spec);
-            return result.id;
+            try {
+                const result = await createProgramSession(spec);
+                return result.id;
+            }
+            catch (e) {
+                await logRequestError(req, 0, "handleCreateSession", e);
+                throw e;
+            }
         } else {
             throw new Error("Permission denied");
         }
@@ -981,8 +1046,14 @@ async function handleCreateSessionEvent(req) {
             spec.session = new Parse.Object("ProgramSession", { id: spec.session });
             spec.startTime = new Date(spec.startTime);
             spec.endTime = new Date(spec.endTime);
-            const result = await createProgramSessionEvent(spec);
-            return result.id;
+            try {
+                const result = await createProgramSessionEvent(spec);
+                return result.id;
+            }
+            catch (e) {
+                await logRequestError(req, 0, "handleCreateSessionEvent", e);
+                throw e;
+            }
         } else {
             throw new Error("Permission denied");
         }

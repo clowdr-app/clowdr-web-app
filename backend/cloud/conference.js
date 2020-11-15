@@ -8,6 +8,7 @@ const Twilio = require("twilio");
 const { callWithRetry, validateRequest } = require("./utils");
 const { generateRoleDBName, getRoleByName, isUserInRoles } = require("./role");
 const assert = require("assert");
+const { logError } = require("./errors");
 
 /**
  * All the information needed to initialise a fresh conference.
@@ -238,6 +239,7 @@ Parse.Cloud.job("conference-create", async (request) => {
         }
         catch (e2) {
             console.error(`Failed to clean up moderation hub chat. ${e2}`);
+            await logError(undefined, undefined, 0, "create-conference:cleanup-moderation-hub-chat", e2);
             cleanupSuccess = false;
         }
 
@@ -248,6 +250,7 @@ Parse.Cloud.job("conference-create", async (request) => {
         }
         catch (e2) {
             console.error(`Failed to clean up announcements chat. ${e2}`);
+            await logError(undefined, undefined, 0, "create-conference:cleanup-announcements-chat", e2);
             cleanupSuccess = false;
         }
 
@@ -260,6 +263,7 @@ Parse.Cloud.job("conference-create", async (request) => {
         }
         catch (e2) {
             console.error(`Failed to clean up configuration items. ${e2}`);
+            await logError(undefined, undefined, 0, "create-conference:cleanup-configuration-items", e2);
             cleanupSuccess = false;
         }
 
@@ -272,6 +276,7 @@ Parse.Cloud.job("conference-create", async (request) => {
         }
         catch (e2) {
             console.error(`Failed to suspend Twilio subaccount. ${e2}`);
+            await logError(undefined, undefined, 0, "create-conference:cleanup-suspend-twilio-subaccount", e2);
             cleanupSuccess = false;
         }
 
@@ -284,6 +289,7 @@ Parse.Cloud.job("conference-create", async (request) => {
         }
         catch (e2) {
             console.error(`Failed to clean up admin user profile. ${e2}`);
+            await logError(undefined, undefined, 0, "create-conference:cleanup-admin-user-profile", e2);
             cleanupSuccess = false;
         }
 
@@ -296,6 +302,7 @@ Parse.Cloud.job("conference-create", async (request) => {
         }
         catch (e2) {
             console.error(`Failed to clean up admin user. ${e2}`);
+            await logError(undefined, undefined, 0, "create-conference:cleanup-admin-user", e2);
             cleanupSuccess = false;
         }
 
@@ -308,6 +315,7 @@ Parse.Cloud.job("conference-create", async (request) => {
         }
         catch (e2) {
             console.error(`Failed to clean up logged in text. ${e2}`);
+            await logError(undefined, undefined, 0, "create-conference:cleanup-logged-in-text", e2);
             cleanupSuccess = false;
         }
 
@@ -320,6 +328,7 @@ Parse.Cloud.job("conference-create", async (request) => {
         }
         catch (e2) {
             console.error(`Failed to clean up flairs. ${e2}`);
+            await logError(undefined, undefined, 0, "create-conference:cleanup-flairs", e2);
             cleanupSuccess = false;
         }
 
@@ -332,6 +341,7 @@ Parse.Cloud.job("conference-create", async (request) => {
         }
         catch (e2) {
             console.error(`Failed to clean up roles. ${e2}`);
+            await logError(undefined, undefined, 0, "create-conference:cleanup-roles", e2);
             cleanupSuccess = false;
         }
 
@@ -344,6 +354,7 @@ Parse.Cloud.job("conference-create", async (request) => {
         }
         catch (e2) {
             console.error(`Failed to clean up conference. ${e2}`);
+            await logError(undefined, undefined, 0, "create-conference:cleanup-conference", e2);
             cleanupSuccess = false;
         }
         let cleanupResultMsg = `Cleanup ${cleanupSuccess ? "successful" : "failed"}.`;
@@ -853,6 +864,8 @@ Parse.Cloud.job("conference-create", async (request) => {
         }
     }
     catch (e) {
+        await logError(undefined, undefined, 0, "create-conference", e);
+
         await cleanupOnFailure();
 
         console.error("ERROR: " + e.stack, e);
@@ -985,6 +998,7 @@ async function configureGlobalChats(message, twilioChatService, setConfiguration
     }
     catch (e) {
         if (!e.toString().toLowerCase().includes("user already exists")) {
+            await logError(conference, undefined, 0, "configureGlobalChats:add-admin-user-to-announcements", e);
             throw e;
         }
     }
@@ -1255,6 +1269,7 @@ Parse.Cloud.job("regenerate-global-chats", async (request) => {
         }
     }
     catch (e) {
+        await logError(conference, undefined, 0, "regenerate-global-chats", e);
         console.error("ERROR: " + e.stack, e);
         message(e);
         throw e;

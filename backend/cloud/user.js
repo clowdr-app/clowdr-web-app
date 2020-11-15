@@ -18,6 +18,7 @@ const {
 const { callWithRetry, validateRequest } = require("./utils");
 const Config = require("./config");
 const { v4: uuidv4 } = require("uuid");
+const { logRequestError, logError } = require("./errors");
 
 async function getUserByEmail(email) {
     let query = new Parse.Query(Parse.User);
@@ -241,6 +242,13 @@ async function handleRegisterUser(request) {
     let { params } = request;
 
     try {
+        throw new Error("Test error");
+    }
+    catch (e) {
+        await logRequestError(request, 0, "handleRegisterUser:test", e);
+    }
+
+    try {
         if (!params.registrationId
             || !params.conferenceId
             || !params.fullName
@@ -275,7 +283,8 @@ async function handleRegisterUser(request) {
             } else {
                 await Parse.User.logIn(user.get("username"), params.password, {
                     useMasterKey: true
-                }).catch(_ => {
+                }).catch(async e => {
+                    await logRequestError(request, 0, "handleRegisterUser:Couldn't log in existing user", e);
                     throw new Error(`Registration: error matching user details.`)
                 });
                 await createUserProfile(user, params.fullName, registration.get("newRole"), conference);
@@ -295,7 +304,12 @@ async function handleRegisterUser(request) {
         return true;
     }
     catch (e) {
-        console.error(`Error during registration of ${params.registrationId} / ${params.fullName}`, e);
+        const msg = `Error during registration of ${params.registrationId} / ${params.fullName}`;
+        await logRequestError(request, 0, "handleRegisterUser", {
+            msg,
+            e: e.toString()
+        });
+        console.error(msg, e);
         if (e.toString().includes("error matching user details")) {
             return "Use existing password";
         }
@@ -335,7 +349,8 @@ async function handleCreateUser(request) {
         if (signUpEnabled) {
             let user = await getUserByEmail(params.email.toLowerCase());
             if (user) {
-                await Parse.User.logIn(user.get("username"), params.password, { useMasterKey: true }).catch(_ => {
+                await Parse.User.logIn(user.get("username"), params.password, { useMasterKey: true }).catch(async e => {
+                    await logRequestError(request, 0, "handleCreateUser:error-matching-user-details", e);
                     throw new Error(`Registration: error matching user details.`)
                 });
                 await createUserProfile(user, params.fullName, "attendee", conference);
@@ -354,6 +369,7 @@ async function handleCreateUser(request) {
         }
     }
     catch (e) {
+        await logRequestError(request, 0, "handleCreateUser", e);
         console.error("Error during signup", e);
     }
 
@@ -390,6 +406,7 @@ async function startResetPassword(data) {
             console.error(`Failed to retrieve email for user ${data.user.id}`);
         }
     } catch (e) {
+        await logError(data.get("conference").id, undefined, 0, "start-reset-password", e);
         throw new Error("Failed to start password reset.");
     }
 }
@@ -458,6 +475,7 @@ async function sendPasswordResetEmail(confId, email, token) {
     try {
         await sgMail.send(message);
     } catch (e) {
+        await logError(confId, undefined, 0, "sendPasswordResetEmail", { e, email });
         console.log(`Sending password reset to ${email.toLowerCase()} failed`, e);
     }
 }
@@ -497,6 +515,7 @@ async function resetPassword(data) {
             throw new Error("Failed to reset password.");
         }
     } catch (e) {
+        await logError(undefined, undefined, 0, "resetPassword", { e, email: data.email });
         throw new Error("Failed to reset password.");
     }
 }
@@ -606,6 +625,7 @@ Parse.Cloud.define("user-ban", async (req) => {
                     const msg = e.toString().toLowerCase();
                     // Already been kicked from Twilio? Or never joined?
                     if (!msg.includes("requested resource") || !msg.includes("not found")) {
+                        await logError(confId, targetUser.id, 0, "user-ban", e);
                         throw e;
                     }
                 }

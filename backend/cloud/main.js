@@ -1,3 +1,4 @@
+require("./analytics");
 require("./clientCache");
 require("./conference");
 require("./config");

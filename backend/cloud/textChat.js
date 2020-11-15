@@ -8,6 +8,7 @@ const { getUserById, getUserProfileById, getProfileOfUser, getProfileOfUserId } 
 const { getConferenceConfigurationByKey } = require("./conference");
 const { getConfig } = require("./config");
 const { callWithRetry, validateRequest } = require("./utils");
+const { logRequestError } = require("./errors");
 
 const { v4: uuidv4 } = require("uuid");
 const assert = require("assert");
@@ -308,6 +309,7 @@ Parse.Cloud.beforeSave("TextChat", async (req) => {
         }
     }
     catch (e) {
+        await logRequestError(req, 0, "beforeSave:TextChat", e);
         console.error("Could not update members of Twilio channel", e);
     }
 });
@@ -384,6 +386,7 @@ Parse.Cloud.beforeDelete("TextChat", async (req) => {
                 // "The requested resource /Services/SERVICE_ID/Channels/CHANNEL_ID was not found"
                 // Occurs if the channel was already deleted.
                 if (!(e.toString().includes("resource") && e.toString().includes("not found"))) {
+                    await logRequestError(req, 0, "beforeDelete:TextChat:remove-channel", e);
                     throw e;
                 }
             }
@@ -408,6 +411,7 @@ Parse.Cloud.beforeDelete("TextChat", async (req) => {
             }, { useMasterKey: true });
     }
     catch (e) {
+        await logRequestError(req, 0, "beforeDelete:TextChat", e);
         console.error(`Error deleting text chat! ${e}`);
     }
 });
