@@ -96,7 +96,7 @@ export default function AdminAnalytics() {
             {rawData ? (
                 <>
                     {renderChart(userVals, "Users")}
-                    {renderChart(messagesVals, "Total number of messages")}
+                    {renderChart(messagesVals, "New messages")}
                     {renderChart(roomMemberVals, "Active Users in Breakout Rooms")}
                     {renderChart(chatVals, "Chats")}
                     {renderChart(roomVals, "Rooms")}
