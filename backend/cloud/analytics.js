@@ -3,6 +3,7 @@
 
 const { getTwilioChatService } = require("./twilio");
 const { logError } = require("./errors");
+const { callWithRetry } = require("./utils");
 
 async function logAnalyticsData(conferenceId, measurementKey, dataKey, dataValue) {
     const newObj = new Parse.Object("Analytics", {
@@ -90,7 +91,7 @@ Parse.Cloud.job("analytics-log-message-counts", async (request) => {
             sid: x.get("twilioID")
         }), { useMasterKey: true });
         for (const chat of chats) {
-            const channel = await service.channels(chat.sid).fetch();
+            const channel = await callWithRetry(() => service.channels(chat.sid).fetch());
             const messageCount = channel.messagesCount;
             await logAnalyticsData(conference.id, "messages-count", chat.id, messageCount);
         }
