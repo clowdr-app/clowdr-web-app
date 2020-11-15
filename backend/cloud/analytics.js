@@ -6,8 +6,22 @@ const { logError } = require("./errors");
 const { callWithRetry } = require("./utils");
 
 async function logAnalyticsData(conferenceId, measurementKey, dataKey, dataValue) {
+    const conference = conferenceId ? new Parse.Object("Conference", { id: conferenceId }) : undefined;
+
+    const previousValueMatches = await new Parse.Query("Analytics")
+        .equalTo("conference", conference)
+        .equalTo("measurementKey", measurementKey)
+        .equalTo("dataKey", dataKey)
+        .descending("createdAt")
+        .first({ useMasterKey: true });
+    if (previousValueMatches) {
+        if (previousValueMatches.get("dataValue").dataValue === dataValue) {
+            return;
+        }
+    }
+
     const newObj = new Parse.Object("Analytics", {
-        conference: conferenceId ? new Parse.Object("Conference", { id: conferenceId }) : undefined,
+        conference,
         measurementKey,
         dataKey,
         dataValue: { dataValue }
