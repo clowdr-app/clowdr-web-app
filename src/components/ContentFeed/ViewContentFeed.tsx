@@ -9,6 +9,7 @@ import VideoGrid from "../Video/VideoGrid/VideoGrid";
 import IframeResizer from "iframe-resizer-react";
 import "./ViewContentFeed.scss";
 import useUserProfile from "../../hooks/useUserProfile";
+import { Tooltip } from "@material-ui/core";
 
 interface Props {
     feed: ContentFeed;
@@ -99,52 +100,23 @@ export default function ViewContentFeed(props: Props) {
     //       or somehow supply the user's email address to Zoom to join the webinar? Consent?
     return (
         <div className={className}>
-            {!props.hideZoomOrVideo && zoomRoom && zoomRoom !== "not present" ? (
-                <div className="zoom">
-                    <h3>Connect to Zoom</h3>
-                    <p>
-                        Q&amp;A is available within Zoom. You may choose to join directly in your browser (only
-                        compatible with Chrome and Edge), or install the Zoom application (if you haven't already) and
-                        join in the app. We suggest joining through the Zoom app if possible.
-                    </p>
-                    <a
-                        className="button"
-                        style={{ marginRight: "1em", fontWeight: "bold" }}
-                        href={zoomRoom.url}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                    >
-                        Join by Zoom App
-                    </a>
-                    {zoomDetails && joinZoom ? (
-                        <div className="zoom-frame-container">
-                            <IframeResizer
-                                className="zoom-frame"
-                                title="zoom-frame"
-                                src={`/zoom.html?signature=${zoomDetails.signature}&meetingNumber=${
-                                    zoomRoomToMeetingDetails()?.meetingNumber
-                                }&password=${zoomRoomToMeetingDetails()?.password}&apiKey=${
-                                    zoomDetails.apiKey
-                                }&userName=${user.displayName}`}
-                                allowFullScreen={true}
-                                frameBorder="0"
-                                onLoad={event => {
-                                    // @ts-ignore
-                                    handleZoomFrameRedirect(event.target.contentWindow.location.href);
-                                }}
-                                style={{ width: "1px", minWidth: "100%", minHeight: "60vh" }}
-                                allow="microphone; camera"
-                            />
-                        </div>
-                    ) : (
-                        <button className="zoom-frame-button" onClick={() => setJoinZoom(true)}>
-                            Join Zoom in browser
-                        </button>
-                    )}
-                </div>
-            ) : (
-                <></>
-            )}
+            {!props.hideZoomOrVideo &&
+                zoomRoom &&
+                zoomRoom !== "not present" &&
+                youTubeFeed &&
+                youTubeFeed !== "not present" && (
+                    <div className="explanation">
+                        <p>
+                            This event is being streamed through YouTube, with Q&amp;A in Zoom. Between each talk, you
+                            will see five minutes of Zoom Q&amp;A in the YouTube stream.
+                        </p>
+                        <p>
+                            You can ask questions in the chat below and the session chair will pick them up. Or, if you
+                            want to join the discussion live, connect directly to the Zoom room! Even after the next
+                            talk starts in the YouTube stream, discussion can continue in the Zoom room.
+                        </p>
+                    </div>
+                )}
             {youTubeFeed && youTubeFeed !== "not present" ? (
                 <ReactPlayer
                     className="video-player"
@@ -156,6 +128,51 @@ export default function ViewContentFeed(props: Props) {
                     volume={1}
                     url={`https://www.youtube.com/watch?v=${youTubeFeed.videoId}`}
                 />
+            ) : (
+                <></>
+            )}
+            {!props.hideZoomOrVideo && zoomRoom && zoomRoom !== "not present" ? (
+                <div className="zoom">
+                    <h3>Join Q&amp;A</h3>
+                    <div className="buttons">
+                        <a
+                            className="button"
+                            style={{ marginRight: "1em", fontWeight: "bold" }}
+                            href={zoomRoom.url}
+                            rel="noopener noreferrer"
+                            target="_blank"
+                        >
+                            Join by Zoom App (recommended)
+                        </a>
+                        {zoomDetails && joinZoom ? (
+                            <div className="zoom-frame-container">
+                                <IframeResizer
+                                    className="zoom-frame"
+                                    title="zoom-frame"
+                                    src={`/zoom.html?signature=${zoomDetails.signature}&meetingNumber=${
+                                        zoomRoomToMeetingDetails()?.meetingNumber
+                                    }&password=${zoomRoomToMeetingDetails()?.password}&apiKey=${
+                                        zoomDetails.apiKey
+                                    }&userName=${user.displayName}`}
+                                    allowFullScreen={true}
+                                    frameBorder="0"
+                                    onLoad={event => {
+                                        // @ts-ignore
+                                        handleZoomFrameRedirect(event.target.contentWindow.location.href);
+                                    }}
+                                    style={{ width: "1px", minWidth: "100%", minHeight: "60vh" }}
+                                    allow="microphone; camera"
+                                />
+                            </div>
+                        ) : (
+                            <Tooltip title="Google Chrome and Microsoft Edge only">
+                                <button className="zoom-frame-button" onClick={() => setJoinZoom(true)}>
+                                    Join Zoom in browser
+                                </button>
+                            </Tooltip>
+                        )}
+                    </div>
+                </div>
             ) : (
                 <></>
             )}

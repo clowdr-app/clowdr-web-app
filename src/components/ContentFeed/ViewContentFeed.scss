@@ -14,10 +14,23 @@
         flex-wrap: wrap;
 
         .zoom {
-            width: 100%;
+            margin-top: 0.5em;
+            text-align: center;
+            width     : 100%;
+
+            .buttons {
+                margin: 0 auto;
+            }
         }
 
-        .video-player {            
+        .video-player {}
+    }
+
+    .explanation {
+        width: 100%;
+
+        p {
+            margin: 0.5em 0;
         }
     }
 
@@ -33,6 +46,6 @@
     }
 
     .zoom-frame-button {
-        margin: mm(5);
+        margin: 0.5em;
     }
 }
