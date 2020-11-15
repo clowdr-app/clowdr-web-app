@@ -403,7 +403,7 @@ export default function ViewSession(props: Props) {
                     <div className="embedded-content">
                         {!sessionFeed
                             ? <LoadingSpinner />
-                            : <ViewContentFeed feed={sessionFeed} hideZoomOrVideo={(!isLive && !isPreShow) && sessionMessage("The session's content")} hideTextChat={true} />}
+                            : <ViewContentFeed feed={sessionFeed} hideZoomOrVideo={false && (!isLive && !isPreShow) && sessionMessage("The session's content")} hideTextChat={true} />}
                     </div>
                 </div>
                 <div className="split bottom-split">

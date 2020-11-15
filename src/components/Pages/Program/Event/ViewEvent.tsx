@@ -31,7 +31,7 @@ export default function ViewEvent(props: Props) {
     const [event, setEvent] = useState<ProgramSessionEvent | null>(null);
     const [item, setItem] = useState<ProgramItem | null>(null);
     const [session, setSession] = useState<ProgramSession | null>(null);
-    const [eventsOfSession, setEventsOfSession] = useState<ProgramSessionEvent[]>();
+    // const [eventsOfSession, setEventsOfSession] = useState<ProgramSessionEvent[]>();
     const [sessionFeed, setSessionFeed] = useState<ContentFeed | null>(null);
     const [eventFeed, setEventFeed] = useState<ContentFeed | "not present" | null>(null);
 
@@ -47,7 +47,7 @@ export default function ViewEvent(props: Props) {
     );
     useSafeAsync(async () => (await event?.item) ?? null, setItem, [event], "ViewEvent:setItem");
     useSafeAsync(async () => (await event?.session) ?? null, setSession, [event], "ViewEvent:setSession");
-    useSafeAsync(async () => await session?.events, setEventsOfSession, [session], "ViewEvent:setEventsInSession");
+    // useSafeAsync(async () => await session?.events, setEventsOfSession, [session], "ViewEvent:setEventsInSession");
     useSafeAsync(async () => (await session?.feed) ?? null, setSessionFeed, [session], "ViewEvent:setSessionFeed");
     useSafeAsync(
         async () => (event ? (await event.feed) ?? "not present" : null),
@@ -316,12 +316,12 @@ export default function ViewEvent(props: Props) {
             undefined
         );
 
-    const earliestStart = eventsOfSession?.reduce((r, e) => r.getTime() < e.startTime.getTime() ? r : e.startTime, new Date(32503680000000));
-    const latestEnd = eventsOfSession?.reduce((r, e) => r.getTime() > e.endTime.getTime() ? r : e.endTime, new Date(0));
+    // const earliestStart = eventsOfSession?.reduce((r, e) => r.getTime() < e.startTime.getTime() ? r : e.startTime, new Date(32503680000000));
+    // const latestEnd = eventsOfSession?.reduce((r, e) => r.getTime() > e.endTime.getTime() ? r : e.endTime, new Date(0));
 
     const renderNow = Date.now();
     const eventIsLive = !!event && event.startTime.getTime() < renderNow && event.endTime.getTime() > renderNow;
-    const sessionIsLive = earliestStart && latestEnd && earliestStart.getTime() < renderNow && latestEnd.getTime() > renderNow;
+    const sessionIsLive = true; // earliestStart && latestEnd && earliestStart.getTime() < renderNow && latestEnd.getTime() > renderNow;
     return (
         <div className="program-event">
             {sessionIsLive || (sessionFeed && sessionFeed.youtubeId) ? (
@@ -332,7 +332,7 @@ export default function ViewEvent(props: Props) {
                             <ViewContentFeed
                                 feed={sessionFeed}
                                 hideZoomOrVideo={
-                                    !eventIsLive &&
+                                    false && !eventIsLive &&
                                     "Sorry, something has gone wrong and we are unable to show you the session feed for this event."
                                 }
                             />
