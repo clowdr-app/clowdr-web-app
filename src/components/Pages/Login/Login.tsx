@@ -34,7 +34,7 @@ export default function Login(props: LoginProps) {
             setErrorMsg(null);
 
             try {
-                const p = makeCancelable(doLogin(email, password));
+                const p = makeCancelable(doLogin(email.toLowerCase(), password));
                 setAttemptingLogin(p);
 
                 const ok = await p.promise;
@@ -43,8 +43,7 @@ export default function Login(props: LoginProps) {
                 }
 
                 setAttemptingLogin(null);
-            }
-            catch (e) {
+            } catch (e) {
                 if (!e.isCanceled) {
                     throw e;
                 }
@@ -60,10 +59,7 @@ export default function Login(props: LoginProps) {
         };
     }, [attemptingLogin]);
 
-    function onChange(
-        element: "email" | "password",
-        event: React.ChangeEvent<HTMLInputElement>
-    ) {
+    function onChange(element: "email" | "password", event: React.ChangeEvent<HTMLInputElement>) {
         setErrorMsg(null);
 
         const value = event.target.value;
@@ -77,76 +73,88 @@ export default function Login(props: LoginProps) {
         }
     }
 
-    const emailBox = <input
-        type="email"
-        name="email"
-        aria-label="Email"
-        value={email}
-        placeholder={"Email"}
-        required={true}
-        onChange={(e) => onChange("email", e)}
-    />;
-    const passwordBox = <input
-        type="password"
-        name="password"
-        aria-label="Password"
-        value={password}
-        placeholder={"Password"}
-        required={true}
-        onChange={(e) => onChange("password", e)}
-    />;
-    const formButtons = <>
+    const emailBox = (
         <input
-            className="sign-in"
-            type="submit"
-            aria-label="Log in"
-            value="Log in"
+            type="email"
+            name="email"
+            aria-label="Email"
+            value={email}
+            placeholder={"Email"}
+            required={true}
+            onChange={e => onChange("email", e)}
         />
-        {props.showSignUp
-            ? <Link className="sign-up"
-                aria-label="Sign up"
-                to="/signup"
-            >
-                Sign up
-            </Link>
-            : <></>
-        }
-    </>;
-    const selectOtherButton = <button
-        className="select-another"
-        onClick={(ev) => {
-            ev.preventDefault();
-            props.clearSelectedConference();
-        }}
-        aria-label="Select another conference">
-        Select another conference
-    </button>;
+    );
+    const passwordBox = (
+        <input
+            type="password"
+            name="password"
+            aria-label="Password"
+            value={password}
+            placeholder={"Password"}
+            required={true}
+            onChange={e => onChange("password", e)}
+        />
+    );
+    const formButtons = (
+        <>
+            <input className="sign-in" type="submit" aria-label="Log in" value="Log in" />
+            {props.showSignUp ? (
+                <Link className="sign-up" aria-label="Sign up" to="/signup">
+                    Sign up
+                </Link>
+            ) : (
+                <></>
+            )}
+        </>
+    );
+    const selectOtherButton = (
+        <button
+            className="select-another"
+            onClick={ev => {
+                ev.preventDefault();
+                props.clearSelectedConference();
+            }}
+            aria-label="Select another conference"
+        >
+            Select another conference
+        </button>
+    );
     let errorMessage = <></>;
     if (errorMsg) {
         errorMessage = <div className="error-message">{errorMsg}</div>;
     }
 
-    const form = <form name="Sign in form" onSubmit={onSubmit}>
-        {errorMessage}
-        {emailBox}
-        {passwordBox}
-        <div className={"form-buttons" + (props.showSignUp ? "" : " no-signup")}>
-            {formButtons}
-            {selectOtherButton}
-        </div>
-    </form>;
+    const form = (
+        <form name="Sign in form" onSubmit={onSubmit}>
+            {errorMessage}
+            {emailBox}
+            {passwordBox}
+            <div className={"form-buttons" + (props.showSignUp ? "" : " no-signup")}>
+                {formButtons}
+                {selectOtherButton}
+            </div>
+        </form>
+    );
 
-    return <section aria-labelledby="page-title" tabIndex={0} className="login">
-        <h1>{conference.name}</h1>
+    return (
+        <section aria-labelledby="page-title" tabIndex={0} className="login">
+            <h1>{conference.name}</h1>
 
-        {attemptingLogin
-            ? <LoadingSpinner message="Signing in, please wait" />
-            : <>
-                <p>Please log in or sign up to join the conference</p>
-                <p>Clowdr requires the use of the Firefox, Chrome or Edge browsers. Safari and Opera are not supported at this time. Most features will also work in Firefox and Chrome mobile.</p>
-                {form}
-                <p><Link to={`/forgotPassword/${email}`}>Forgotten your password?</Link></p>
-            </>
-        }
-    </section>;
+            {attemptingLogin ? (
+                <LoadingSpinner message="Signing in, please wait" />
+            ) : (
+                <>
+                    <p>Please log in or sign up to join the conference</p>
+                    <p>
+                        Clowdr requires the use of the Firefox, Chrome or Edge browsers. Safari and Opera are not
+                        supported at this time. Most features will also work in Firefox and Chrome mobile.
+                    </p>
+                    {form}
+                    <p>
+                        <Link to={`/forgotPassword/${email}`}>Forgotten your password?</Link>
+                    </p>
+                </>
+            )}
+        </section>
+    );
 }
