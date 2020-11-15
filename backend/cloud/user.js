@@ -242,13 +242,6 @@ async function handleRegisterUser(request) {
     let { params } = request;
 
     try {
-        throw new Error("Test error");
-    }
-    catch (e) {
-        await logRequestError(request, 0, "handleRegisterUser:test", e);
-    }
-
-    try {
         if (!params.registrationId
             || !params.conferenceId
             || !params.fullName
