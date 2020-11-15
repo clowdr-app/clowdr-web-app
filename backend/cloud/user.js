@@ -468,7 +468,7 @@ async function sendPasswordResetEmail(confId, email, token) {
     try {
         await sgMail.send(message);
     } catch (e) {
-        await logError(confId, undefined, 0, "sendPasswordResetEmail", { e, email });
+        await logError(confId, undefined, 0, "sendPasswordResetEmail", { e: e.toString(), stack: e.stack, message: e.message, email });
         console.log(`Sending password reset to ${email.toLowerCase()} failed`, e);
     }
 }
@@ -508,7 +508,7 @@ async function resetPassword(data) {
             throw new Error("Failed to reset password.");
         }
     } catch (e) {
-        await logError(undefined, undefined, 0, "resetPassword", { e, email: data.email });
+        await logError(undefined, undefined, 0, "resetPassword", { e: e.toString(), stack: e.stack, message: e.message, email: data.email });
         throw new Error("Failed to reset password.");
     }
 }
