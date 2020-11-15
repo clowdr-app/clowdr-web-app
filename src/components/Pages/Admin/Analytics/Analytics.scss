@@ -1,0 +1,14 @@
+.admin-analytics {
+    display: flex;
+    flex-wrap: wrap;
+
+    .line-chart-wrapper {
+        margin: 1em 0 0 0;
+
+        h3 {
+            text-align: center;
+            font-size: 130%;
+            margin-left: 3em;
+        }
+    }
+}

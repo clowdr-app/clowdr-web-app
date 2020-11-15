@@ -10,6 +10,9 @@ export default function Tools() {
             <p>Please use the links below to access the available administration tools.</p>
             <ul>
                 <li>
+                    <Link to="/admin/analytics">Analytics</Link>
+                </li>
+                <li>
                     <Link to="/admin/authors">Authors</Link>
                 </li>
                 {/*<li>

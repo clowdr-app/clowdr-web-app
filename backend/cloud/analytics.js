@@ -102,3 +102,59 @@ Parse.Cloud.job("analytics-log-message-counts", async (request) => {
         }
     });
 });
+
+async function fetchAnalyticsRecords(conferenceId, measurementKey) {
+    return new Parse.Query("Analytics")
+        .equalTo("conference", new Parse.Object("Conference", { id: conferenceId }))
+        .equalTo("measurementKey", measurementKey)
+        .map(x => ({
+            time: x.get("createdAt"),
+            key: x.get("dataKey"),
+            value: x.get("dataValue").dataValue
+        }), { useMasterKey: true });
+}
+
+Parse.Cloud.define("analytics-summaries", async (request) => {
+    const conferenceId = request.params.conference;
+    if (conferenceId) {
+        const results = {};
+
+        results.errorsCounts = await fetchAnalyticsRecords(conferenceId, "errors-count");
+        results.chatsCounts = await fetchAnalyticsRecords(conferenceId, "chats-count");
+        results.roomsCounts = await fetchAnalyticsRecords(conferenceId, "rooms-count");
+        results.usersCounts = await fetchAnalyticsRecords(conferenceId, "active-users");
+
+        const timeGroupPeriod = 1000 * 60 * 5;
+
+        const roomMemberCounts = await fetchAnalyticsRecords(conferenceId, "active-room-members");
+        const groupedRoomMemberCounts = {};
+        for (const count of roomMemberCounts) {
+            const t = Math.round(count.time.getTime() / timeGroupPeriod) * timeGroupPeriod;
+            if (!groupedRoomMemberCounts[t]) {
+                groupedRoomMemberCounts[t] = count.value;
+            }
+            else {
+                groupedRoomMemberCounts[t] = groupedRoomMemberCounts[t] + count.value;
+            }
+        }
+        results.activeRoomMemberCounts = groupedRoomMemberCounts;
+
+        const MessagesCounts = await fetchAnalyticsRecords(conferenceId, "messages-count");
+        const groupedMessagesCounts = {};
+        for (const count of MessagesCounts) {
+            const t = Math.round(count.time.getTime() / timeGroupPeriod) * timeGroupPeriod;
+            if (!groupedMessagesCounts[t]) {
+                groupedMessagesCounts[t] = count.value;
+            }
+            else {
+                groupedMessagesCounts[t] = groupedMessagesCounts[t] + count.value;
+            }
+        }
+        results.messagesCounts = groupedMessagesCounts;
+
+        return results;
+    }
+    else {
+        return undefined;
+    }
+});

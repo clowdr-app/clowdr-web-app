@@ -53,6 +53,7 @@ import Sponsor from "../Pages/Sponsor/Sponsor";
 import AllSponsors from "../Pages/AllSponsors/AllSponsors";
 import ProgramEditor from "../Pages/Admin/Program/ProgramEditor";
 import ProfileItems from "../Pages/ProfileItems/ProfileItems";
+import AdminAnalytics from "../Pages/Admin/Analytics/Analytics";
 
 interface Props {
     doLogin: doLoginF;
@@ -245,6 +246,7 @@ function Page(props: Props) {
                     />
                     <Route path="/profile" component={() => <Redirect to={"/profile/" + mUser.id} />} />
 
+                    <Route path="/admin/analytics" component={isAdmin ? AdminAnalytics : NotFound} />
                     <Route path="/admin/registration" component={isAdmin ? AdminRegistration : NotFound} />
                     <Route path="/admin/sidebar" component={isAdmin ? AdminSidebar : NotFound} />
                     <Route path="/admin/welcome" component={isAdmin ? AdminWelcomePage : NotFound} />
