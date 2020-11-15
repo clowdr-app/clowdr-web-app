@@ -61,7 +61,7 @@ Parse.Cloud.job("analytics-log-rooms-count", async (request) => {
 });
 
 Parse.Cloud.job("analytics-log-active-room-members", async (request) => {
-    await forAllConferences("analytics-log-chats-count", async (conference) => {
+    await forAllConferences("analytics-log-active-room-members", async (conference) => {
         await new Parse.Query("VideoRoom").equalTo("conference", conference).map(async (room) => {
             await logAnalyticsData(conference.id, "active-room-members", room.id, room.get("participants").length);
         }, { useMasterKey: true });
@@ -71,12 +71,17 @@ Parse.Cloud.job("analytics-log-active-room-members", async (request) => {
 Parse.Cloud.job("analytics-log-active-users", async (request) => {
     await forAllConferences("analytics-log-active-users", async (conference) => {
         const service = await getTwilioChatService(conference.id);
-        const profileIds = await new Parse.Query("UserProfile").equalTo("conference", conference).map(x => x.id, { useMasterKey: true });
+        const profileIds = await new Parse.Query("UserProfile").equalTo("conference", conference).map(x => ({
+            id: x.id,
+            banned: x.get("isBanned")
+        }), { useMasterKey: true });
         let onlineCount = 0;
-        for (const profileId of profileIds) {
-            const isOnline = (await service.users(profileId).fetch()).isOnline;
-            if (isOnline) {
-                onlineCount++;
+        for (const profile of profileIds) {
+            if (!profile.banned) {
+                const isOnline = (await service.users(profile.id).fetch()).isOnline;
+                if (isOnline) {
+                    onlineCount++;
+                }
             }
         }
         await logAnalyticsData(conference.id, "active-users", "-", onlineCount);
