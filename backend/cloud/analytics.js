@@ -91,7 +91,7 @@ Parse.Cloud.job("analytics-log-message-counts", async (request) => {
         }), { useMasterKey: true });
         for (const chat of chats) {
             const channel = await service.channels(chat.sid).fetch();
-            const messageCount = channel.messages.length;
+            const messageCount = channel.messagesCount;
             await logAnalyticsData(conference.id, "messages-count", chat.id, messageCount);
         }
     });
