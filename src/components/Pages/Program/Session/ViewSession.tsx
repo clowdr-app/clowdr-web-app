@@ -384,7 +384,7 @@ export default function ViewSession(props: Props) {
     const sessionMessage
         = session && sessionLatestEnd
             ? sessionLatestEnd.getTime() <= Date.now()
-                ? (filler: string) => `This session has ended. Please choose a specific event to participate in its conversation.`
+                ? (filler: string) => `This session has ended. Please either click on the next session in the sidebar or choose a specific event to participate in its conversation (Click the "Events in this session" button at the top of this page).`
                 : (filler: string) => `This session starts in ${sessionStartTimeText?.distance} ${sessionStartTimeText?.units}. ${filler} will appear here and update throughout the session.`
             : (filler: string) => "";
     return <div className={`view-session${showEventsList ? " events-list" : ""}`}>
