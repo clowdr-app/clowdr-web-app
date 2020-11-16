@@ -422,62 +422,63 @@ export default function ViewEvent(props: Props) {
             <div className="program-event">
                 {elementsToShow.includes(EventViewElements.LoadingSpinner)
                     ? <LoadingSpinner />
-                    : <EventPhases currentMode={viewMode} />}
-                {sessionFeed &&
-                    (
-                        elementsToShow.includes(EventViewElements.YouTube)
-                        || elementsToShow.includes(EventViewElements.ZoomForChairAndAuthors)
-                        || elementsToShow.includes(EventViewElements.ZoomForQAndA)
-                    )
-                    ? (
-                        <div className="session-feed">
-                            {<ViewContentFeed
-                                autoJoinZoom={doJoinZoom}
-                                setIsInZoom={setIsInZoom}
-                                feed={sessionFeed}
-                                hideVideoRoom={true}
-                                hideTextChat={true}
-                                hideYouTube={!elementsToShow.includes(EventViewElements.YouTube)}
-                                hideZoomRoom={
-                                    !(
-                                        elementsToShow.includes(EventViewElements.ZoomForQAndA)
-                                        || elementsToShow.includes(EventViewElements.ZoomForChairAndAuthors)
-                                    )
-                                }
-                                zoomButtonText={
-                                    elementsToShow.includes(EventViewElements.ZoomForChairAndAuthors)
-                                        ? {
-                                            app: "Session Chairs and Authors: Join the Zoom room via Zoom's app (recommended)",
-                                            browser: "Session Chairs and Authors: Join the Zoom room in-browser"
-                                        }
-                                        : {
-                                            app: "Join the Q&A in Zoom via Zoom's app (recommended)",
-                                            browser: "Join the Q&A in Zoom in-browser"
-                                        }
-                                }
-                                zoomAboveYouTube={elementsToShow.includes(EventViewElements.ZoomForQAndA)}
-                            />
-                            }
-                        </div>
-                    )
-                    : <></>
-                }
-
-                {item
-                    ? (
-                        <ViewItem
-                            showFeedName={false}
-                            item={item}
-                            videoRoomShutdownWarning={elementsToShow.includes(EventViewElements.VideoRoomWithClosedownWarning) ? <b>This event is about to start and the video room will end accordingly.</b> : undefined}
-                            textChatFeedOnly={!(elementsToShow.includes(EventViewElements.VideoRoom) || elementsToShow.includes(EventViewElements.VideoRoomWithClosedownWarning))}
-                            heading={{
-                                title: item?.title ?? "Event",
-                                subtitle,
-                                buttons: buttons.length > 0 ? buttons : undefined,
-                            }}
-                        />
-                    )
-                    : <></>
+                    : item
+                        ? (
+                            <ViewItem
+                                showFeedName={false}
+                                item={item}
+                                videoRoomShutdownWarning={elementsToShow.includes(EventViewElements.VideoRoomWithClosedownWarning) ? <b>This event is about to start and the video room will end accordingly.</b> : undefined}
+                                textChatFeedOnly={!(elementsToShow.includes(EventViewElements.VideoRoom) || elementsToShow.includes(EventViewElements.VideoRoomWithClosedownWarning))}
+                                heading={{
+                                    title: item?.title ?? "Event",
+                                    subtitle,
+                                    buttons: buttons.length > 0 ? buttons : undefined,
+                                }}>
+                                <>
+                                    <EventPhases currentMode={viewMode} />
+                                    {sessionFeed &&
+                                        (
+                                            elementsToShow.includes(EventViewElements.YouTube)
+                                            || elementsToShow.includes(EventViewElements.ZoomForChairAndAuthors)
+                                            || elementsToShow.includes(EventViewElements.ZoomForQAndA)
+                                        )
+                                        ? (
+                                            <div className="session-feed">
+                                                {<ViewContentFeed
+                                                    autoJoinZoom={doJoinZoom}
+                                                    setIsInZoom={setIsInZoom}
+                                                    feed={sessionFeed}
+                                                    hideVideoRoom={true}
+                                                    hideTextChat={true}
+                                                    hideYouTube={!elementsToShow.includes(EventViewElements.YouTube)}
+                                                    hideZoomRoom={
+                                                        !(
+                                                            elementsToShow.includes(EventViewElements.ZoomForQAndA)
+                                                            || elementsToShow.includes(EventViewElements.ZoomForChairAndAuthors)
+                                                        )
+                                                    }
+                                                    zoomButtonText={
+                                                        elementsToShow.includes(EventViewElements.ZoomForChairAndAuthors)
+                                                            ? {
+                                                                app: "Session Chairs and Authors: Join the Zoom room via Zoom's app (recommended)",
+                                                                browser: "Session Chairs and Authors: Join the Zoom room in-browser"
+                                                            }
+                                                            : {
+                                                                app: "Join the Q&A in Zoom via Zoom's app (recommended)",
+                                                                browser: "Join the Q&A in Zoom in-browser"
+                                                            }
+                                                    }
+                                                    zoomAboveYouTube={elementsToShow.includes(EventViewElements.ZoomForQAndA)}
+                                                />
+                                                }
+                                            </div>
+                                        )
+                                        : <></>
+                                    }
+                                </>
+                            </ViewItem>
+                        )
+                        : <></>
                 }
             </div>
         );
@@ -578,10 +579,6 @@ export default function ViewEvent(props: Props) {
         return undefined;
     }, setNextEvent, [event, eventsOfSession, sessionsWSE, sessionFeed, feeds, allEvents], "ViewEvent:setNextEvent");
 
-    useEffect(() => {
-        console.log(`Current event: ${event?.id}, Next event: ${nextEvent?.id}`);
-    }, [event, nextEvent]);
-
     const handleCloseNextEventDialog = (action: EndOfEventActions) => {
         setChosenAction(action);
         if (action === "always-next") {
@@ -631,6 +628,9 @@ export default function ViewEvent(props: Props) {
                     </DialogContentText> */}
                 </DialogContent>
                 <DialogActions>
+                    <Button onClick={() => handleCloseNextEventDialog("no-action")} color="primary">
+                        Stay here
+                    </Button>
                     <Button onClick={() => handleCloseNextEventDialog("zoom")} color="primary">
                         Join this talk's Q&amp;A in Zoom
                     </Button>

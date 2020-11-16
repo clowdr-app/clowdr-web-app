@@ -4,6 +4,7 @@ import {
     DataDeletedEventDetails,
 } from "@clowdr-app/clowdr-db-schema/build/DataLayer/Cache/Cache";
 import React, { useCallback, useEffect, useState } from "react";
+import SplitterLayout from "react-splitter-layout";
 import { ReactMarkdownCustomised } from "../../../../classes/Utils";
 import { ActionButton, HeadingState } from "../../../../contexts/HeadingContext";
 import useConference from "../../../../hooks/useConference";
@@ -26,6 +27,7 @@ interface Props {
     textChatFeedOnly?: boolean;
     showFeedName?: boolean;
     videoRoomShutdownWarning?: JSX.Element;
+    children?: JSX.Element;
 }
 
 export default function ViewItem(props: Props) {
@@ -33,10 +35,11 @@ export default function ViewItem(props: Props) {
     const profile = useUserProfile();
     const { isAdmin } = useUserRoles();
     const [item, setItem] = useState<ProgramItem | null>(null);
-    const [feed, setFeed] = useState<ContentFeed | null>(null);
+    const [feed, setFeed] = useState<ContentFeed | "not-present" | null>(null);
     const [authors, setAuthors] = useState<Array<ProgramPerson> | null>(null);
     const [attachments, setAttachments] = useState<Array<ProgramItemAttachment> | null>(null);
     const [canUploadAttachments, setCanUploadAttachments] = useState<boolean>(false);
+    const [size, setSize] = useState(30);
 
     useSafeAsync(
         async () => (typeof props.item === "string" ? await ProgramItem.get(props.item, conference.id) : props.item),
@@ -46,7 +49,7 @@ export default function ViewItem(props: Props) {
     );
     useSafeAsync(async () => (item ? await item.authorPerons : null), setAuthors, [item], "ViewItem:setAuthors");
     useSafeAsync(async () => (item ? await item.attachments : null), setAttachments, [item], "ViewItem:setAttachments");
-    useSafeAsync(async () => (await item?.feed) ?? null, setFeed, [item], "ViewItem:setFeed");
+    useSafeAsync(async () => (item ? await item.feed ?? "not-present" : null), setFeed, [item], "ViewItem:setFeed");
 
     useEffect(() => {
         setCanUploadAttachments(authors?.some(author => author.profileId && author.profileId === profile.id) ?? false);
@@ -56,7 +59,7 @@ export default function ViewItem(props: Props) {
     useSafeAsync(
         async () => {
             const itemFeed = feed;
-            if (itemFeed) {
+            if (itemFeed && itemFeed !== "not-present") {
                 if (itemFeed.textChatId) {
                     return itemFeed.textChatId;
                 } else if (itemFeed.videoRoomId) {
@@ -137,7 +140,7 @@ export default function ViewItem(props: Props) {
     const onContentFeedUpdated = useCallback(
         function _onContentFeedUpdated(ev: DataUpdatedEventDetails<"ContentFeed">) {
             for (const object of ev.objects) {
-                if (feed && object.id === feed.id) {
+                if (feed && feed !== "not-present" && object.id === feed.id) {
                     setFeed(object as ContentFeed);
                 }
             }
@@ -147,7 +150,7 @@ export default function ViewItem(props: Props) {
 
     const onContentFeedDeleted = useCallback(
         function _onContentFeedDeleted(ev: DataDeletedEventDetails<"ContentFeed">) {
-            if (feed && ev.objectId === feed.id) {
+            if (feed && feed !== "not-present" && ev.objectId === feed.id) {
                 setFeed(null);
             }
         },
@@ -196,55 +199,66 @@ export default function ViewItem(props: Props) {
     // TODO: posterImage?
     // TODO: Show all events where this item is presented (optional: Switch off in ViewEvent)
 
-    return (
+    const contents = item && authors ? (
+        <div>
+            {props.children}
+            {!props.textChatFeedOnly && feed && feed !== "not-present"
+                ? (
+                    <>
+                        {props.showFeedName ? <h2>{feed.name}</h2> : <></>}
+                        {feed.videoRoomId && props.videoRoomShutdownWarning ? <p>{props.videoRoomShutdownWarning}</p> : <></>}
+                        <ViewContentFeed feed={feed} hideTextChat={true} />
+                    </>
+                ) : <></>
+            }
+            <div className="info">
+                <ReactMarkdownCustomised className="abstract">
+                    {item.abstract}
+                </ReactMarkdownCustomised>
+                <AuthorsList authors={authors} idOrdering={item.authors} />
+            </div>
+            <div className="attachments">
+                <h3>Attachments</h3>
+                <div className="attachment-items">
+                    {attachmentEls.length > 0 ? attachmentEls : <p>No attachments uploaded.</p>}
+                </div>
+                {(canUploadAttachments || isAdmin) && (
+                    <div className="attachments__upload">
+                        <AttachmentUpload programItem={item} />
+                    </div>
+                )}
+            </div>
+        </div>
+    ) : <></>;
+
+    const outputEl = (
         <div className="program-item">
-            {item && authors ? (
-                <>
-                    {props.textChatFeedOnly ? (
-                        textChatId ? (
-                            <>
-                                <div className="content-feed">
-                                    <ChatFrame chatId={textChatId} />
-                                </div>
-                                <hr />
-                            </>
-                        ) : (
-                            <></>
-                        )
-                    ) : feed ? (
-                        <>
-                            {props.showFeedName ? <h2>{feed.name}</h2> : <></>}
-                            {feed.videoRoomId && props.videoRoomShutdownWarning ? <p>{props.videoRoomShutdownWarning}</p> : <></>}
-                            <ViewContentFeed feed={feed} />
-                            <div className="content-feed">
-                                {!feed.textChatId && textChatId ? <ChatFrame chatId={textChatId} /> : <></>}
-                            </div>
-                            <hr />
-                        </>
-                    ) : (
-                        <></>
-                    )}
-                    <div className="info">
-                        <ReactMarkdownCustomised className="abstract">
-                            {item.abstract}
-                        </ReactMarkdownCustomised>
-                        <AuthorsList authors={authors} idOrdering={item.authors} />
-                    </div>
-                    <div className="attachments">
-                        <h3>Attachments</h3>
-                        <div className="attachment-items">
-                            {attachmentEls.length > 0 ? attachmentEls : <p>No attachments uploaded.</p>}
+            {textChatId
+                ? (
+                    <SplitterLayout
+                        vertical={true}
+                        percentage={true}
+                        ref={component => {
+                            component?.setState({ secondaryPaneSize: size });
+                        }}
+                        onSecondaryPaneSizeChange={newSize => setSize(newSize)}
+                    >
+                        <div className="split top-split">
+                            {contents}
+                            <button onClick={() => setSize(100)}>&#9650;</button>
                         </div>
-                        {(canUploadAttachments || isAdmin) && (
-                            <div className="attachments__upload">
-                                <AttachmentUpload programItem={item} />
+                        <div className="split bottom-split">
+                            <button onClick={() => setSize(0)}>&#9660;</button>
+                            <div className="content-feed">
+                                <ChatFrame chatId={textChatId} />
                             </div>
-                        )}
-                    </div>
-                </>
-            ) : (
-                <LoadingSpinner />
-            )}
+                        </div>
+                    </SplitterLayout>
+                )
+                : contents
+            }
         </div>
     );
+
+    return item && authors && feed ? outputEl : <LoadingSpinner />;
 }

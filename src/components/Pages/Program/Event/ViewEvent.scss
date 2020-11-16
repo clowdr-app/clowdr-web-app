@@ -1,15 +1,11 @@
 @import "../../../../styles/util";
 
 .program-event {
+    display       : flex;
+    flex-direction: column;
+    height        : 100%;
+
     h2 {
         font-size: 130%;
-    }
-
-    .content-feed {
-        & > .chat-frame {
-            & > .message-list {
-                max-height: 70vh;
-            }
-        }
     }
 }

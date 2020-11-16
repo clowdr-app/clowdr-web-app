@@ -9,12 +9,12 @@ import VideoGrid from "../Video/VideoGrid/VideoGrid";
 import IframeResizer from "iframe-resizer-react";
 import "./ViewContentFeed.scss";
 import useUserProfile from "../../hooks/useUserProfile";
-import { Tooltip } from "@material-ui/core";
 
 interface Props {
     feed: ContentFeed;
 
     autoJoinZoom?: boolean;
+
     hideZoomRoom?: boolean;
     hideYouTube?: boolean;
     hideVideoRoom?: boolean;
@@ -46,6 +46,7 @@ export default function ViewContentFeed(props: Props) {
             setVideoIsPlaying(false);
         }
     }, [joinZoom, props.autoJoinZoom, props.hideZoomRoom, zoomRoom]);
+
 
     useSafeAsync(
         async () => (feed ? (await feed.textChat) ?? "not present" : null),
