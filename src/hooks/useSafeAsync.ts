@@ -16,12 +16,10 @@ export default function useSafeAsync<T>(
 
         async function execute() {
             try {
-                //console.log(`useSafeAsync: started executing for ${debugOrigin}`);
                 const p = makeCancelable(generatorCallback());
                 cancel = p.cancel;
                 const newV = await p.promise;
                 if (newV !== undefined) {
-                    //console.log(`useSafeAsync: Update from completed execution for ${debugOrigin}`);
                     setStateCallback(newV);
                 }
                 // else {

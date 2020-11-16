@@ -71,9 +71,10 @@ export default function SessionGroup(props: Props) {
         <h2 className={`title${props.showSessionTime ? " left-align" : ""}`}>
             {props.overrideTitle
                 ? props.overrideTitle
-                : <Link to={`/session/${props.session.session.id}`}>
-                    {title}
-                </Link>
+                : title
+                // : <Link to={`/session/${props.session.session.id}`}>
+                //     {title}
+                // </Link>
             }
         </h2>
         <div className="content">

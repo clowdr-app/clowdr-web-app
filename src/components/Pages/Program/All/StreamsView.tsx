@@ -134,7 +134,7 @@ export default function StreamsView(props: Props) {
     for (const group of sortedGroups) {
         const items: JSX.Element[] = [];
         for (const session of group.sessions) {
-            items.push(<SessionGroup session={session} key={session.session.id} hideEventTimes={false} showSessionTime={true} eventsLinkToSession={true} />);
+            items.push(<SessionGroup session={session} key={session.session.id} hideEventTimes={false} showSessionTime={true} />);
         }
         rows.push(<div className="track">
             <div className="content">

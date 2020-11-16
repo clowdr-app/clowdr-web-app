@@ -89,6 +89,7 @@ interface ItemRenderData {
 }
 
 interface GroupRenderData {
+    key: string;
     timeText: string;
     items: Array<ItemRenderData>;
 }
@@ -225,7 +226,7 @@ export default function ProgramList(props: Props) {
                             isWatched: !!props.watchedSessions?.includes(session.id),
                             item: { type: "session", data: session },
                             sortValue: sessionWSE.earliestStart.getTime(),
-                            additionalClasses: "session no-events" // TODO: Remove .no-events if displaying events
+                            additionalClasses: "session" // TODO: Add .no-events if displaying events
                         };
                         return result;
                     }));
@@ -245,6 +246,7 @@ export default function ProgramList(props: Props) {
                     })));
 
                     const groupRenderData: GroupRenderData = {
+                        key: groupKey,
                         timeText,
                         items: items.sort((x, y) => x.sortValue < y.sortValue ? -1 : x.sortValue > y.sortValue ? 1 : 0)
                     };
@@ -353,7 +355,7 @@ export default function ProgramList(props: Props) {
                 <Tooltip title={`Starts at ${startTime.toLocaleTimeString(undefined, {
                     hour: "2-digit",
                     minute: "2-digit"
-                })} your time`}>
+                })} your time`} key={item.item.data.id}>
                     <li key={item.item.data.id} className={item.additionalClasses + (item.isWatched ? " watched" : "")}>
                         <Link to={item.url}>
                             <h3>{item.title}</h3>
@@ -377,7 +379,7 @@ export default function ProgramList(props: Props) {
                 </Tooltip>);
         }
 
-        const groupElem = <div className="group">
+        const groupElem = <div className="group" key={group.key}>
             <div className="time">{group.timeText}</div>
             <ul className="items">
                 {itemElems}

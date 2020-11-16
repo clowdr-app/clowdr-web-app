@@ -157,14 +157,14 @@ body {
     }
 
     &.top-split button {
-        bottom: 0;
-        border-top-left-radius: 5px;
+        bottom                 : 0;
+        border-top-left-radius : 5px;
         border-top-right-radius: 5px;
     }
 
     &.bottom-split button {
-        top: 0;
-        border-bottom-left-radius: 5px;
+        top                       : 0;
+        border-bottom-left-radius : 5px;
         border-bottom-right-radius: 5px;
     }
 }
@@ -189,5 +189,13 @@ body {
         i {
             margin-left: -0.1em;
         }
+    }
+}
+
+.MuiTooltip-popper {
+    div.MuiTooltip-tooltip {
+        background-color: rgba(77, 77, 77, 1);
+        font-size: 1rem;
+        font-weight: normal;
     }
 }

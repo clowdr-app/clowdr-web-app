@@ -13,8 +13,20 @@ import { Tooltip } from "@material-ui/core";
 
 interface Props {
     feed: ContentFeed;
-    hideZoomOrVideo: string | false;
+
+    autoJoinZoom?: boolean;
+    hideZoomRoom?: boolean;
+    hideYouTube?: boolean;
+    hideVideoRoom?: boolean;
     hideTextChat?: boolean;
+
+    setIsInZoom?: (value: boolean) => void;
+
+    zoomButtonText?: {
+        app: string;
+        browser: string;
+    }
+    zoomAboveYouTube?: boolean;
 }
 
 export default function ViewContentFeed(props: Props) {
@@ -58,14 +70,14 @@ export default function ViewContentFeed(props: Props) {
 
     useSafeAsync(
         async () =>
-            joinZoom
+            joinZoom || props.autoJoinZoom
                 ? await Parse.Cloud.run("zoom-generate-signature", {
-                      meetingNumber: zoomRoomToMeetingDetails()?.meetingNumber,
-                      conference: conf.id,
-                  })
+                    meetingNumber: zoomRoomToMeetingDetails()?.meetingNumber,
+                    conference: conf.id,
+                })
                 : undefined,
         setZoomDetails,
-        [joinZoom],
+        [joinZoom, props.autoJoinZoom],
         "ViewContentFeed:generate-zoom-signature"
     );
 
@@ -93,47 +105,14 @@ export default function ViewContentFeed(props: Props) {
     if (youTubeFeed && youTubeFeed !== "not present") {
         className += " youtube";
     }
-    if (!props.hideZoomOrVideo && zoomRoom && zoomRoom !== "not present") {
+    if (!props.hideZoomRoom && zoomRoom && zoomRoom !== "not present") {
         className += " zoom";
     }
-    // TODO: Detect if the Zoom is a webinar and hide the Join In Browser thing
-    //       or somehow supply the user's email address to Zoom to join the webinar? Consent?
-    return (
-        <div className={className}>
-            {!props.hideZoomOrVideo &&
-                zoomRoom &&
-                zoomRoom !== "not present" &&
-                youTubeFeed &&
-                youTubeFeed !== "not present" && (
-                    <div className="explanation">
-                        <p>
-                            This event is being streamed through YouTube, with Q&amp;A in Zoom. Between each talk, you
-                            will see five minutes of Zoom Q&amp;A in the YouTube stream.
-                        </p>
-                        <p>
-                            You can ask questions in the chat below and the session chair will pick them up. Or, if you
-                            want to join the discussion live, connect directly to the Zoom room! Even after the next
-                            talk starts in the YouTube stream, discussion can continue in the Zoom room.
-                        </p>
-                    </div>
-                )}
-            {youTubeFeed && youTubeFeed !== "not present" ? (
-                <ReactPlayer
-                    className="video-player"
-                    width=""
-                    height=""
-                    playsinline
-                    controls={true}
-                    muted={false}
-                    volume={1}
-                    url={`https://www.youtube.com/watch?v=${youTubeFeed.videoId}`}
-                />
-            ) : (
-                <></>
-            )}
-            {!props.hideZoomOrVideo && zoomRoom && zoomRoom !== "not present" ? (
+
+    const zoom = !props.hideZoomRoom && zoomRoom && zoomRoom !== "not present"
+        ? (
+            <>
                 <div className="zoom">
-                    <h3>Join Q&amp;A</h3>
                     <div className="buttons">
                         <a
                             className="button"
@@ -142,21 +121,20 @@ export default function ViewContentFeed(props: Props) {
                             rel="noopener noreferrer"
                             target="_blank"
                         >
-                            Join by Zoom App (recommended)
-                        </a>
-                        {zoomDetails && joinZoom ? (
+                            {props.zoomButtonText ? props.zoomButtonText.app : "Join by Zoom App (recommended)"}
+                        </a><br />
+                        {zoomDetails && (props.autoJoinZoom || joinZoom) ? (
                             <div className="zoom-frame-container">
                                 <IframeResizer
                                     className="zoom-frame"
                                     title="zoom-frame"
-                                    src={`/zoom.html?signature=${zoomDetails.signature}&meetingNumber=${
-                                        zoomRoomToMeetingDetails()?.meetingNumber
-                                    }&password=${zoomRoomToMeetingDetails()?.password}&apiKey=${
-                                        zoomDetails.apiKey
-                                    }&userName=${user.displayName}`}
+                                    src={`/zoom.html?signature=${zoomDetails.signature}&meetingNumber=${zoomRoomToMeetingDetails()?.meetingNumber
+                                        }&password=${zoomRoomToMeetingDetails()?.password}&apiKey=${zoomDetails.apiKey
+                                        }&userName=${user.displayName}`}
                                     allowFullScreen={true}
                                     frameBorder="0"
                                     onLoad={event => {
+                                        props.setIsInZoom?.(true);
                                         // @ts-ignore
                                         handleZoomFrameRedirect(event.target.contentWindow.location.href);
                                     }}
@@ -165,34 +143,57 @@ export default function ViewContentFeed(props: Props) {
                                 />
                             </div>
                         ) : (
-                            <Tooltip title="Google Chrome and Microsoft Edge only">
-                                <button className="zoom-frame-button" onClick={() => setJoinZoom(true)}>
-                                    Join Zoom in browser
-                                </button>
-                            </Tooltip>
-                        )}
+                                <Tooltip title="Google Chrome and Microsoft Edge only">
+                                    <button className="zoom-frame-button" onClick={() => setJoinZoom(true)}>
+                                        {props.zoomButtonText ? props.zoomButtonText.browser : "Join Zoom in browser"}
+                                    </button>
+                                </Tooltip>
+                            )}
                     </div>
                 </div>
-            ) : (
-                <></>
-            )}
-            {!props.hideZoomOrVideo && videoRoom && videoRoom !== "not present" ? (
-                <>
-                    <p>Join the discussion by entering this breakout room.</p>
-                    <VideoGrid room={videoRoom} preferredMode="fullwidth" />
-                </>
-            ) : (
-                <></>
-            )}
-            {!props.hideTextChat && textChat && textChat !== "not present" ? <ChatFrame chatId={textChat.id} /> : <></>}
-            {(props.hideZoomOrVideo || !zoomRoom || zoomRoom === "not present") &&
-            (!youTubeFeed || youTubeFeed === "not present") &&
-            (props.hideZoomOrVideo || !videoRoom || videoRoom === "not present") &&
-            (props.hideTextChat || !textChat || textChat === "not present") ? (
-                <>{props.hideZoomOrVideo}</>
-            ) : (
-                <></>
-            )}
+            </>
+        )
+        : <></>;
+
+    // TODO: Detect if the Zoom is a webinar and hide the Join In Browser thing
+    //       or somehow supply the user's email address to Zoom to join the webinar? Consent?
+    return (
+        <div className={className}>
+            {!props.hideZoomRoom && props.zoomAboveYouTube
+                ? zoom
+                : <></>
+            }
+            {!props.hideYouTube && youTubeFeed && youTubeFeed !== "not present"
+                ? (
+                    <ReactPlayer
+                        className="video-player"
+                        width=""
+                        height=""
+                        playsinline
+                        controls={true}
+                        muted={false}
+                        volume={1}
+                        url={`https://www.youtube.com/watch?v=${youTubeFeed.videoId}`}
+                    />
+                )
+                : <></>
+            }
+            {!props.hideZoomRoom && !props.zoomAboveYouTube
+                ? zoom
+                : <></>
+            }
+            {!props.hideVideoRoom && videoRoom && videoRoom !== "not present"
+                ? (
+                    <>
+                        <p>Join the discussion by entering this breakout room.</p>
+                        <VideoGrid room={videoRoom} preferredMode="fullwidth" />
+                    </>
+                ) : <></>
+            }
+            {!props.hideTextChat && textChat && textChat !== "not present"
+                ? <ChatFrame chatId={textChat.id} />
+                : <></>
+            }
         </div>
     );
 }

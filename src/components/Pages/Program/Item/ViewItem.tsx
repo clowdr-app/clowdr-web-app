@@ -25,6 +25,7 @@ interface Props {
     heading?: HeadingState;
     textChatFeedOnly?: boolean;
     showFeedName?: boolean;
+    videoRoomShutdownWarning?: JSX.Element;
 }
 
 export default function ViewItem(props: Props) {
@@ -175,7 +176,7 @@ export default function ViewItem(props: Props) {
 
     if (attachments) {
         attachmentEls = attachments.map(x => (
-            <div className="attachment-items__item">
+            <div className="attachment-items__item" key={x.id}>
                 {(canUploadAttachments || isAdmin) && (
                     <button
                         className="attachment-items__item__delete"
@@ -213,7 +214,8 @@ export default function ViewItem(props: Props) {
                     ) : feed ? (
                         <>
                             {props.showFeedName ? <h2>{feed.name}</h2> : <></>}
-                            <ViewContentFeed feed={feed} hideZoomOrVideo={false} />
+                            {feed.videoRoomId && props.videoRoomShutdownWarning ? <p>{props.videoRoomShutdownWarning}</p> : <></>}
+                            <ViewContentFeed feed={feed} />
                             <div className="content-feed">
                                 {!feed.textChatId && textChatId ? <ChatFrame chatId={textChatId} /> : <></>}
                             </div>
@@ -228,7 +230,6 @@ export default function ViewItem(props: Props) {
                         </ReactMarkdownCustomised>
                         <AuthorsList authors={authors} idOrdering={item.authors} />
                     </div>
-                    <hr />
                     <div className="attachments">
                         <h3>Attachments</h3>
                         <div className="attachment-items">

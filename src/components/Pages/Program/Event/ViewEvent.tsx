@@ -9,7 +9,7 @@ import {
     ContentFeed,
     WatchedItems,
 } from "@clowdr-app/clowdr-db-schema";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import useConference from "../../../../hooks/useConference";
 import useDataSubscription from "../../../../hooks/useDataSubscription";
@@ -20,10 +20,25 @@ import ViewItem from "../Item/ViewItem";
 import ViewContentFeed from "../../../ContentFeed/ViewContentFeed";
 import useUserProfile from "../../../../hooks/useUserProfile";
 import { CancelablePromise, makeCancelable } from "@clowdr-app/clowdr-db-schema/build/Util";
+import { EventPhases, EventViewMode } from "./EventPhases";
+import { ProgramSessionWithStartEnd } from "../../../Sidebar/ProgramList";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@material-ui/core";
+import { useHistory } from "react-router-dom";
 
 interface Props {
     eventId: string;
 }
+
+enum EventViewElements {
+    LoadingSpinner,
+    YouTube,
+    ZoomForChairAndAuthors,
+    ZoomForQAndA,
+    VideoRoom,
+    VideoRoomWithClosedownWarning
+}
+
+type EndOfEventActions = "zoom" | "next" | "always-next" | "no-action";
 
 export default function ViewEvent(props: Props) {
     const conference = useConference();
@@ -31,12 +46,18 @@ export default function ViewEvent(props: Props) {
     const [event, setEvent] = useState<ProgramSessionEvent | null>(null);
     const [item, setItem] = useState<ProgramItem | null>(null);
     const [session, setSession] = useState<ProgramSession | null>(null);
-    // const [eventsOfSession, setEventsOfSession] = useState<ProgramSessionEvent[]>();
+    const [eventsOfSession, setEventsOfSession] = useState<ProgramSessionEvent[]>();
     const [sessionFeed, setSessionFeed] = useState<ContentFeed | null>(null);
-    const [eventFeed, setEventFeed] = useState<ContentFeed | "not present" | null>(null);
+    const [doJoinZoom, setDoJoinZoom] = useState<boolean>(false);
+    const [isInZoom, setIsInZoom] = useState<boolean>(false);
 
-    // TODO: Build a re-usable "View all the times this program item is scheduled" component
-    //       to be accessible via an Actions Button on an EventItem or embedded in an ViewItem
+    const [allSessions, setAllSessions] = useState<ProgramSession[]>();
+    const [allEvents, setAllEvents] = useState<ProgramSessionEvent[]>();
+    const [feeds, setFeeds] = useState<ContentFeed[]>();
+    // TODO: Make these live update
+    useSafeAsync(async () => ProgramSession.getAll(conference.id), setAllSessions, [conference.id], "ProgramGroup:setAllSessions");
+    useSafeAsync(async () => ProgramSessionEvent.getAll(conference.id), setAllEvents, [conference.id], "ProgramGroup:setAllEvents");
+    useSafeAsync(async () => ContentFeed.getAll(conference.id), setFeeds, [conference.id], "ProgramGroup:setFeeds");
 
     // Initial data fetch
     useSafeAsync(
@@ -47,20 +68,20 @@ export default function ViewEvent(props: Props) {
     );
     useSafeAsync(async () => (await event?.item) ?? null, setItem, [event], "ViewEvent:setItem");
     useSafeAsync(async () => (await event?.session) ?? null, setSession, [event], "ViewEvent:setSession");
-    // useSafeAsync(async () => await session?.events, setEventsOfSession, [session], "ViewEvent:setEventsInSession");
-    useSafeAsync(async () => (await session?.feed) ?? null, setSessionFeed, [session], "ViewEvent:setSessionFeed");
-    useSafeAsync(
-        async () => (event ? (await event.feed) ?? "not present" : null),
-        setEventFeed,
-        [event],
-        "ViewEvent:setEventFeed"
+    useSafeAsync(async () =>
+        (await session?.events)
+            ?.sort((x, y) => x.startTime.getTime() - y.startTime.getTime())
+        , setEventsOfSession,
+        [session],
+        "ViewEvent:setEventsInSession"
     );
+    useSafeAsync(async () => (await session?.feed) ?? null, setSessionFeed, [session], "ViewEvent:setSessionFeed");
 
     const [refreshTime, setRefreshTime] = useState<number>(0);
     useEffect(() => {
         const t = setInterval(() => {
             setRefreshTime(Date.now());
-        }, 15000);
+        }, 1000 * 15);
         return () => {
             clearInterval(t);
         };
@@ -133,13 +154,9 @@ export default function ViewEvent(props: Props) {
                 if (sessionFeed && object.id === sessionFeed.id) {
                     setSessionFeed(object as ContentFeed);
                 }
-
-                if (eventFeed && eventFeed !== "not present" && object.id === eventFeed.id) {
-                    setEventFeed(object as ContentFeed);
-                }
             }
         },
-        [sessionFeed, eventFeed]
+        [sessionFeed]
     );
 
     const onContentFeedDeleted = useCallback(
@@ -147,12 +164,8 @@ export default function ViewEvent(props: Props) {
             if (sessionFeed && ev.objectId === sessionFeed.id) {
                 setSessionFeed(null);
             }
-
-            if (eventFeed && eventFeed !== "not present" && ev.objectId === eventFeed.id) {
-                setEventFeed(null);
-            }
         },
-        [sessionFeed, eventFeed]
+        [sessionFeed]
     );
 
     useDataSubscription("ProgramSessionEvent", onSessionEventUpdated, onSessionEventDeleted, !event, conference);
@@ -253,129 +266,369 @@ export default function ViewEvent(props: Props) {
         [props.eventId, userProfile.watchedId]
     );
 
-    const buttons: Array<ActionButton> = [];
-    if (event) {
-        if (isFollowing !== null) {
-            if (isFollowing) {
-                buttons.push({
-                    label: changingFollow ? "Changing" : "Unfollow event",
-                    icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
-                    action: ev => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                        doUnfollow();
-                    },
-                    ariaLabel: "Unfollow this event"
-                });
-            } else {
-                buttons.push({
-                    label: changingFollow ? "Changing" : "Follow event",
-                    icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
-                    action: ev => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                        doFollow();
-                    },
-                    ariaLabel: "Follow this event"
-                });
+
+    const buttons = useMemo(() => {
+        const _buttons: Array<ActionButton> = [];
+        if (event) {
+            if (isFollowing !== null) {
+                if (isFollowing) {
+                    _buttons.push({
+                        label: changingFollow ? "Changing" : "Unfollow event",
+                        icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
+                        action: ev => {
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                            doUnfollow();
+                        },
+                        ariaLabel: "Unfollow this event"
+                    });
+                } else {
+                    _buttons.push({
+                        label: changingFollow ? "Changing" : "Follow event",
+                        icon: changingFollow ? <LoadingSpinner message="" /> : <i className="fas fa-star"></i>,
+                        action: ev => {
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                            doFollow();
+                        },
+                        ariaLabel: "Follow this event"
+                    });
+                }
             }
         }
+        if (session) {
+            _buttons.push({
+                label: "Track",
+                action: `/track/${session.trackId}`,
+                icon: <i className="fas fa-eye"></i>,
+                ariaLabel: "View the track for this event"
+            });
+        }
+        return _buttons;
+    }, [changingFollow, doFollow, doUnfollow, event, isFollowing, session]);
 
-        buttons.push({
-            label: "Session",
-            action: `/session/${event.sessionId}`,
-            icon: <i className="fas fa-eye"></i>,
-            ariaLabel: "View the session for this event"
-        });
-    }
-    if (session) {
-        buttons.push({
-            label: "Track",
-            action: `/track/${session.trackId}`,
-            icon: <i className="fas fa-eye"></i>,
-            ariaLabel: "View the track for this event"
-        });
-    }
-    if (item) {
-        // TODO: Action button for viewing all session events (i.e. scheduled
-        //       times) for this event's program item
-    }
+    const viewMode = useMemo(() => {
+        if (event && item && sessionFeed) {
+            if (!sessionFeed.youtubeId || !sessionFeed.zoomRoomId) {
+                return EventViewMode.Everything;
+            }
+            else {
+                const eventStart = event.startTime.getTime();
+                const eventEnd = event.endTime.getTime();
+                const now = Date.now();
 
-    // TODO: directLink?
+                const distToStart = now - eventStart;
+                const distToEnd = now - eventEnd;
 
-    // TODO: Offer to auto-move to the session's next event 30 secs before the
-    //       end of the current event
+                const second = 1000;
+                const minute = 60 * second;
 
-    const subtitle = event ? (
-        <>
-            {fmtDay(event.startTime)} &middot; {fmtTime(event.startTime)} - {fmtTime(event.endTime)}
-            {event.chair ? <>&nbsp;&middot;&nbsp;Chaired by {event.chair}</> : <></>}
-            {session ? <>&nbsp;&middot;&nbsp;{session.title}</> : <></>}
-        </>
-    ) : (
-            undefined
-        );
+                if (distToStart < -(minute * 20)) {
+                    return EventViewMode.PreEvent;
+                }
+                else if (distToStart < -(minute * 2)) {
+                    return EventViewMode.PreShow;
+                }
+                else if (distToStart < (minute * 0)) {
+                    return EventViewMode.PreRoll;
+                }
+                else if (distToEnd < -(minute * 5)) {
+                    return EventViewMode.WatchOnly;
+                }
+                else if (distToEnd < (minute * 0)) {
+                    return EventViewMode.WatchAndQuestion;
+                }
+                else if (distToEnd < (minute * 15)) {
+                    return EventViewMode.QuestionOnly;
+                }
+                else {
+                    return EventViewMode.Breakout;
+                }
+            }
+        }
+        return EventViewMode.Loading;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [event, item, sessionFeed, refreshTime]);
 
-    // const earliestStart = eventsOfSession?.reduce((r, e) => r.getTime() < e.startTime.getTime() ? r : e.startTime, new Date(32503680000000));
-    // const latestEnd = eventsOfSession?.reduce((r, e) => r.getTime() > e.endTime.getTime() ? r : e.endTime, new Date(0));
+    const elementsToShow = useMemo(() => {
+        // If there is a Zoom + Youtube:
+        // Person opens the event page
+        //    -- PreEvent: More than 20 mins before the start of the event
+        //          - Do not show Zoom
+        //          - Do not show YouTube
+        //          - Show video room
+        //    -- PreShow: Within 20 mins to 2 mins of the start of the event
+        //          - Show Zoom for Session Chairs + Authors only
+        //          - Do not show YouTube
+        //          - Show video room
+        //    -- PreRoll: Within 2 mins of the start of the event
+        //          - Show Zoom for Session Chairs + Authors only
+        //          - Show YouTube
+        //          - Show video room + warning that it will close soon
+        //    -- WatchOnly: Within first (duration - 5) mins of the event
+        //          - Show Zoom for Session Chairs + Authors only
+        //          - Show YouTube
+        //          - Do not show video room
+        //    -- WatchAndQuestion: Within the last 5 mins of the event
+        //          - Show Zoom for Q&A
+        //          - Show YouTube
+        //          - Do not show video room
+        //    -- QuestionOnly: Within 15 mins of the end of the event
+        //          - Show Zoom for Q&A
+        //          - Do not show YouTube
+        //          - Do not show video room
+        //    -- Breakout: More than 15 mins after the end of the event
+        //          - Do not show Zoom for Q&A
+        //          - Do not show YouTube
+        //          - Show video room
 
-    const renderNow = Date.now();
-    const eventIsLive = !!event && event.startTime.getTime() < renderNow && event.endTime.getTime() > renderNow;
-    const sessionIsLive = true; // earliestStart && latestEnd && earliestStart.getTime() < renderNow && latestEnd.getTime() > renderNow;
-    return (
-        <div className="program-event">
-            {sessionIsLive || (sessionFeed && sessionFeed.youtubeId) ? (
-                sessionFeed ? (
-                    <div className="session-feed">
-                        <h2>{sessionFeed.name}</h2>
-                        {eventIsLive || sessionFeed.youtubeId ? (
-                            <ViewContentFeed
-                                feed={sessionFeed}
-                                hideZoomOrVideo={
-                                    false && !eventIsLive &&
-                                    "Sorry, something has gone wrong and we are unable to show you the session feed for this event."
-                                }
-                            />
-                        ) : (
-                                <>This event is part of an ongoing live session. Please join the session to participate.</>
-                            )}
-                    </div>
-                ) : (
-                        <LoadingSpinner message="Loading session feed" />
+        // If not both Zoom + Youtube:
+        // - Always show the session feeds all the time
+
+        switch (viewMode) {
+            case EventViewMode.Loading:
+                return [EventViewElements.LoadingSpinner];
+            case EventViewMode.Everything:
+                return [EventViewElements.YouTube, EventViewElements.ZoomForQAndA, EventViewElements.VideoRoom];
+            case EventViewMode.PreEvent:
+                return [EventViewElements.VideoRoom];
+            case EventViewMode.PreShow:
+                return [EventViewElements.ZoomForChairAndAuthors, EventViewElements.VideoRoom];
+            case EventViewMode.PreRoll:
+                return [EventViewElements.ZoomForChairAndAuthors, EventViewElements.VideoRoomWithClosedownWarning, EventViewElements.YouTube];
+            case EventViewMode.WatchOnly:
+                return [EventViewElements.ZoomForChairAndAuthors, EventViewElements.YouTube];
+            case EventViewMode.WatchAndQuestion:
+                return [EventViewElements.ZoomForQAndA, EventViewElements.YouTube];
+            case EventViewMode.QuestionOnly:
+                return [EventViewElements.ZoomForQAndA];
+            case EventViewMode.Breakout:
+                return [EventViewElements.VideoRoom];
+        }
+    }, [viewMode]);
+
+    const view = useMemo(() => {
+        const subtitle = event ? (
+            <>
+                {fmtDay(event.startTime)} &middot; {fmtTime(event.startTime)} - {fmtTime(event.endTime)}
+                {event.chair ? <>&nbsp;&middot;&nbsp;Chaired by {event.chair}</> : <></>}
+                {session ? <>&nbsp;&middot;&nbsp;{session.title}</> : <></>}
+            </>
+        ) : (
+                undefined
+            );
+
+        return (
+            <div className="program-event">
+                {elementsToShow.includes(EventViewElements.LoadingSpinner)
+                    ? <LoadingSpinner />
+                    : <EventPhases currentMode={viewMode} />}
+                {sessionFeed &&
+                    (
+                        elementsToShow.includes(EventViewElements.YouTube)
+                        || elementsToShow.includes(EventViewElements.ZoomForChairAndAuthors)
+                        || elementsToShow.includes(EventViewElements.ZoomForQAndA)
                     )
-            ) : (
-                    <></>
-                )}
-            {/* TODO: Re-enable this ever?
-         {eventFeed
-            ? (eventFeed !== "not present"
-                ? !isLive || (eventFeed.youtubeId || eventFeed.zoomRoomId)
-                    ? <div className="event-feed">
-                        <h2>{eventFeed.name}</h2>
-                        <ViewContentFeed feed={eventFeed} />
-                    </div>
+                    ? (
+                        <div className="session-feed">
+                            {<ViewContentFeed
+                                autoJoinZoom={doJoinZoom}
+                                setIsInZoom={setIsInZoom}
+                                feed={sessionFeed}
+                                hideVideoRoom={true}
+                                hideTextChat={true}
+                                hideYouTube={!elementsToShow.includes(EventViewElements.YouTube)}
+                                hideZoomRoom={
+                                    !(
+                                        elementsToShow.includes(EventViewElements.ZoomForQAndA)
+                                        || elementsToShow.includes(EventViewElements.ZoomForChairAndAuthors)
+                                    )
+                                }
+                                zoomButtonText={
+                                    elementsToShow.includes(EventViewElements.ZoomForChairAndAuthors)
+                                        ? {
+                                            app: "Session Chairs and Authors: Join the Zoom room via Zoom's app (recommended)",
+                                            browser: "Session Chairs and Authors: Join the Zoom room in-browser"
+                                        }
+                                        : {
+                                            app: "Join the Q&A in Zoom via Zoom's app (recommended)",
+                                            browser: "Join the Q&A in Zoom in-browser"
+                                        }
+                                }
+                                zoomAboveYouTube={elementsToShow.includes(EventViewElements.ZoomForQAndA)}
+                            />
+                            }
+                        </div>
+                    )
                     : <></>
-                : <></>)
-            : <LoadingSpinner message="Loading event feed" />
-        } */}
-            {item ? (
-                <ViewItem
-                    showFeedName={false}
-                    item={item}
-                    // TODO: Do we ever want this? `&& eventHasEnded`
-                    textChatFeedOnly={
-                        (eventIsLive || sessionIsLive) &&
-                        !!(sessionFeed?.videoRoomId || sessionFeed?.youtubeId || sessionFeed?.zoomRoomId)
+                }
+
+                {item
+                    ? (
+                        <ViewItem
+                            showFeedName={false}
+                            item={item}
+                            videoRoomShutdownWarning={elementsToShow.includes(EventViewElements.VideoRoomWithClosedownWarning) ? <b>This event is about to start and the video room will end accordingly.</b> : undefined}
+                            textChatFeedOnly={!(elementsToShow.includes(EventViewElements.VideoRoom) || elementsToShow.includes(EventViewElements.VideoRoomWithClosedownWarning))}
+                            heading={{
+                                title: item?.title ?? "Event",
+                                subtitle,
+                                buttons: buttons.length > 0 ? buttons : undefined,
+                            }}
+                        />
+                    )
+                    : <></>
+                }
+            </div>
+        );
+    }, [buttons, doJoinZoom, elementsToShow, event, item, session, sessionFeed, viewMode]);
+
+    // Popups:
+    //      - 30 seconds before end of event
+    //          - If not in Zoom: Join Zoom for Q&A + stay with current talk and text chat
+    //          - If in Zoom: Just ask whether to stay with current event or not
+    //          - Or: Go to the next talk
+    //          - Or: "Always go to the next talk" option
+
+    // Transitions:
+    //      - If Always go to next talk AND not in Zoom: Go to next event
+
+    const sessionsWSE: ProgramSessionWithStartEnd[] | null = useMemo(() => {
+        if (allSessions && allEvents) {
+            const events = allEvents;
+            return allSessions.map(_session => {
+                const _eventsOfSession = events.filter(x => x.sessionId === _session.id);
+                return {
+                    session: _session,
+                    earliestStart: _eventsOfSession.reduce(
+                        (r, e) => (r.getTime() < e.startTime.getTime() ? r : e.startTime),
+                        new Date(32503680000000)
+                    ),
+                    latestEnd: _eventsOfSession.reduce(
+                        (r, e) => (r.getTime() > e.endTime.getTime() ? r : e.endTime),
+                        new Date(0)
+                    ),
+                };
+            });
+        }
+        return null;
+    }, [allEvents, allSessions]);
+
+    const [nextEvent, setNextEvent] = useState<{
+        id: string;
+        name: string;
+        startsAt: Date;
+    }>();
+    const getDefaultAction = () => window.localStorage.getItem("default-next-event-action") as EndOfEventActions | null;
+    const [chosenAction, setChosenAction] = useState<EndOfEventActions | null>(getDefaultAction());
+
+    useSafeAsync(async () => {
+        if (event && eventsOfSession && sessionsWSE && sessionFeed && feeds && allEvents) {
+            let _nextEvent: ProgramSessionEvent | undefined;
+            if (eventsOfSession[eventsOfSession.length - 1].id === event.id) {
+                // Currently view the last event in the session
+                // So we need to find the next session and pull its first event
+
+                const now = Date.now();
+                const matchingFeeds = feeds.filter(x => x.youtubeId === sessionFeed.youtubeId || x.zoomRoomId === sessionFeed.zoomRoomId).map(x => x.id);
+                const matchingSessions
+                    = sessionsWSE
+                        .filter(x =>
+                            x.earliestStart.getTime() > now
+                            && matchingFeeds.includes(x.session.feedId)
+                        )
+                        .sort((x, y) => x.earliestStart.getTime() - y.earliestStart.getTime());
+                if (matchingSessions.length > 0) {
+                    for (const _nextSession of matchingSessions) {
+                        const _nextEvents = allEvents
+                            .filter(x => x.sessionId === _nextSession.session.id)
+                            .sort((x, y) => x.startTime.getTime() - y.startTime.getTime());
+                        if (_nextEvents.length > 0) {
+                            _nextEvent = _nextEvents[0];
+                            break;
+                        }
                     }
-                    heading={{
-                        title: item?.title ?? "Event",
-                        subtitle,
-                        buttons: buttons.length > 0 ? buttons : undefined,
-                    }}
-                />
-            ) : (
-                    <LoadingSpinner />
-                )}
-        </div>
+                }
+            }
+            else {
+                _nextEvent = eventsOfSession[eventsOfSession.findIndex(x => x.id === event.id) + 1];
+            }
+
+            if (_nextEvent) {
+                return {
+                    id: _nextEvent.id,
+                    name: (await _nextEvent.item).title,
+                    startsAt: _nextEvent.startTime
+                };
+            }
+        }
+        return undefined;
+    }, setNextEvent, [event, eventsOfSession, sessionsWSE, sessionFeed, feeds, allEvents], "ViewEvent:setNextEvent");
+
+    useEffect(() => {
+        console.log(`Current event: ${event?.id}, Next event: ${nextEvent?.id}`);
+    }, [event, nextEvent]);
+
+    const handleCloseNextEventDialog = (action: EndOfEventActions) => {
+        setChosenAction(action);
+        if (action === "always-next") {
+            window.localStorage.setItem("default-next-event-action", action);
+        }
+    };
+
+    const endDist = event ? event.endTime.getTime() - Date.now() : -1;
+    const isAboutToEnd = !!nextEvent && endDist > 0 && endDist < (1000 * 60);
+    const history = useHistory();
+    useEffect(() => {
+        if (nextEvent && chosenAction && isAboutToEnd && !isInZoom) {
+            setChosenAction(getDefaultAction());
+
+            if (chosenAction === "always-next" || chosenAction === "next") {
+                setDoJoinZoom(false);
+                history.push(`/event/${nextEvent.id}`);
+            }
+            else if (chosenAction === "zoom") {
+                setDoJoinZoom(true);
+            }
+        }
+    }, [chosenAction, history, isAboutToEnd, isInZoom, nextEvent]);
+
+    return (
+        <>
+            {view}
+
+            <Dialog
+                open={isAboutToEnd && !chosenAction && viewMode !== EventViewMode.Everything && !isInZoom}
+                onClose={() => handleCloseNextEventDialog("no-action")}
+                aria-labelledby="next-session-dialog-title"
+                aria-describedby="next-session-dialog-description"
+                id="next-session-dialog"
+            >
+                <DialogTitle id="next-session-dialog-title">
+                    Go to next talk?
+                </DialogTitle>
+                <DialogContent id="next-session-dialog-description">
+                    <DialogContentText>
+                        This talk is about to end. You can stay with it by joining the Q&amp;A in Zoom
+                        or go on to watch the next talk. Please choose below.
+                    </DialogContentText>
+                    {/* <DialogContentText>
+                        You can also choose to hide this popup in future and automatically go to the
+                        next talk.
+                    </DialogContentText> */}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => handleCloseNextEventDialog("zoom")} color="primary">
+                        Join this talk's Q&amp;A in Zoom
+                    </Button>
+                    <Button onClick={() => handleCloseNextEventDialog("next")} color="primary" autoFocus>
+                        Watch next talk
+                    </Button>
+                    {/* <Button onClick={() => handleCloseNextEventDialog("always-next")} color="primary">
+                        Always watch next talk
+                    </Button> */}
+                </DialogActions>
+            </Dialog>
+        </>
     );
 }

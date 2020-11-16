@@ -111,13 +111,15 @@ async function filterSessionsAndEvents(
             )
         );
 
-        return [sessions, events];
+        // sessions, 
+        return [[], events];
     } else {
         // const eventsSessionIds = [...new Set(allEvents.map(x => x.sessionId))];
         // sessions = sessions.filter(x => !eventsSessionIds.includes(x.id));
 
         /*[sessions, events]*/
-        return [allSessions, []];
+        // return [allSessions, []];
+        return [[], allEvents];
     }
 }
 
