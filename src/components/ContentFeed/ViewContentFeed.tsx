@@ -1,5 +1,5 @@
 import { ContentFeed, TextChat, VideoRoom, YouTubeFeed, ZoomRoom } from "@clowdr-app/clowdr-db-schema";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactPlayer from "react-player";
 import Parse from "parse";
 import useConference from "../../hooks/useConference";
@@ -39,6 +39,13 @@ export default function ViewContentFeed(props: Props) {
     const [zoomRoom, setZoomRoom] = useState<ZoomRoom | "not present" | null>(null);
     const [joinZoom, setJoinZoom] = useState<boolean>(false);
     const [zoomDetails, setZoomDetails] = useState<{ signature: string; apiKey: string } | undefined>(undefined);
+    const [videoIsPlaying, setVideoIsPlaying] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (zoomRoom && !props.hideZoomRoom && (props.autoJoinZoom || joinZoom)) {
+            setVideoIsPlaying(false);
+        }
+    }, [joinZoom, props.autoJoinZoom, props.hideZoomRoom, zoomRoom]);
 
     useSafeAsync(
         async () => (feed ? (await feed.textChat) ?? "not present" : null),
@@ -120,6 +127,9 @@ export default function ViewContentFeed(props: Props) {
                             href={zoomRoom.url}
                             rel="noopener noreferrer"
                             target="_blank"
+                            onClick={(ev) => {
+                                setVideoIsPlaying(false);
+                            }}
                         >
                             {props.zoomButtonText ? props.zoomButtonText.app : "Join by Zoom App (recommended)"}
                         </a><br />
@@ -172,6 +182,10 @@ export default function ViewContentFeed(props: Props) {
                         muted={false}
                         volume={1}
                         url={`https://www.youtube.com/watch?v=${youTubeFeed.videoId}`}
+                        onPlay={() => setVideoIsPlaying(true)}
+                        onPause={() => setVideoIsPlaying(false)}
+                        onEnded={() => setVideoIsPlaying(false)}
+                        playing={videoIsPlaying}
                     />
                 )
                 : <></>
