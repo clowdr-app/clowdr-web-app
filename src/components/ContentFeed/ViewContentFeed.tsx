@@ -143,11 +143,9 @@ export default function ViewContentFeed(props: Props) {
                                 />
                             </div>
                         ) : (
-                                <Tooltip title="Google Chrome and Microsoft Edge only">
-                                    <button className="zoom-frame-button" onClick={() => setJoinZoom(true)}>
-                                        {props.zoomButtonText ? props.zoomButtonText.browser : "Join Zoom in browser"}
-                                    </button>
-                                </Tooltip>
+                                <button className="zoom-frame-button" onClick={() => setJoinZoom(true)}>
+                                    {props.zoomButtonText ? props.zoomButtonText.browser : "Join Zoom in browser"}
+                                </button>
                             )}
                     </div>
                 </div>
