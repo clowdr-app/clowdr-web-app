@@ -531,15 +531,28 @@ export default function ViewEvent(props: Props) {
 
                 const now = Date.now();
                 const matchingFeeds = feeds.filter(x => x.youtubeId === sessionFeed.youtubeId || x.zoomRoomId === sessionFeed.zoomRoomId).map(x => x.id);
-                const matchingSessions
+                const nextSessions
                     = sessionsWSE
                         .filter(x =>
                             x.earliestStart.getTime() > now
-                            && matchingFeeds.includes(x.session.feedId)
                         )
                         .sort((x, y) => x.earliestStart.getTime() - y.earliestStart.getTime());
+                const matchingSessions
+                    = nextSessions
+                        .filter(x => matchingFeeds.includes(x.session.feedId) && x.earliestStart.getTime() < now + (1000 * 60 * 5));
                 if (matchingSessions.length > 0) {
                     for (const _nextSession of matchingSessions) {
+                        const _nextEvents = allEvents
+                            .filter(x => x.sessionId === _nextSession.session.id)
+                            .sort((x, y) => x.startTime.getTime() - y.startTime.getTime());
+                        if (_nextEvents.length > 0) {
+                            _nextEvent = _nextEvents[0];
+                            break;
+                        }
+                    }
+                }
+                else if (nextSessions.length > 0) {
+                    for (const _nextSession of nextSessions) {
                         const _nextEvents = allEvents
                             .filter(x => x.sessionId === _nextSession.session.id)
                             .sort((x, y) => x.startTime.getTime() - y.startTime.getTime());
