@@ -103,7 +103,7 @@ export function ReactMarkdownCustomised(props?: {
                 },
                 link: ({ href, children }: { href: string; children: JSX.Element }) => {
                     return (
-                        <a href={href} style={{ color: props?.linkColour }}>
+                        <a href={href} style={{ color: props?.linkColour }} target="_blank" rel="noopener noreferrer">
                             {children}
                         </a>
                     );
