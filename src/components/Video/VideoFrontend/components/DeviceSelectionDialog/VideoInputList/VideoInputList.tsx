@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import { DEFAULT_VIDEO_CONSTRAINTS } from "../../../constants";
 import { FormControl, MenuItem, Typography, Select } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
@@ -25,9 +25,17 @@ export default function VideoInputList() {
     const { localVideoTrack } = useVideoContext();
     const mediaStreamTrack = useMediaStreamTrack(localVideoTrack);
     const localVideoInputDeviceId = mediaStreamTrack?.getSettings().deviceId;
+    const [lastVideoDeviceId, _setLastVideoDeviceId] = useState<string | null>(
+        LocalStorage_TwilioVideo.twilioVideoLastCamera
+    );
+
+    const setLastVideoDeviceId = useCallback((deviceId: string | null) => {
+        LocalStorage_TwilioVideo.twilioVideoLastCamera = deviceId;
+        _setLastVideoDeviceId(deviceId);
+    }, []);
 
     function replaceTrack(newDeviceId: string) {
-        LocalStorage_TwilioVideo.twilioVideoLastCamera = newDeviceId;
+        setLastVideoDeviceId(newDeviceId);
         if (localVideoTrack) {
             localVideoTrack.restart({
                 ...(DEFAULT_VIDEO_CONSTRAINTS as {}),
@@ -50,7 +58,7 @@ export default function VideoInputList() {
                     </Typography>
                     <Select
                         onChange={e => replaceTrack(e.target.value as string)}
-                        value={localVideoInputDeviceId || ""}
+                        value={localVideoInputDeviceId || lastVideoDeviceId}
                         variant="outlined"
                     >
                         {videoInputDevices.map(device => (

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import AudioLevelIndicator from "../../AudioLevelIndicator/AudioLevelIndicator";
 import { FormControl, MenuItem, Typography, Select, Grid } from "@material-ui/core";
 import { useAudioInputDevices } from "../../../hooks/deviceHooks/deviceHooks";
@@ -12,9 +12,17 @@ export default function AudioInputList() {
 
     const mediaStreamTrack = useMediaStreamTrack(localAudioTrack);
     const localAudioInputDeviceId = mediaStreamTrack?.getSettings().deviceId;
+    const [lastAudioDeviceId, _setLastAudioDeviceId] = useState<string | null>(
+        LocalStorage_TwilioVideo.twilioVideoLastMic
+    );
+
+    const setLastAudioDeviceId = useCallback((deviceId: string | null) => {
+        LocalStorage_TwilioVideo.twilioVideoLastMic = deviceId;
+        _setLastAudioDeviceId(deviceId);
+    }, []);
 
     function replaceTrack(newDeviceId: string) {
-        LocalStorage_TwilioVideo.twilioVideoLastMic = newDeviceId;
+        setLastAudioDeviceId(newDeviceId);
         localAudioTrack?.restart({ deviceId: { exact: newDeviceId } });
     }
 
@@ -29,7 +37,7 @@ export default function AudioInputList() {
                         <FormControl fullWidth>
                             <Select
                                 onChange={e => replaceTrack(e.target.value as string)}
-                                value={localAudioInputDeviceId || ""}
+                                value={localAudioInputDeviceId || lastAudioDeviceId}
                                 variant="outlined"
                             >
                                 {audioInputDevices.map(device => (
