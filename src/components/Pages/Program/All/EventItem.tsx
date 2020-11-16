@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { LoadingSpinner } from "../../../LoadingSpinner/LoadingSpinner";
 import { Link, useHistory } from "react-router-dom";
 import Item from "./Item";
@@ -30,10 +30,24 @@ export default function EventItem(props: Props) {
         });
     }
 
+    const elemRef = React.useRef<HTMLInputElement>(null);
+    useEffect(() => {
+        // Don't use the outer-level now/isNow variables so that this only runs
+        // once when the element is first loaded
+        const _now = new Date();
+        const _isNow = event.startTime < _now && event.endTime > _now;
+        if (_isNow && elemRef.current) {
+            elemRef.current.scrollIntoView({
+                behavior: "smooth",
+            });
+        }
+    }, [event.endTime, event.startTime]);
+
     const now = new Date();
     const isNow = event.startTime < now && event.endTime > now;
 
     return <div
+        ref={elemRef}
         className={`event${isNow ? " now" : ""}`}
         style={{ height: props.height }}
         tabIndex={0}
