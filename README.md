@@ -188,7 +188,7 @@ Clowdr uses Sendgrid to deliver emails to conference participants.
 | `SENDGRID_API_KEY` | Your sendgrid API key.        |
 | `SENDGRID_SENDER`  | Your verified sender address. |
 
-### Zoon
+### Zoom
 
 To use zoom embedding, you need to create a JWT app on Zoom, and set the
 instance configuration variables `ZOOM_API_KEY` and `ZOOM_API_SECRET` with the
@@ -196,7 +196,7 @@ values from Zoom.
 
 ## Configuring the CLOWDR Back-end
 
-1. Clone the (CLOWDR backend)[https://github.com/clowdr-app/clowdr-backend].
+1. Clone the [CLOWDR backend](https://github.com/clowdr-app/clowdr-backend).
 1. Run `npm install` in the backend directory.
 1. Run `ln -s "../clowdr-web-app/.env" .env` to link the `.env` file.
 1. Run `npm start`.
